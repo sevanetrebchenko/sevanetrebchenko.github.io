@@ -11,8 +11,6 @@ date: 2020-12-27 05:02:31
 		text-align: center;
 		margin-left: auto;
 		margin-right: auto;
-		margin-top: -80px;
-		margin-bottom: 50px
 	}
 
 	.button {
@@ -37,9 +35,20 @@ date: 2020-12-27 05:02:31
 		cursor: pointer;
 		text-decoration: none;
 	}
+	
+	.button:focus {
+		color:#353535;
+		border: 1px #353535 solid;
+		cursor: pointer;
+		text-decoration: none;
+		outline: none;
+		box-shadow: none;
+	}
+	
+	
 }
 	
 </style>
 
-<img src="/images/SevaNetrebchenko_Resume2020.png" alt="Resume is not available for view, use the link below to download." width="1100" class="center"></img>
-<button type="button" onclick="location.href='https://drive.google.com/file/d/1vZDgfPBOyyZsE_pGp32hrUIiCiHsHeG0/view';" class="center button">DOWNLOAD</button>
+<img src="/images/SevaNetrebchenko_Resume2020.jpg" alt="Resume is not available for view, use the link below to download." width="1100" class="center"></img>
+<button type="button" onclick="location.href='https://drive.google.com/file/d/1vZDgfPBOyyZsE_pGp32hrUIiCiHsHeG0/view';" class="center button disable-select">DOWNLOAD</button>
