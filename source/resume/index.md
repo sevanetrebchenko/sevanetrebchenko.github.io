@@ -41,5 +41,5 @@ date: 2020-12-27 05:02:31
 	
 </style>
 
-<img src="/images/SevaNetrebchenko_Resume2020_IMG.jpg" alt="Resume is not available for view, use the link below to download." width="1100" class="center"></img>
+<img src="/images/SevaNetrebchenko_Resume2020.png" alt="Resume is not available for view, use the link below to download." width="1100" class="center"></img>
 <button type="button" onclick="location.href='https://drive.google.com/file/d/1vZDgfPBOyyZsE_pGp32hrUIiCiHsHeG0/view';" class="center button">DOWNLOAD</button>
