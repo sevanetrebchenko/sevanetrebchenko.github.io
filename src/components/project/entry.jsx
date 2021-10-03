@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router';
 
 // Styles.
-import "../styles/project.css"
+import "../../styles/project.css"
 
 export default function ProjectEntry(props = {}) {
   const { project } = props;

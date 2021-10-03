@@ -1,8 +1,8 @@
 import React from 'react'
-import ProjectEntry from './projectentry';
+import ProjectEntry from './entry';
 
 // Styles.
-import "../styles/projectlist.css"
+import "../../styles/projectlist.css"
 
 export default function ProjectList(props = {}) {
   const { projects } = props;
@@ -10,7 +10,7 @@ export default function ProjectList(props = {}) {
   return (
     <div className="project-list">
       {
-        projects.map(project =>
+        projects.map(project => 
           <ProjectEntry
             key={project.id}
             project={project}

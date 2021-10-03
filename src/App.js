@@ -14,8 +14,8 @@ import Navbar from './components/navbar';
 
 // Project data.
 import PROJECTS from './content/projects';
-import ProjectList from './components/projectlist'
-import ProjectPage from './components/projectpage';
+import ProjectList from './components/project/list'
+import ProjectPage from './components/project/page';
 
 export default function App() {
   return (
@@ -26,16 +26,18 @@ export default function App() {
           <Navbar></Navbar>
 
           <Switch>
-            <Route path="/projects/:id" component={function RouterWrapper() {
-              const match = useRouteMatch();
-              const id = match.params.id;
+            <Route path="/projects/:id" component={
+              function RouterWrapper() {
+                const match = useRouteMatch();
+                const id = match.params.id;
 
-              const project = lodash.find(PROJECTS, (project) => {
-                return project.id === id;
-              });
+                const project = lodash.find(PROJECTS, (project) => {
+                  return project.id === id;
+                });
 
-              return <ProjectPage project={project} />
-            }} />
+                return <ProjectPage project={project} />
+              }
+            } />
 
             <Route path="/projects" exact component={() => <ProjectList projects={PROJECTS} />} />
 
