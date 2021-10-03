@@ -10,7 +10,7 @@ export default function ProjectEntry(props = {}) {
 
   const routeToProjectPage = (e) => {
     e.preventDefault();
-    history.push('/projects/' + project.id);
+    history.push('/projects/' + project.url);
   };
 
   return (

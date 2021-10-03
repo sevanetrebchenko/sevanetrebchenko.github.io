@@ -1,6 +1,6 @@
 const PROJECTS = [
   {
-    id: "project1",
+    url: "project1",
     title: "Project 1",
     links: [
       {
@@ -13,8 +13,9 @@ const PROJECTS = [
         data: "First fragment. Fragments can go on for multiple sentences.",
       },
       {
-        type: "text",
-        data: "This is the second fragment.",
+        type: "image",
+        data: "mountains.jpeg",
+        alt: "Foggy mountains.",
       },
       {
         type: "text",
@@ -23,7 +24,7 @@ const PROJECTS = [
     ],
   },
   {
-    id: "project2",
+    url: "project2",
     title: "Project 2",
     links: [
       {

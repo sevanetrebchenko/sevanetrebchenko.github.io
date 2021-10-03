@@ -1,5 +1,5 @@
 import React from 'react'
-import ProjectEntry from './entry';
+import ProjectEntry from './project-entry';
 
 // Styles.
 import "../../styles/projectlist.css"
@@ -12,7 +12,7 @@ export default function ProjectList(props = {}) {
       {
         projects.map(project => 
           <ProjectEntry
-            key={project.id}
+            key={project.url}
             project={project}
           />
         )

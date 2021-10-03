@@ -1,6 +1,6 @@
-import React from 'react';
-import lodash from 'lodash';
-import './App.css';
+import React from "react";
+import lodash from "lodash";
+import "./App.css";
 import {
   BrowserRouter as Router,
   Switch,
@@ -9,13 +9,18 @@ import {
   useRouteMatch,
 } from "react-router-dom";
 
-import Header from './components/header';
-import Navbar from './components/navbar';
+import Header from "./components/header";
+import Navbar from "./components/navbar";
 
 // Project data.
-import PROJECTS from './content/projects';
-import ProjectList from './components/project/list'
-import ProjectPage from './components/project/page';
+import PROJECTS from "./content/projects";
+import ProjectList from "./components/portfolio/project-list";
+import ProjectPage from "./components/portfolio/project-page";
+
+// Blog data.
+import BLOG_POSTS from "./content/blog-posts"
+import Blog from "./components/blog/blog"
+import BlogPost from "./components/blog/blog-post"
 
 export default function App() {
   return (
@@ -23,16 +28,34 @@ export default function App() {
       <Router>
         <div>
           <Header></Header>
+
           <Navbar></Navbar>
 
           <Switch>
-            <Route path="/projects/:id" component={
+            {/* BLOG. */}
+            <Route path="/blog/:url" component={
               function RouterWrapper() {
                 const match = useRouteMatch();
-                const id = match.params.id;
+                const url = match.params.url; // Local URL.
+
+                const post = lodash.find(BLOG_POSTS, (post) => {
+                  return post.url === url;
+                });
+
+                return <BlogPost post={post} />
+              }
+            } />
+
+            <Route path="/blog" exact component={() => <Blog posts={BLOG_POSTS} />} />
+
+            {/* PORTFOLIO. */}
+            <Route path="/projects/:url" component={
+              function RouterWrapper() {
+                const match = useRouteMatch();
+                const url = match.params.url; // Local URL.
 
                 const project = lodash.find(PROJECTS, (project) => {
-                  return project.id === id;
+                  return project.url === url;
                 });
 
                 return <ProjectPage project={project} />
@@ -45,7 +68,7 @@ export default function App() {
               <p>Blog</p>
             </Route>
 
-            <Route path='/resume'>
+            <Route path="/resume">
               <p>Resume</p>
             </Route> */
 
