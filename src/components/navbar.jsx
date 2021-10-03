@@ -1,23 +1,19 @@
 import React from 'react'
 import { useHistory } from 'react-router-dom';
 
-// Styles.
-import "../styles/navbar.css"
-import "../styles/mouse-events.css"
-import "../styles/panel.css"
-
+import "./navbar.css"
         
 export default function Navbar(props = {}) {
     let history = useHistory();
 
     return (
-        <div className="panel-item-container">
+        <div className="navbar">
             <p className="navbar-element"
                 onClick={e => {
                     e.preventDefault();
                     history.push('/projects');
                 }}
-            >Projects</p>
+            >Porfolio</p>
             <p className="navbar-element"
                 onClick={e => {
                     e.preventDefault();

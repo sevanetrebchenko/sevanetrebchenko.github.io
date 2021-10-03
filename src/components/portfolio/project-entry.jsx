@@ -5,7 +5,7 @@ import { useHistory } from 'react-router';
 import "../../styles/project.css"
 
 export default function ProjectEntry(props = {}) {
-  const { project } = props;
+  const { project, className } = props;
   const history = useHistory();
 
   const routeToProjectPage = (e) => {
@@ -14,7 +14,7 @@ export default function ProjectEntry(props = {}) {
   };
 
   return (
-    <div className="project" onClick={routeToProjectPage}> 
+    <div className={(className + " " || "") + "project"} onClick={routeToProjectPage}> 
       <p>
         {project.title}
       </p>

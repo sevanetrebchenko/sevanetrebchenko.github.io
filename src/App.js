@@ -22,6 +22,8 @@ import BLOG_POSTS from "./content/blog-posts"
 import Blog from "./components/blog/blog"
 import BlogPost from "./components/blog/blog-post"
 
+import "./components/page-title.css"
+
 export default function App() {
   return (
     <div>
@@ -32,6 +34,7 @@ export default function App() {
           <Navbar></Navbar>
 
           <Switch>
+
             {/* BLOG. */}
             <Route path="/blog/:url" component={
               function RouterWrapper() {
@@ -46,7 +49,10 @@ export default function App() {
               }
             } />
 
-            <Route path="/blog" exact component={() => <Blog posts={BLOG_POSTS} />} />
+            <Route path="/blog">
+              <p className="page-title">Blog</p>
+              <Blog posts={BLOG_POSTS} />
+            </Route>
 
             {/* PORTFOLIO. */}
             <Route path="/projects/:url" component={
@@ -62,10 +68,9 @@ export default function App() {
               }
             } />
 
-            <Route path="/projects" exact component={() => <ProjectList projects={PROJECTS} />} />
-
-            <Route path="/blog">
-              <p>Blog</p>
+            <Route path="/projects" >
+              <p className="page-title">Projects</p>
+              <ProjectList projects={PROJECTS} />
             </Route>
 
             <Route path="/resume">

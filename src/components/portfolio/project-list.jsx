@@ -2,16 +2,17 @@ import React from 'react'
 import ProjectEntry from './project-entry';
 
 // Styles.
-import "../../styles/projectlist.css"
+import "../panel.css"
 
 export default function ProjectList(props = {}) {
   const { projects } = props;
 
   return (
-    <div className="project-list">
+    <div className="panel-container">
       {
         projects.map(project => 
-          <ProjectEntry
+          <ProjectEntry 
+            className={project.class}
             key={project.url}
             project={project}
           />

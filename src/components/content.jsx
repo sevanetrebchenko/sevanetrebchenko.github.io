@@ -1,4 +1,6 @@
 
+
+
 export default function Content(props = {}) {
   const { type } = props;
 
@@ -10,7 +12,7 @@ export default function Content(props = {}) {
   else if (type === "image") {
     // Image.
     const { data, alt } = props;
-    var file = "./images/" + data;
+    let file = "/images/" + data;
     console.log(file);
     
     return <img src={file} alt={alt} />

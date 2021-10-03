@@ -1,0 +1,36 @@
+.panel-container {
+  display: flex;
+  flex-flow: row wrap;
+  padding: 0, 10px;
+  /* align-items: center;
+  justify-content: center;
+  flex-basis: 100%; */
+}
+
+.panel, .panel.col12 {
+  flex: 1 0 calc(100% - 20px);
+  margin-bottom: 10px;
+}
+
+@media only screen and (min-width: 640px) {
+  .panel-container {
+    gap: 10px;
+  }
+
+  .panel, .panel.col3, .panel.col4, .panel.col6 {
+    flex-basis: calc(50% - 20px);
+    margin: 0;
+  }
+}
+
+@media only screen and (min-width: 1220px) {
+  .panel, .panel.col3, .panel.col4 {
+    flex-basis: calc(33% - 20px);
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .panel, .panel.col4 {
+    flex-basis: calc(25% - 20px);
+  }
+}

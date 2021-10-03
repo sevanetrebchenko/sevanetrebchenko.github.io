@@ -1,7 +1,6 @@
 import React from 'react'
 
-// Styles.
-import '../styles/header.css'
+import "./header.css"
 
 export default function Header(props = {}) {
   return (
