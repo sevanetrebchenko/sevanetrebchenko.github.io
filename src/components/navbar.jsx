@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router-dom';
 
 // Styles.
-import "./navbar.css"
+import "../styles/navbar.css"
 
 export default function Navbar(props = {}) {
     let history = useHistory();
