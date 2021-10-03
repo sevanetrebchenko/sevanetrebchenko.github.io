@@ -6,9 +6,7 @@ import {
   Switch,
   Route,
   Redirect,
-  Link,
   useRouteMatch,
-  useParams
 } from "react-router-dom";
 
 import Header from './components/header';

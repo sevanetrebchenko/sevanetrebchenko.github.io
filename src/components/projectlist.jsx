@@ -1,19 +1,18 @@
 import React from 'react'
+import ProjectEntry from './projectentry';
 
 // Styles.
 import "../styles/projectlist.css"
-import ProjectEntry from './projectentry';
-
 
 export default function ProjectList(props = {}) {
   const { projects } = props;
-  console.log(projects);
 
   return (
     <div className="project-list">
       {
         projects.map(project =>
           <ProjectEntry
+            key={project.id}
             project={project}
           />
         )
