@@ -1,0 +1,9 @@
+.project-list {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+    padding: 0px;
+    margin: 50px;
+    gap: 10px;
+    list-style: none;
+}
