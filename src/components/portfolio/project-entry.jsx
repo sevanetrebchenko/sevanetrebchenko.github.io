@@ -15,7 +15,8 @@ export default function ProjectEntry(props = {}) {
     history.push('/projects/' + project.url);
   };
 
-  const [data, setData] = useState([]);
+  // Read in file.
+  const [data, setData] = useState("");
   const getData = () => {
     fetch("/test.md").then(response => {
       return response.text();
@@ -26,7 +27,7 @@ export default function ProjectEntry(props = {}) {
   }
   useEffect(() => {
     getData();
-  }, [])
+  })
 
   return (
     <React.Fragment>
@@ -36,7 +37,7 @@ export default function ProjectEntry(props = {}) {
 
         { /* Project abstract. */}
         <div className="project-text">
-          <ReactMarkdown remarkPlugins={[gfm]}>{{data}.data}</ReactMarkdown>
+          <ReactMarkdown children={{data}.data}></ReactMarkdown>
           <h3>{project.title}</h3>
           <p>{project.abstract}</p>
         </div>
