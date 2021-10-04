@@ -1,3 +1,9 @@
+.constrain {
+  margin: 0% auto;
+  flex-basis: 100%;
+  max-width: 1600px;
+}
+
 .global {
   margin-left: 25px;
   margin-right: 25px;

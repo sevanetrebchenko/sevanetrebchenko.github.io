@@ -40,11 +40,11 @@ export default function Header(props = {}) {
         </button>
 
         <div className="header navbar-desktop" >
-          {NavbarElements()}
+          <NavbarElements />
         </div>
       </div>
       <div className="header navbar-mobile">
-        {expanded ? NavbarElements() : <></>}
+        {expanded ? <NavbarElements /> : <></>}
       </div>
       {expanded ? <div className="separator" /> : <></>}
 
