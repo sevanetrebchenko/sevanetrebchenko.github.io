@@ -2,10 +2,10 @@ import React from 'react'
 import { useHistory } from 'react-router';
 
 // Styles.
-import "../../styles/project.css"
+import "./project-entry.css"
 
 export default function ProjectEntry(props = {}) {
-  const { project, className } = props;
+  const { project } = props;
   const history = useHistory();
 
   const routeToProjectPage = (e) => {
@@ -14,10 +14,15 @@ export default function ProjectEntry(props = {}) {
   };
 
   return (
-    <div className={(className + " " || "") + "project"} onClick={routeToProjectPage}> 
-      <p>
-        {project.title}
-      </p>
-    </div>
+    <React.Fragment>
+      <div className="project-entry" onClick={routeToProjectPage}>
+        { /* Project image. */ }
+        <img className="project-image" src="/images/mountains.jpeg" alt=""/>
+
+        { /* Project abstract. */ }
+        <p className="project-text">{project.title}</p>
+      </div>
+    </React.Fragment>
+
   );
 }

@@ -8,11 +8,10 @@ export default function ProjectList(props = {}) {
   const { projects } = props;
 
   return (
-    <div className="panel-container">
+    <div className="project-container">
       {
-        projects.map(project => 
-          <ProjectEntry 
-            className={project.class}
+        projects.map(project =>
+          <ProjectEntry
             key={project.url}
             project={project}
           />

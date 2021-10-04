@@ -1,9 +1,6 @@
 import React from 'react'
 import Content from '../content'
 
-// Styles.
-import "../../styles/project.css"
-
 export default function ProjectPage(props = {}) {
   const { project } = props;
 

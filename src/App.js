@@ -10,7 +10,6 @@ import {
 } from "react-router-dom";
 
 import Header from "./components/header";
-import Navbar from "./components/navbar";
 
 // Project data.
 import PROJECTS from "./content/projects";
@@ -24,14 +23,14 @@ import BlogPost from "./components/blog/blog-post"
 
 import "./components/page-title.css"
 
+import "./components/global.css"
+
 export default function App() {
   return (
     <div>
       <Router>
-        <div>
+        <div className="global">
           <Header></Header>
-
-          <Navbar></Navbar>
 
           <Switch>
 

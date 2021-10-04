@@ -1,15 +1,123 @@
 .header {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
   text-transform: uppercase;
+}
+.name {
+  justify-content: left;
   font-weight: 800;
-  font-size: 1.7rem;
-  letter-spacing: 2px;
-  text-align: center;
-  margin-left: 25%;
-  margin-right: 25%;
-  border-bottom: solid 1px #cfcfcf;
+  letter-spacing: 1.0px;
+  font-size: 1.4rem;
+
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+}
+.name:hover {
+  cursor: pointer;
 }
 
-.header p {
-  margin-block-start: 1em;
+.navbar-element {
+  font-family: 'Crimson Text', sans-serif;
+  letter-spacing: 1.5px;
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: #777;
+  background: white;
+  padding: 4px 12px 4px 12px;
+  margin: 20px 10px 20px 10px;
+  margin-block-start: 0.3em;
   margin-block-end: 0.3em;
+}
+.navbar-element:hover {
+  color: goldenrod;
+  cursor: pointer;
+}
+
+/* Navbars */
+.header.navbar-desktop {
+  display: none;
+}
+.header.navbar-mobile {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+
+.separator {
+  display: block;
+  border-bottom: solid 1px #cfcfcf;
+  margin-left: 4%;
+  margin-right: 4%;
+}
+.button {
+  background-color: white;
+  border: none;
+  color: white;
+  cursor: pointer; 
+}
+.button:active {
+  background-color: white;
+}
+.icon {
+  color: #cfcfcf;
+}
+.icon.collapsed {
+  font-size: 25px;
+}
+.icon.expanded {
+  font-size: 30px;
+}
+
+
+
+@media only screen and (min-width: 1080px) {
+  /* Hide mobile specific elements. */
+  .separator {
+    display: none;
+  }
+  .header.navbar-mobile {
+    display: none;
+  }
+  .button {
+    display: none;
+  }
+
+  .name {
+    font-size: 1.6rem;
+  }
+  .header.navbar-desktop {
+    display: flex;
+    flex: 1;
+    justify-content: right;
+    flex-direction: row;
+    align-items: center;
+  }
+  .icon {
+    margin-right: 20px;
+    margin-top: 18px;
+    margin-left: 0px;
+
+    justify-content: right;
+    align-items: center;
+  }
+  .navbar-element {
+    font-size: 0.9rem;
+    margin-block-start: 0.4em;
+    margin-block-end: 0.0em;
+  }
+
+}
+
+@media only screen and (min-width: 640px) {
+  .name {
+    font-size: 1.6rem;
+  }
+
+  .icon {
+    margin-block-start: 0.1em;
+  }
 }
