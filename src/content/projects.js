@@ -1,7 +1,7 @@
 const PROJECTS = [
   {
     url: "project1",
-    title: "1",
+    title: "Project 1",
     links: [
       {
       }
