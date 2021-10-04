@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown';
 import RemarkGFM from 'remark-gfm';
 
+import "./project-page.css"
+
 export default function ProjectPage(props = {}) {
   const { project } = props;
   return (
@@ -50,8 +52,8 @@ function MarkdownEntry(props = {}) {
   });
 
   return (
-    <React.Fragment>
+    <div className="center">
       <ReactMarkdown remarkPlugins={[RemarkGFM]} children={{ data }.data} />
-    </React.Fragment>
+    </div>
   )
 }
