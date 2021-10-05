@@ -2,10 +2,6 @@ const BLOG_POSTS = [
   {
     url: "post1",
     title: "Blog Post 1",
-    links: [
-      {
-      }
-    ],
     abstract: "This is blog post 1.",
     content: [
       {

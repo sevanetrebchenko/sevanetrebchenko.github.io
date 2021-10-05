@@ -1,47 +1,105 @@
-  .project-container {
-    display: flex;
-    flex-flow: column nowrap;
-    margin: 0% auto;
-    flex-basis: 100%;
-    max-width: 1000px;
-  }
-  
-  .project-entry {
-    display: flex;
-    flex: 1;
-    border-radius: 10px;
-    background-color: #ffffff;
-    overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0px 0px 20px -8px #cfcfcf;
-  }
+.project-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
 
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.project-container img {
+  max-width: 100%;
+}
+
+.project-entry {
+  position: relative;
+
+  box-shadow: 0px 0px 20px -8px #cfcfcf;
+  border-radius: 10px;
+
+  margin-bottom: 30px;
+
+  overflow: hidden;
+}
+
+.project-entry-text {
+  position: absolute;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: #f1f1f1;
+  border-radius: 0px 0px 10px 10px;
+  
+  /* Make overlay span entire content panel. */
+  width: 100%;
+}
+
+.project-entry-image {
+  border-radius: 10px;
+  vertical-align: middle;
+
+  transform: scale(1.0);
+  transition: 0.4s;
+}
+
+.project-entry-text h3 {
+  font-weight: 500;
+  font-size: 5.5vw;
+
+  margin-left: 2.7vw;
+  margin-block-start: 2.65vw;
+  margin-block-end: 0;
+}
+
+.project-entry-text p {
+  font-weight: 300;
+  font-size: 3.75vw;
+
+  margin-left: 5vw;
+  margin-right: 5vw;
+  margin-block-start: 1vw;
+  margin-block-end: 4.15vw;
+}
+
+@media only screen and (min-width: 480px) {
+  .project-entry-text h3 {
+    font-size: 25px;
+  }
+  .project-entry-text p {
+    font-size: 18px;
+  }
+}
+
+@media only screen and (min-width: 640px) {
+  .project-entry-text h3 {
+    font-size: 30px;
+  }
+  .project-entry-text p {
+    font-size: 18px;
+  }
+}
+
+@media only screen and (min-width: 1080px) {
   .project-entry:hover {
     cursor: pointer;
   }
-
-  .project-image {
-    flex: 1 0 60%;
+  .project-entry:hover .project-entry-text {
+    background: rgba(0, 0, 0, 0.6);
+    transition: 0.4s;
   }
-
-  .project-text {
-    flex: 1 0 40%;
-    text-align: center;
+  .project-entry:hover .project-entry-image {
+    transform: scale(1.05);
+    transition: 0.4s;
   }
-
-  .project-text h3 {
-    font-weight: 500;
-    font-size: 30px;
+    /* Keep scaling consistent after. */
+  .project-entry-text h3 {
+    margin-left: 29.16px;
+    margin-block-start: 28.62px;
   }
-
-  .project-text p {
-    font-weight: 300;
-    font-size: 20px;
+  .project-entry-text p {
+    margin-left: 54px;
+    margin-right: 54px;
+    margin-block-start: 10.8px;
+    margin-block-end: 44.82px;
   }
-
-  @media only screen and (min-width: 640px) {
-    .project-entry {
-      flex-direction: row;
-    }
-  }
-  
+}

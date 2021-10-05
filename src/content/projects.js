@@ -2,11 +2,7 @@ const PROJECTS = [
   {
     url: "project1",
     title: "Project 1",
-    links: [
-      {
-      }
-    ],
-    abstract: "This is project 1",
+    abstract: "This is the abstract to project 1. Showcasing the line wrapping function. ",
     path: "test.md"
   },
 

@@ -27,7 +27,7 @@ import "./components/global.css"
 
 export default function App() {
   return (
-    <div /*className="constrain"*/>
+    <div>
       <Router>
         <div className="global">
           <Header></Header>

@@ -3,6 +3,7 @@ import { useHistory } from 'react-router';
 
 // Styles.
 import "./project-entry.css"
+import "../global.css"
 
 export default function ProjectEntry(props = {}) {
   const { project } = props;
@@ -14,18 +15,14 @@ export default function ProjectEntry(props = {}) {
   };
 
   return (
-    <React.Fragment>
-      <div className="project-entry" onClick={routeToProjectPage}>
-        { /* Project image. */}
-        <img className="project-image" src="/images/mountains.jpeg" alt="" />
+    <div className="project-entry" onClick={routeToProjectPage}>
+      <img className="project-entry-image" src="/images/mountains.jpeg" alt="" />
 
-        { /* Project abstract. */}
-        <div className="project-text">
-          <h3>{project.title}</h3>
-          <p>{project.abstract}</p>
-        </div>
+      <div className="project-entry-text">
+        <h3>{project.title}</h3>
+        <p>{project.abstract}</p>
       </div>
-    </React.Fragment>
 
+    </div>
   );
 }
