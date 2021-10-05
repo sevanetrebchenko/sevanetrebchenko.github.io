@@ -1,24 +1,15 @@
+import React from "react";
 
+export default function Posts(props = {}) {
+  const { content, FormatContent } = props;
 
-
-export default function Content(props = {}) {
-  const { type } = props;
-
-  if (type === "text") {
-    // Text.
-    const { data } = props;
-    return <p>{data}</p>;
-  }
-  else if (type === "image") {
-    // Image.
-    const { data, alt } = props;
-    let file = "/images/" + data;
-    console.log(file);
-    
-    return <img src={file} alt={alt} />
-  }
-  else {
-    console.log("Unknown file parameter '%s'", type);
-    return <p />;
-  }
+  return (
+    <React.Fragment>
+      {
+        content.map((item, index) => (
+          FormatContent(item, index))
+        )
+      }
+    </React.Fragment>
+  )
 }

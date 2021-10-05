@@ -14,7 +14,6 @@ import Resume from "./components/resume/resume";
 
 // Project data.
 import PROJECTS from "./content/projects";
-import ProjectList from "./components/portfolio/project-list";
 import ProjectPage from "./components/portfolio/project-page";
 
 // Blog data.
@@ -26,62 +25,75 @@ import "./components/page-title.css"
 
 import "./components/global.css"
 
-export default function App() {
-  return (
-    <div>
-      <Router>
-        <div className="global">
-          <Header></Header>
+import ProjectsPage from "./components/projects-page";
 
-          <Switch>
+export default class App extends React.Component {
+  constructor(props) {
 
-            {/* BLOG. */}
-            <Route path="/blog/:url" component={
-              function RouterWrapper() {
-                const match = useRouteMatch();
-                const url = match.params.url; // Local URL.
 
-                const post = lodash.find(BLOG_POSTS, (post) => {
-                  return post.url === url;
-                });
+    super(props);
 
-                return <BlogPost post={post} />
-              }
-            } />
+    this.state = {
+      limit: 5,
+      offset: 0,
 
-            <Route path="/blog">
-              <p className="page-title">Blog</p>
-              <Blog posts={BLOG_POSTS} />
-            </Route>
+      cars: ["Audi", "Alfa Romeo", "BMW", "Citroen", "Dacia", "Ford", "Mercedes", "Peugeot", "Porsche", "VW"]
+    }
+  }
 
-            {/* PORTFOLIO. */}
-            <Route path="/projects/:url" component={
-              function RouterWrapper() {
-                const match = useRouteMatch();
-                const url = match.params.url; // Local URL.
+  render() {
+    return (
+      <div>
+        <Router>
+          <div className="global">
+            <Header></Header>
 
-                const project = lodash.find(PROJECTS, (project) => {
-                  return project.url === url;
-                });
+            <Switch>
+              <Route path="/blog/:url" component={
+                function RouterWrapper() {
+                  const match = useRouteMatch();
+                  const url = match.params.url; // Local URL.
+  
+                  const post = lodash.find(BLOG_POSTS, (post) => {
+                    return post.url === url;
+                  });
+  
+                  return <BlogPost post={post} />
+                }
+              } />
+  
+              <Route path="/blog">
+                <p className="page-title">Blog</p>
+                <Blog posts={BLOG_POSTS} />
+              </Route>
+  
+              <Route path="/projects/:url" component={
+                function RouterWrapper() {
+                  const match = useRouteMatch();
+                  const url = match.params.url; // Local URL.
+  
+                  const project = lodash.find(PROJECTS, (project) => {
+                    return project.url === url;
+                  });
+  
+                  return <ProjectPage project={project} />
+                }
+              } />
 
-                return <ProjectPage project={project} />
-              }
-            } />
-
-            <Route path="/projects" >
+            <Route path="/projects">
               <p className="page-title">Projects</p>
-              <ProjectList projects={PROJECTS} />
+              <ProjectsPage items={PROJECTS} />
             </Route>
-
-            <Route path="/resume">
-              <Resume />
-            </Route> */
-
-            <Redirect from="/" to="/projects"></Redirect>
-
-          </Switch>
-        </div>
-      </Router>
-    </div>
-  );
-}
+  
+              <Route path="/resume">
+                <Resume />
+              </Route>
+  
+              <Redirect from="/" to="/projects"></Redirect>
+            </Switch>
+          </div>
+        </Router>
+      </div>
+    );
+  }
+};

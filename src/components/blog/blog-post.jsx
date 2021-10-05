@@ -1,5 +1,4 @@
 import React from 'react'
-import Content from '../content'
 
 // Styles.
 
@@ -8,7 +7,7 @@ export default function BlogPost(props = {}) {
 
   return (
     <div>
-      {
+      {/* {
         post.content.map((content, index) => 
           <Content 
             key={index} 
@@ -16,7 +15,7 @@ export default function BlogPost(props = {}) {
             data={content.data} 
           />
         )
-      }
+      } */}
     </div>
   );
 }
