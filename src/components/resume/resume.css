@@ -1,0 +1,17 @@
+
+.resume {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+
+  max-width: 1080px;
+
+  align-items: center;
+  margin: 0% auto;
+}
+
+.resume img {
+  width: 100%;
+
+  margin-top: -20px;
+}

@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 
 import Header from "./components/header";
+import Resume from "./components/resume/resume";
 
 // Project data.
 import PROJECTS from "./content/projects";
@@ -73,7 +74,7 @@ export default function App() {
             </Route>
 
             <Route path="/resume">
-              <p>Resume</p>
+              <Resume />
             </Route> */
 
             <Redirect from="/" to="/projects"></Redirect>
