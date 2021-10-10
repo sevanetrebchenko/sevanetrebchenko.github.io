@@ -2,20 +2,29 @@ import React from 'react'
 import { useHistory } from 'react-router';
 
 // Styles.
+import "../center.css";
 
 export default function BlogEntry(props = {}) {
   const { post } = props;
   const history = useHistory();
 
-  const routeToBlogPost = (e) => {
+  const RouteToBlogPost = (e) => {
     e.preventDefault();
     history.push('/blog/' + post.url);
   };
 
   return (
-    <div onClick={routeToBlogPost}> 
+    <div className="blog-post-entry-container">
+      <div className="blog-post-entry" onClick={RouteToBlogPost}> 
+        <p>
+          {post.title}
+        </p>
+        <p>
+          Date
+        </p>
+      </div>
       <p>
-        {post.title}
+        {post.abstract}
       </p>
     </div>
   );

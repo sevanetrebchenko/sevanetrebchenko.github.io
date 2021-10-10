@@ -1,0 +1,28 @@
+.pagination-container {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  width: 100px;
+  justify-content: space-between;
+}
+
+.pagination-element {
+  background-color: white;
+  border: none;
+  color: #838383;
+
+  font-size: 1.0rem;
+  font-weight: 200;
+
+  cursor: pointer; 
+}
+.pagination-element.current {
+  font-weight: 700;
+}
+.pagination-element:hover {
+  color: goldenrod;
+}
+
+.list-element {
+  display: inline;
+}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Content from "./content";
 
+import "./paginator.css"
+import "./center.css"
+
 export default function Paginator(props = {}) {
   const { items, FormatContent } = props;
 
@@ -20,19 +23,29 @@ export default function Paginator(props = {}) {
 
   // Update the pagination of the current page.
   const ChangePage = (pageNumber) => {
+    if (pageNumber === 0) {
+      pageNumber = 1;
+    }
+
+    let finalPage = Math.ceil(posts.length / postsPerPage);
+
+    if (pageNumber === (finalPage + 1)) {
+      pageNumber = finalPage;
+    }
+
     setCurrentPage(pageNumber);
   }
 
   return (
-    <div className="content-pagination">
-      <Content content={visiblePosts} FormatContent={FormatContent}/>
-      <Pagination postsPerPage={postsPerPage} totalNumPosts={posts.length} ChangePage={ChangePage}/>
-    </div>
+    <React.Fragment>
+      <Content content={visiblePosts} FormatContent={FormatContent} />
+      <Pagination postsPerPage={postsPerPage} totalNumPosts={posts.length} currentPage={currentPage} ChangePage={ChangePage} />
+    </React.Fragment>
   )
 }
 
 function Pagination(props = {}) {
-  const { postsPerPage, totalNumPosts, ChangePage } = props;
+  const { postsPerPage, totalNumPosts, currentPage, ChangePage } = props;
   const pageNumbers = [];
 
   // Get all valid pagination indices.
@@ -41,16 +54,18 @@ function Pagination(props = {}) {
   }
 
   return (
-    <nav>
-      <ul>
-        {
-          pageNumbers.map(pageNumber => (
-            <li key={pageNumber} onClick={() => ChangePage(pageNumber)}>
-                {pageNumber}
-            </li>
-          ))
-        }
-      </ul>
-    </nav>
+    <div className="center pagination-container">
+
+      {
+        pageNumbers.map(pageNumber => (
+          <li className="list-element" key={pageNumber} onClick={() => ChangePage(pageNumber)}>
+            <button className={pageNumber == currentPage ? "pagination-element current" : "pagination-element"}>
+              {pageNumber}
+            </button>
+          </li>
+        ))
+      }
+
+    </div>
   );
 }

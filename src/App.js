@@ -26,6 +26,7 @@ import "./components/page-title.css"
 import "./components/global.css"
 
 import ProjectsPage from "./components/projects-page";
+import Footer from "./components/footer";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -90,6 +91,8 @@ export default class App extends React.Component {
               </Route>
   
               <Redirect from="/" to="/projects"></Redirect>
+
+              <Footer />
             </Switch>
           </div>
         </Router>
