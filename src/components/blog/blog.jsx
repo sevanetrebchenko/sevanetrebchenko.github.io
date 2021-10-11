@@ -29,7 +29,7 @@ export default function Blog(props = {}) {
           <p className="blog-post-entry-abstract">
             {post.abstract}
           </p>
-          <button className="blog-post-entry-button">
+          <button className="blog-post-entry-button" onClick={RouteToBlogPost}>
             Read more
           </button>
         </div>
