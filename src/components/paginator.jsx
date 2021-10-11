@@ -62,7 +62,7 @@ function Pagination(props = {}) {
 
             {
               pageNumbers.length > 1 ? 
-                <button className={pageNumber == currentPage ? "pagination-element current" : "pagination-element"}>
+                <button className={pageNumber === currentPage ? "pagination-element current" : "pagination-element"}>
                   {pageNumber}
                 </button>
                 : <></>

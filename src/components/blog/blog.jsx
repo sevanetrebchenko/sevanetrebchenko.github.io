@@ -19,7 +19,7 @@ export default function Blog(props = {}) {
   
     return (
       <React.Fragment key={index}>
-        <div className={ index == 0 ? "blog-post-entry-first" : "blog-post-entry"}>
+        <div className={ index === 0 ? "blog-post-entry-first" : "blog-post-entry"}>
           <p className="blog-post-entry-title" onClick={RouteToBlogPost}>
             {post.title}
           </p>
