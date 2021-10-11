@@ -20,7 +20,7 @@ export default function Header(props = {}) {
 
   const handleClick = (e) => {
     if (!clickable.current.contains(e.target)) {
-      setTimeout(() => setExpanded(false), 200);
+      setExpanded(false);
     }
   };
 

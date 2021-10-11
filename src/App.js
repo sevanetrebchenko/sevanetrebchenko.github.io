@@ -81,19 +81,21 @@ export default class App extends React.Component {
                 }
               } />
 
-            <Route path="/projects">
-              <p className="page-title">Projects</p>
-              <ProjectsPage items={PROJECTS} />
-            </Route>
-  
+              <Route path="/projects">
+                <p className="page-title">Projects</p>
+                <ProjectsPage items={PROJECTS} />
+              </Route>
+    
               <Route path="/resume">
                 <Resume />
               </Route>
-  
+
+
               <Redirect from="/" to="/projects"></Redirect>
 
-              <Footer />
             </Switch>
+
+            <Footer />
           </div>
         </Router>
       </div>

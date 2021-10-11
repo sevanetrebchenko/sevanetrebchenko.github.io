@@ -6,6 +6,7 @@ html * {
   margin-left: 25px;
   margin-right: 25px;
   margin-top: 25px;
+  margin-bottom: 40px;
 }
 
 @media only screen and (min-width: 640px) {
