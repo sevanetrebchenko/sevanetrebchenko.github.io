@@ -59,9 +59,15 @@ function Pagination(props = {}) {
       {
         pageNumbers.map(pageNumber => (
           <li className="list-element" key={pageNumber} onClick={() => ChangePage(pageNumber)}>
-            <button className={pageNumber == currentPage ? "pagination-element current" : "pagination-element"}>
-              {pageNumber}
-            </button>
+
+            {
+              pageNumbers.length > 1 ? 
+                <button className={pageNumber == currentPage ? "pagination-element current" : "pagination-element"}>
+                  {pageNumber}
+                </button>
+                : <></>
+            }
+
           </li>
         ))
       }

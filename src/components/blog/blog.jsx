@@ -1,6 +1,6 @@
 import React from 'react'
-import Archive from './archive';
-import BlogEntry from './blog-entry';
+import Paginator from '../paginator';
+import { useHistory } from "react-router";
 
 // Styles.
 import "./blog-entry.css"
@@ -8,23 +8,41 @@ import "./blog-entry.css"
 export default function Blog(props = {}) {
   const { posts } = props;
 
-  // Process 5 most recent posts.
-  const recent = [];
-  let numVisiblePosts = Math.min(posts.length, 7);
-  for (let i = 0; i < numVisiblePosts; ++i) {
-    recent.push(posts[i]);
-  }
+  // Blog post entry formatting function.
+  const BlogPostFormatting = (post, index) => {
+    const history = useHistory();
+
+    const RouteToBlogPost = (e) => {
+      e.preventDefault();
+      history.push('/blog/' + post.url);
+    };
   
+    return (
+      <React.Fragment key={index}>
+        <div className="blog-post-entry">
+          <p className="blog-post-entry-title" onClick={RouteToBlogPost}>
+            {post.title}
+          </p>
+          <p className="blog-post-entry-description">
+            {post.month} {post.day}, {post.year} in {post.category}
+          </p>
+          <p className="blog-post-entry-abstract">
+            {post.abstract}
+          </p>
+          <button className="blog-post-entry-button">
+            Read more
+          </button>
+        </div>
+      </React.Fragment>
+    );
+  }
+
   return (
     <div className="blog-post-container">
-      {
-        recent.map(post => 
-          <BlogEntry
-            key={post.url}
-            post={post}
-          />
-        )
-      }
+      <Paginator items={posts} FormatContent={BlogPostFormatting} />
     </div>
   );
+
+
+
 }
