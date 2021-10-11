@@ -12,15 +12,16 @@ export default function Header(props = {}) {
 
   useEffect(() => {
     // add when mounted
-    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("mousedown", HandleClick);
 
     // return function to be called when unmounted
     return () => {
-      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("mousedown", HandleClick);
     };
   }, []);
 
-  const handleClick = (e) => {
+  const HandleClick = (e) => {
+    // If navbar contains clickaway target, redirect instead.
     if (navbar.current.contains(e.target)) {
       return;
     }
