@@ -39,8 +39,6 @@
 .project-entry-image {
   border-radius: 10px;
   vertical-align: middle;
-
-  transform: scale(1.0);
   transition: 0.4s;
 }
 
@@ -87,11 +85,9 @@
   }
   .project-entry:hover .project-entry-text {
     background: rgba(0, 0, 0, 0.7);
-    transition: 0.4s;
   }
   .project-entry:hover .project-entry-image {
     transform: scale(1.05);
-    transition: 0.4s;
   }
     /* Keep scaling consistent after. */
   .project-entry-text h3 {
