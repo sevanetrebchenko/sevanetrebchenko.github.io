@@ -12,7 +12,7 @@ const BLOG_POSTS = [
   {
     url: "hello-world",
     title: "Hello, World!",
-    abstract: "Welcome to my personal website! Let's discuss the tools, timeline and process, decisions in design, future plans for developing this space, and my goals for takeaways for the reader.",
+    abstract: "Welcome to my personal website! Let's discuss the tools, timeline and process, decisions in design, future plans for developing this space, and my goals and takeaways for readers to have.",
     day: "10",
     month: "October",
     year: "2021",
