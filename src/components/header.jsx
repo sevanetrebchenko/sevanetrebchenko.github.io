@@ -78,7 +78,7 @@ function NavbarElements(props = {}) {
       <p className="navbar-element"
         onClick={e => {
           e.preventDefault();
-          window.location.href = "https://github.com/sevanetrebchenko";
+          window.location.href = "https://github.com/sevanetrebchenko/";
         }}
       >GitHub</p>
       <p className="navbar-element"
