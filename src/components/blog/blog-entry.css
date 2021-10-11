@@ -26,6 +26,21 @@
     margin-block-start: 1em;
     margin-block-end: 1em;
 }
+.blog-post-entry-first {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    max-width: 700px;
+    align-items: center;
+
+    /* border: solid 1px #cfcfcf; */
+    /* border-radius: 10px; */
+
+    letter-spacing: 0.5px;
+
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+}
 .blog-post-entry-title {
     font-weight: 400;
     font-size: 30px;
