@@ -14,18 +14,19 @@ export default function BlogEntry(props = {}) {
   };
 
   return (
-    <div className="blog-post-entry-container">
-      <div className="blog-post-entry" onClick={RouteToBlogPost}> 
-        <p>
-          {post.title}
-        </p>
-        <p>
-          Date
-        </p>
-      </div>
-      <p>
+    <div className="blog-post-entry">
+      <p className="blog-post-entry-title" onClick={RouteToBlogPost}>
+        {post.title}
+      </p>
+      <p className="blog-post-entry-description">
+        {post.month} {post.day}, {post.year} in {post.category}
+      </p>
+      <p className="blog-post-entry-abstract">
         {post.abstract}
       </p>
+      <button className="blog-post-entry-button">
+        Read more
+      </button>
     </div>
   );
 }
