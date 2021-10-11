@@ -7,7 +7,9 @@ export default function Header(props = {}) {
   const history = useHistory();
   const [expanded, setExpanded] = useState(false);
 
-  const clickable = useRef();
+  const dropDownButton = useRef();
+  const navbar = useRef();
+
   useEffect(() => {
     // add when mounted
     document.addEventListener("mousedown", handleClick);
@@ -19,7 +21,11 @@ export default function Header(props = {}) {
   }, []);
 
   const handleClick = (e) => {
-    if (!clickable.current.contains(e.target)) {
+    if (navbar.current.contains(e.target)) {
+      return;
+    }
+
+    if (!dropDownButton.current.contains(e.target)) {
       setExpanded(false);
     }
   };
@@ -35,15 +41,15 @@ export default function Header(props = {}) {
           Seva Netrebchenko</p>
         <button className="button">
           <i className={(expanded ? "fas fa-times icon expanded" : "fas fa-bars icon collapsed")}
-            ref={clickable}
+            ref={dropDownButton}
             onClick={() => setExpanded(expanded ? false : true)} />
         </button>
 
-        <div className="header navbar-desktop" >
+        <div className="header navbar-desktop">
           <NavbarElements />
         </div>
       </div>
-      <div className="header navbar-mobile">
+      <div className="header navbar-mobile" ref={navbar}>
         {expanded ? <NavbarElements /> : <></>}
       </div>
       {expanded ? <div className="separator" /> : <></>}
