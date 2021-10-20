@@ -5,11 +5,11 @@ import "./paginator.css"
 import "./center.css"
 
 export default function Paginator(props = {}) {
-  const { items, FormatContent } = props;
+  const { items, numItemsPerPage, FormatContent } = props;
 
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(3);
+  const [postsPerPage] = useState(numItemsPerPage);
 
   // Set data.
   useEffect(() => {

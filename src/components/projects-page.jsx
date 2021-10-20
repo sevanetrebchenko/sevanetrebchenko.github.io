@@ -13,13 +13,13 @@ export default function ProjectsPage(props = {}) {
     // Project formatting function.
     const RouteToProjectPage = (e) => {
       e.preventDefault();
-      history.push('/projects/' + project.url);
+      history.push("/portfolio/" + project.url);
     };
   
     return (
       <React.Fragment key={index}>
         <div className="project-entry" onClick={RouteToProjectPage}>
-          <img className="project-entry-image" src="/images/mountains.jpeg" alt="" />
+          <img className="project-entry-image" src={project.image} alt="" />
   
           <div className="project-entry-text">
             <h3>{project.title}</h3>
@@ -33,7 +33,7 @@ export default function ProjectsPage(props = {}) {
 
   return (
     <div className="project-container">
-      <Paginator items={items} FormatContent={ProjectFormatting} />
+      <Paginator items={items} numItemsPerPage={3} FormatContent={ProjectFormatting} />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 const PROJECTS = [
   {
-    url: "project1",
-    title: "Project 1",
-    abstract: "This is the abstract to project 1.",
-    path: "test.md"
+    url: "hybrid-rendering-engine",
+    title: "Hybrid Rendering Engine",
+    abstract: "A deep dive into Deferred Rendering in OpenGL, Hierarchical Spatial Partitioning, and the Gilbert–Johnson–Keerthi (GJK) Algorithm for 3D collision detection",
+    image: "/portfolio/hybrid-rendering-engine/cover.png",
+    path: "hybrid-rendering-engine/hybrid-rendering-engine.md"
   },
 
   {

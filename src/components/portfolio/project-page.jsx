@@ -6,7 +6,7 @@ export default function ProjectPage(props = {}) {
   const { project } = props;
   return (
     <div>
-      <MarkdownEntry path={"/posts/" + project.path} />
+      <MarkdownEntry path={"/portfolio/" + project.path} />
     </div>
   );
 }

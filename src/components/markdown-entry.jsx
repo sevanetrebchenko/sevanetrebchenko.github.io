@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactMarkdown from "react-markdown";
 import RemarkGFM from 'remark-gfm';
+import rehypeRaw from 'rehype-raw'
 
 import "./center.css"
 
@@ -46,7 +47,7 @@ export default function MarkdownEntry(props = {}) {
 
   return (
     <div className="center">
-      <ReactMarkdown remarkPlugins={[RemarkGFM]} children={file} />
+      <ReactMarkdown remarkPlugins={[RemarkGFM]} rehypePlugins={[rehypeRaw]} children={file} />
     </div>
   )
 }

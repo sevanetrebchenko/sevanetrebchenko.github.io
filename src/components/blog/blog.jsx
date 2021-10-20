@@ -19,28 +19,24 @@ export default function Blog(props = {}) {
   
     return (
       <React.Fragment key={index}>
-        <div className={ index === 0 ? "blog-post-entry-first" : "blog-post-entry"}>
+        <div className="blog-post-entry">
           <p className="blog-post-entry-title" onClick={RouteToBlogPost}>
             {post.title}
           </p>
           <p className="blog-post-entry-description">
-            {post.month} {post.day}, {post.year} in {post.category}
+            {post.month} {post.day}, {post.year}
           </p>
-          <p className="blog-post-entry-abstract">
-            {post.abstract}
-          </p>
-          <button className="blog-post-entry-button" onClick={RouteToBlogPost}>
-            Read more
-          </button>
         </div>
       </React.Fragment>
     );
   }
 
   return (
-    <div className="blog-post-container">
-      <Paginator items={posts} FormatContent={BlogPostFormatting} />
-    </div>
+    <React.Fragment>
+      <div className="blog-post-container">
+        <Paginator items={posts} numItemsPerPage={5} FormatContent={BlogPostFormatting} />
+      </div>
+    </React.Fragment>
   );
 
 

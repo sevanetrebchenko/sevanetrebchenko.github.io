@@ -68,7 +68,7 @@ export default class App extends React.Component {
                 <Blog posts={BLOG_POSTS} />
               </Route>
   
-              <Route path="/projects/:url" component={
+              <Route path="/portfolio/:url" component={
                 function RouterWrapper() {
                   const match = useRouteMatch();
                   const url = match.params.url; // Local URL.
@@ -81,7 +81,7 @@ export default class App extends React.Component {
                 }
               } />
 
-              <Route path="/projects">
+              <Route path="/portfolio">
                 <p className="page-title">Projects</p>
                 <ProjectsPage items={PROJECTS} />
               </Route>
@@ -91,7 +91,7 @@ export default class App extends React.Component {
               </Route>
 
 
-              <Redirect from="/" to="/projects"></Redirect>
+              <Redirect from="/" to="/portfolio"></Redirect>
 
             </Switch>
 
