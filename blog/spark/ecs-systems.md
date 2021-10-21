@@ -55,4 +55,4 @@ Note that each 'entry' in the system is a tuple of components that belong to a s
 
 Systems are designed to operate on the list of entities with components that have 
 
-With the proposed layout for the data within component systems, there needs to be a way to create tuples of components for entities that meet the requirements of the system.
+With the proposed layout for the data within component systems, there needs to be a way to create tuples of components for entities that meet the requirements of the system. Filtered entities that have the necessary components to be processed by the given component system will have a component tuple 
