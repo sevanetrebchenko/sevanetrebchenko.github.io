@@ -71,7 +71,7 @@ Another requirement for this project was to implement the Phong Illumination Mod
 </br>
 
 
-Looking at the geometry pass textures to the right of the main output texture gives an idea of where the individual contributions from each of the components come from. [Click to read more]() about the implementation details of a deferred rendering pipeline using the Phong Illumination Model!  
+Looking at the geometry pass textures to the right of the main output texture gives an idea of where the individual contributions from each of the components come from. 
 </br>
 
 <a id="debug_normal_visualization"></a>
@@ -169,7 +169,7 @@ Octrees are the 3D representation of quadtrees, in which each subdivision divide
 </br>
 
 
-It is trivial to tell where model geometry complexity lies with such a spatial representation, as more densely packed areas of meshes will contain more frequent and smaller subdivisions. Conversely, simpler areas with less geometry will contain fewer, larger subdivisions. [Click to read more]() about the implementation details of constructing the BSP tree and Octree spatial data structures used for this project!  
+It is trivial to tell where model geometry complexity lies with such a spatial representation, as more densely packed areas of meshes will contain more frequent and smaller subdivisions. Conversely, simpler areas with less geometry will contain fewer, larger subdivisions.  
 </br>
 
 <a id="gjk_collision_detection"></a>
@@ -178,8 +178,6 @@ It is trivial to tell where model geometry complexity lies with such a spatial r
 The final part of this course was to implement the Gilbert-Johnson-Keerthi algorithm for detecting collisions in 3D space. For the purposes of collision, one can consider the points of the convex hull of two models, but it is important to remember that convex hulls contain an infinite number of points that make up the 3D volume inside. Programmatically, though, the GJK algorithm is easily implemented using only the vertices of both models. 
 
 The GJK algorithm utilizes the Minkowski difference, which is formed by subtracting each point of one model's mesh from another, to determine if two objects are colliding. The Minkwoski difference states that, given two intersecting objects in 3D space, there exists at least *one* point that is the same across both models. Subtracting this point will result in a point at the origin of the world. Put differently, if the Minkowski difference of any two given models contains the origin, the objects are intersecting. The goal of the GJK algorithm is to determine whether this fact is true in the smallest amount of necessary computation power. This, paired together with the spatial data structures from Project 2, allows the GJK algorithm to operate on a significantly smaller subset of mesh vertices. Not having to compute and iterate over an entire convex hull every frame to detect collisions between objects allows the GJK algorithm to be used for fast, reliable collision detection at program runtime.
-
-[Click to read more]() about the details of the GJK algorithm and the implementation used for this project!
 
 Below are images showing various example scenarios of the GJK algorithm from the framework. A sphere model is shot from the position of the camera along the camera's forward vector until the sphere collides with the model, at which point the GJK algorithm is ran to detect collisions. An octree from Project 2 is used to partition the input data space to speed up checks and reduce the total number of expensive computations. The sphere is first checked against different levels of the octree until a leaf node is reached, at which point the sphere is checked for collision against the convex hull of vertices in that specific leaf node. If a collision is detected, both the sphere and the vertices of the leaf node are rendered in red.
 

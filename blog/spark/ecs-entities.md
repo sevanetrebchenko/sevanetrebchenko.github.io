@@ -19,7 +19,7 @@ code {
 <h1 style="text-align:center;">Spark's ECS Architecture - Part 1: Entities</h1>
 
 If you haven't already, make sure to read the previous post in this series!
- - [Spark's ECS Architecture: An Overview](http://192.168.1.158:3000/blog/spark-ecs)
+ - [Spark's ECS Architecture: An Overview](https://sevanetrebchenko.com/blog/spark-ecs)
 
 ## Entities
 

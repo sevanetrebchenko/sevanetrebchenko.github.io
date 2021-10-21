@@ -26,9 +26,9 @@ img {
 <h1 style="text-align:center;">Spark's ECS Architecture - Part 3: Systems</h1>
 
 If you haven't already, make sure to read the previous posts in this series!
- - [Spark's ECS Architecture: An Overview](http://192.168.1.158:3000/blog/spark-ecs)
- - [Spark's ECS Architecture - Part 1: Entities](http://192.168.1.158:3000/blog/spark-ecs-part-1)
- - [Spark's ECS Architecture - Part 2: Components](http://192.168.1.158:3000/blog/spark-ecs-part-2)
+ - [Spark's ECS Architecture: An Overview](https://sevanetrebchenko.com/blog/spark-ecs)
+ - [Spark's ECS Architecture - Part 1: Entities](https://sevanetrebchenko.com/blog/spark-ecs-part-1)
+ - [Spark's ECS Architecture - Part 2: Components](https://sevanetrebchenko.com/blog/spark-ecs-part-2)
 
 In the previous post, we discussed the necessary backend for supporting components in Spark's ECS architecture. Now that we can start registering components and interacting with entities by adding or removing components from them, how do we udpate individual component state, or create unique behaviors for entities that have a specific set of components?
 
