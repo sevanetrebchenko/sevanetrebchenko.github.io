@@ -1,0 +1,104 @@
+.project-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.project-container img {
+  max-width: 100%;
+}
+
+.project-entry {
+  position: relative;
+
+  box-shadow: 0px 0px 20px -8px #cfcfcf;
+  border-radius: 10px;
+
+  margin-bottom: 30px;
+
+  overflow: hidden;
+}
+
+.project-entry-text {
+  position: absolute;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  transition: 0.4s;
+  color: #f1f1f1;
+  border-radius: 0px 0px 10px 10px;
+  
+  /* Make overlay span entire content panel. */
+  width: 100%;
+}
+
+.project-entry-image {
+  border-radius: 10px;
+  vertical-align: middle;
+  transition: 0.4s;
+}
+
+.project-entry-text h3 {
+  font-weight: 500;
+  font-size: 5.5vw;
+
+  margin-left: 2.7vw;
+  margin-block-start: 2.65vw;
+  margin-block-end: 0;
+}
+
+.project-entry-text p {
+  font-weight: 300;
+  font-size: 0vw;
+
+  margin-left: 5vw;
+  margin-right: 5vw;
+  margin-block-start: 0vw;
+  margin-block-end: 4.15vw;
+}
+
+@media only screen and (min-width: 480px) {
+  .project-entry-text h3 {
+    font-size: 25px;
+  }
+  .project-entry-text p {
+    margin-block-start: 0vw;
+    font-size: 16px;
+  }
+}
+
+@media only screen and (min-width: 640px) {
+  .project-entry-text h3 {
+    font-size: 30px;
+  }
+  .project-entry-text p {
+    font-size: 18px;
+  }
+
+}
+
+@media only screen and (min-width: 1080px) {
+  .project-entry:hover {
+    cursor: pointer;
+  }
+  .project-entry:hover .project-entry-text {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  .project-entry:hover .project-entry-image {
+    transform: scale(1.05);
+  }
+    /* Keep scaling consistent after. */
+  .project-entry-text h3 {
+    margin-left: 29.16px;
+    margin-block-start: 28.62px;
+  }
+  .project-entry-text p {
+    margin-left: 54px;
+    margin-right: 54px;
+    margin-block-start: 10.8px;
+    margin-block-end: 44.82px;
+  }
+}

@@ -1,0 +1,46 @@
+.resume {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+
+  max-width: 960px;
+
+  align-items: center;
+  margin: 0% auto;
+}
+
+.resume img {
+  width: 100%;
+}
+
+.download {
+  color:#858585;
+  background: #FFFFFF;
+  height: 40px;
+  width: 200px;
+
+  border-radius: 5px;
+
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 1.1px;
+  border: solid 1px #A5A5A5;
+  transition: 0.2s;
+  padding: 4px 12px 4px 12px;
+}
+.download:hover {
+  color:#353535;
+  border: solid 1px #353535;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+@media only screen and (min-width: 1080px) {
+  .download {
+    height: 50px;
+    width: 300px;
+    font-size: 1.0rem;
+  }
+}
