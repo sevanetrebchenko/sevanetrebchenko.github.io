@@ -1,8 +1,5 @@
-html * {
-  font-family: 'Open Sans', sans-serif !important;
-}
-
 .global {
+  font-family: 'Open Sans', sans-serif !important;
   margin-left: 25px;
   margin-right: 25px;
   margin-top: 25px;

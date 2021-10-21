@@ -5,39 +5,39 @@ const BLOG_POSTS = [
     day: "13",
     month: "October",
     year: "2021",
-    path: "blog/spark/logging.md"
+    path: "spark/logging.md"
   },
   {
     url: "spark-ecs-part-3",
-    title: "Spark's ECS - Part 3: Systems",
+    title: "Spark's ECS Architecture - Part 3: Systems",
     day: "13",
     month: "October",
     year: "2021",
-    path: "blog/spark/ecs-systems.md"
+    path: "spark/ecs-systems.md"
   },
   {
-    url: "spark-ecs--part-2",
-    title: "Spark's ECS - Part 2: Components",
+    url: "spark-ecs-part-2",
+    title: "Spark's ECS Architecture - Part 2: Components",
     day: "13",
     month: "October",
     year: "2021",
-    path: "blog/spark/ecs-components.md"
+    path: "spark/ecs-components.md"
   },
   {
     url: "spark-ecs-part-1",
-    title: "Spark's ECS - Part 1: Entities",
+    title: "Spark's ECS Architecture - Part 1: Entities",
     day: "1",
     month: "February",
     year: "2021",
-    path: "blog/spark/ecs-entities.md"
+    path: "spark/ecs-entities.md"
   },
   {
     url: "spark-ecs",
-    title: "Spark's ECS - Overview",
+    title: "Spark's ECS Architecture - An Overview",
     day: "13",
     month: "October",
     year: "2021",
-    path: "blog/spark/ecs-overview.md"
+    path: "spark/ecs-overview.md"
   },
   {
     url: "hello-world",
@@ -45,7 +45,7 @@ const BLOG_POSTS = [
     day: "10",
     month: "October",
     year: "2021",
-    path: "blog/website.md"
+    path: "website.md"
   },
 ];
 

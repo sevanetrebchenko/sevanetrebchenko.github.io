@@ -14,7 +14,7 @@ import Resume from "./components/resume/resume";
 
 // Project data.
 import PROJECTS from "./content/projects";
-import ProjectPage from "./components/portfolio/project-page";
+import ProjectPage from "./components/projects/project-page";
 
 // Blog data.
 import BLOG_POSTS from "./content/blog-posts"
@@ -25,7 +25,7 @@ import "./components/page-title.css"
 
 import "./components/global.css"
 
-import ProjectsPage from "./components/projects-page";
+import ProjectsPage from "./components/projects/projects-page";
 import Footer from "./components/footer";
 
 export default class App extends React.Component {
@@ -68,7 +68,7 @@ export default class App extends React.Component {
                 <Blog posts={BLOG_POSTS} />
               </Route>
   
-              <Route path="/portfolio/:url" component={
+              <Route path="/projects/:url" component={
                 function RouterWrapper() {
                   const match = useRouteMatch();
                   const url = match.params.url; // Local URL.
@@ -81,7 +81,7 @@ export default class App extends React.Component {
                 }
               } />
 
-              <Route path="/portfolio">
+              <Route path="/projects">
                 <p className="page-title">Projects</p>
                 <ProjectsPage items={PROJECTS} />
               </Route>
@@ -91,7 +91,7 @@ export default class App extends React.Component {
               </Route>
 
 
-              <Redirect from="/" to="/portfolio"></Redirect>
+              <Redirect from="/" to="/projects"></Redirect>
 
             </Switch>
 

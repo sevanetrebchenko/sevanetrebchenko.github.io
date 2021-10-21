@@ -34,6 +34,8 @@ export default function Blog(props = {}) {
   return (
     <React.Fragment>
       <div className="blog-post-container">
+        <p></p>
+
         <Paginator items={posts} numItemsPerPage={5} FormatContent={BlogPostFormatting} />
       </div>
     </React.Fragment>

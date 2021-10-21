@@ -15,7 +15,7 @@ This rendering framework was developed for CS350 - Advanced Computer Graphics II
 **Dependencies**: 
  - [GLFW](https://github.com/glfw/glfw)
  - [Glad (OpenGL Core v4.5)](https://glad.dav1d.de/)
- - [Dead ImGui](https://github.com/ocornut/imgui)
+ - [Dear ImGui](https://github.com/ocornut/imgui)
  - [OpenGL Mathematics (GLM)](https://github.com/g-truc/glm)
  - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
  - [STB Image](https://github.com/nothings/stb)   
@@ -39,7 +39,7 @@ This project was my first experience implementing a 3D deferred rendering pipeli
 <br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/deferred_rendering_1.png" alt="Deferred Rendering Pipeline" style="width:100%;max-width:940px;display:block;margin:auto;"/> 
+<img src="/projects/hybrid-rendering-engine/images/deferred_rendering_1.png" alt="Deferred Rendering Pipeline" style="width:100%;max-width:940px;display:block;margin:auto;"/> 
 
 *Figure 1: Final output of a sample scene rendered with the deferred rendering technique. The bunny is being illuminated by 3 (invisible) point light sources using the Phong Illumination Model.*  
 
@@ -64,7 +64,7 @@ Another requirement for this project was to implement the Phong Illumination Mod
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/deferred_rendering_2.png" alt="Phong Illumination Model" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/deferred_rendering_2.png" alt="Phong Illumination Model" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 2: Adjusting the ambient, diffuse, and specular coefficients of a model can give it a completely different look.*  
 
@@ -81,14 +81,14 @@ Normals are necessary for a correct application of the Phong Illumination Model.
 <br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/vertex_normals.png" alt="Vertex Normals" style="width:100%;max-width:940px;display:block;margin:auto;"/>
+<img src="/projects/hybrid-rendering-engine/images/vertex_normals.png" alt="Vertex Normals" style="width:100%;max-width:940px;display:block;margin:auto;"/>
 
 *Figure 3: Vertex normals originate from each of the vertices of the model.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/face_normals.png" alt="Face Normals" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/face_normals.png" alt="Face Normals" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 4: Face normals originate from the center of mesh faces.*  
 
@@ -114,20 +114,20 @@ Below are some BSP example images from the project. The different colors help id
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/bsp-1.png" alt="BSP Tree, 4,000 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/bsp-1.png" alt="BSP Tree, 4,000 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 5: BSP with 4,000 triangles maximum per half, with one split plane.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/bsp-2.png" alt="BSP Tree, 2,000 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/bsp-2.png" alt="BSP Tree, 2,000 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 6: BSP with 2,000 triangles maximum per half, with two split planes.*  
 
 </br>
 
-<img src="/portfolio/hybrid-rendering-engine/images/bsp-3.png" alt="BSP Tree, 300 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/bsp-3.png" alt="BSP Tree, 300 triangles" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 7: BSP with 300 triangles maximum per half.*  
 
@@ -141,28 +141,28 @@ Octrees are the 3D representation of quadtrees, in which each subdivision divide
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/octree-1.png" alt="Octree Root" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/octree-1.png" alt="Octree Root" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 8: Root level of the octree.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/octree-2.png" alt="Octree Level 1" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/octree-2.png" alt="Octree Level 1" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 9: One level deep into the octree.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/octree-3.png" alt="Octree Level 2" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/octree-3.png" alt="Octree Level 2" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 10: Two levels deep into the octree.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/octree-4.png" alt="Octree Base Level" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/octree-4.png" alt="Octree Base Level" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 11: Base level of the octree.*  
 
@@ -184,49 +184,49 @@ The GJK algorithm utilizes the Minkowski difference, which is formed by subtract
 Below are images showing various example scenarios of the GJK algorithm from the framework. A sphere model is shot from the position of the camera along the camera's forward vector until the sphere collides with the model, at which point the GJK algorithm is ran to detect collisions. An octree from Project 2 is used to partition the input data space to speed up checks and reduce the total number of expensive computations. The sphere is first checked against different levels of the octree until a leaf node is reached, at which point the sphere is checked for collision against the convex hull of vertices in that specific leaf node. If a collision is detected, both the sphere and the vertices of the leaf node are rendered in red.
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-5.png" alt="GJK Example Scenario 1" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-5.png" alt="GJK Example Scenario 1" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 12: Sphere collision example with bunny model. Normally rendered output.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-6.png" alt="GJK Example Scenario 1 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-6.png" alt="GJK Example Scenario 1 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 13: Wireframe render of Figure 12, using an Octree spatial data structure with a maximum of 4,000 triangles per node. Note the portion of the model colored in red, which shows the vertices that were checked for collision.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-7.png" alt="GJK Example Scenario 1 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-7.png" alt="GJK Example Scenario 1 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 14: A different perspective on the collision shown in Figures 12 and 13.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-3.png" alt="GJK Example Scenario 2" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-3.png" alt="GJK Example Scenario 2" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 15: Sphere collision example with bunny model. Normally rendered output.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-4.png" alt="GJK Example Scenario 2 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-4.png" alt="GJK Example Scenario 2 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 16: Wireframe render of Figure 15, using an Octree spatial data structure with a maximum of 4,000 triangles per node. Note the portion of the model colored in red, which shows the vertices that were checked for collision.*  
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-1.png" alt="GJK Example Scenario 3" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-1.png" alt="GJK Example Scenario 3" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 17: Sphere collision example with bunny model. Normally rendered output.*   
 
 </br>
 
 
-<img src="/portfolio/hybrid-rendering-engine/images/gjk-2.png" alt="GJK Example Scenario 3 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
+<img src="/projects/hybrid-rendering-engine/images/gjk-2.png" alt="GJK Example Scenario 3 Wireframe" style="width:100%;max-width:940px;display:block;margin:auto;"/>  
 
 *Figure 18: Wireframe render of Figure 17, using an Octree spatial data structure with a maximum of 1,000 triangles per node. Notice how the portion of the model colored in red is much smaller than in Figures 13, 14, and 16, as the vertices are more finely separated.*  
 

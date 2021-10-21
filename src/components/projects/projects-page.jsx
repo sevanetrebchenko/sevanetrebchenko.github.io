@@ -1,8 +1,8 @@
 import React from "react";
-import Paginator from "./paginator";
+import Paginator from "../paginator";
 import { useHistory } from "react-router";
 
-import "./portfolio/project-entry.css"
+import "./project-entry.css"
 
 export default function ProjectsPage(props = {}) {
   const { items } = props;
@@ -13,7 +13,7 @@ export default function ProjectsPage(props = {}) {
     // Project formatting function.
     const RouteToProjectPage = (e) => {
       e.preventDefault();
-      history.push("/portfolio/" + project.url);
+      history.push("/projects/" + project.url);
     };
   
     return (
