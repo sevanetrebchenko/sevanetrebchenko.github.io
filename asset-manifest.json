@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/sevanetrebchenko.github.io/static/css/main.efa83b87.chunk.css",
-    "main.js": "/sevanetrebchenko.github.io/static/js/main.25de128c.chunk.js",
-    "main.js.map": "/sevanetrebchenko.github.io/static/js/main.25de128c.chunk.js.map",
+    "main.js": "/sevanetrebchenko.github.io/static/js/main.d22fed72.chunk.js",
+    "main.js.map": "/sevanetrebchenko.github.io/static/js/main.d22fed72.chunk.js.map",
     "runtime-main.js": "/sevanetrebchenko.github.io/static/js/runtime-main.59968c3c.js",
     "runtime-main.js.map": "/sevanetrebchenko.github.io/static/js/runtime-main.59968c3c.js.map",
     "static/js/2.748d02f4.chunk.js": "/sevanetrebchenko.github.io/static/js/2.748d02f4.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.59968c3c.js",
     "static/js/2.748d02f4.chunk.js",
     "static/css/main.efa83b87.chunk.css",
-    "static/js/main.25de128c.chunk.js"
+    "static/js/main.d22fed72.chunk.js"
   ]
 }
