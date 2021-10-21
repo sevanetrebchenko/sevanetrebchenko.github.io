@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/seva.netrebchenko.github.io/static/css/main.efa83b87.chunk.css",
+    "main.js": "/seva.netrebchenko.github.io/static/js/main.d16b9cc6.chunk.js",
+    "main.js.map": "/seva.netrebchenko.github.io/static/js/main.d16b9cc6.chunk.js.map",
+    "runtime-main.js": "/seva.netrebchenko.github.io/static/js/runtime-main.80be4c0c.js",
+    "runtime-main.js.map": "/seva.netrebchenko.github.io/static/js/runtime-main.80be4c0c.js.map",
+    "static/js/2.748d02f4.chunk.js": "/seva.netrebchenko.github.io/static/js/2.748d02f4.chunk.js",
+    "static/js/2.748d02f4.chunk.js.map": "/seva.netrebchenko.github.io/static/js/2.748d02f4.chunk.js.map",
+    "static/js/3.18a2524c.chunk.js": "/seva.netrebchenko.github.io/static/js/3.18a2524c.chunk.js",
+    "static/js/3.18a2524c.chunk.js.map": "/seva.netrebchenko.github.io/static/js/3.18a2524c.chunk.js.map",
+    "index.html": "/seva.netrebchenko.github.io/index.html",
+    "static/css/main.efa83b87.chunk.css.map": "/seva.netrebchenko.github.io/static/css/main.efa83b87.chunk.css.map",
+    "static/js/2.748d02f4.chunk.js.LICENSE.txt": "/seva.netrebchenko.github.io/static/js/2.748d02f4.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.80be4c0c.js",
+    "static/js/2.748d02f4.chunk.js",
+    "static/css/main.efa83b87.chunk.css",
+    "static/js/main.d16b9cc6.chunk.js"
+  ]
+}
