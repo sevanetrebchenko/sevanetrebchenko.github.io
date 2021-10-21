@@ -1,16 +1,8 @@
 const BLOG_POSTS = [
   {
-    url: "spark-logging",
-    title: "Spark's Logging System",
-    day: "13",
-    month: "October",
-    year: "2021",
-    path: "spark/logging.md"
-  },
-  {
     url: "spark-ecs-part-3",
     title: "Spark's ECS Architecture - Part 3: Systems",
-    day: "13",
+    day: "20",
     month: "October",
     year: "2021",
     path: "spark/ecs-systems.md"
@@ -18,7 +10,7 @@ const BLOG_POSTS = [
   {
     url: "spark-ecs-part-2",
     title: "Spark's ECS Architecture - Part 2: Components",
-    day: "13",
+    day: "17",
     month: "October",
     year: "2021",
     path: "spark/ecs-components.md"
@@ -26,8 +18,8 @@ const BLOG_POSTS = [
   {
     url: "spark-ecs-part-1",
     title: "Spark's ECS Architecture - Part 1: Entities",
-    day: "1",
-    month: "February",
+    day: "14",
+    month: "October",
     year: "2021",
     path: "spark/ecs-entities.md"
   },
@@ -42,7 +34,7 @@ const BLOG_POSTS = [
   {
     url: "hello-world",
     title: "Hello, World!",
-    day: "10",
+    day: "08",
     month: "October",
     year: "2021",
     path: "website.md"
