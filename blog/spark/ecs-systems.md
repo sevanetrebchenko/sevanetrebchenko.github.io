@@ -53,6 +53,22 @@ Note that each 'entry' in the system is a tuple of components that belong to a s
 
 ## Systems
 
-Systems are designed to operate on the list of entities with components that have 
+Systems are designed to operate on the list of entities with components that match the registration of the system.
 
-With the proposed layout for the data within component systems, there needs to be a way to create tuples of components for entities that meet the requirements of the system. Filtered entities that have the necessary components to be processed by the given component system will have a component tuple 
+```cpp
+// ComponentTypes... refers to the components this system operates on.
+template <class ...ComponentTypes>
+class BaseComponentSystem 
+    public:
+        BaseComponentSystem();
+        ~BaseComponentSystem();
+
+        // Standard functions to init, update, and shutdown the system.
+        void Initialize() override;
+        void Update(float dt) override;
+        void Shutdown() override;
+
+    ...
+```
+
+With the proposed layout for the data within component systems, there needs to be a way to create tuples of components for entities that meet the requirements of the system. Filtered entities that have the necessary components to be processed by the given component system will have an tuple entry within that component system. 
