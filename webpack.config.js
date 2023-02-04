@@ -18,8 +18,10 @@ module.exports = {
   target: 'web',
   devServer: {
     port: '3000',
+
+    // serve content rooted at the 'public' directory
     static: {
-      directory: path.join(__dirname, 'public')
+      directory: 'public'
     },
     open: true,
     hot: true,
@@ -30,13 +32,8 @@ module.exports = {
   },
   module: {
     rules: [
-      // Note (webpack v5+): 
-      // asset/resource - file-loader
-      // asset/inline - url-loader
-      // asset/source - raw-loader
-
-      // Use 'babel-loader' for loading .js/.jsx files.
       {
+        // .js/.jsx files
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
@@ -44,36 +41,14 @@ module.exports = {
         }
       },
       {
-        // Use 'style-loader' + 'css-loader' for loading .css files.
+        // .css files
         test: /\.css$/,
+        exclude: /node_modules/,
         use: [
           'style-loader',
           'css-loader',
         ],
       },
-      // {
-      //   // Use 'asset/resource' for images.
-      //   test: /\.(png|svg|jpg|jpeg|gif)$/i,
-      //   exclude: /node_modules/, 
-      //   type: 'asset/resource'
-      // },
-      // {
-      //   // Use 'asset/resource' for fonts.
-      //   test: /\.(woff|woff2|eot|ttf|otf)$/i,
-      //   type: 'asset/resource',
-      // },
-      {
-        // Use raw-loader to load .md files as raw text
-        test: /\.md$/,
-        exclude: [
-          path.resolve(__dirname, '/node_modules/')
-        ],
-        use: [
-          {
-            loader: 'raw-loader'
-          }
-        ]
-      }
     ],
   },
   plugins: [

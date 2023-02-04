@@ -8,12 +8,7 @@ import RemarkGFM from 'remark-gfm'
 import RehypeRaw from 'rehype-raw'
 
 import Highlight, { defaultProps } from "prism-react-renderer";
-import theme from '../styles/cpp.js'
-
-// SyntaxHighlighter.registerLanguage('cpp', cpp);
-// SyntaxHighlighter.registerLanguage('cmake', cmake);
-// SyntaxHighlighter.registerLanguage('glsl', glsl);
-// SyntaxHighlighter.registerLanguage('diff', diff);
+import rangeParser from 'parse-numeric-range'
 
 export default function Post({ parent }) {
     const { name } = useParams();
@@ -63,238 +58,193 @@ export default function Post({ parent }) {
     }
 }
 
-// custom component?
-// https://stackoverflow.com/questions/66707123/is-it-possible-to-highlight-specific-characters-in-a-line-using-react-syntax-hig
-// https://github.com/react-syntax-highlighter/react-syntax-highlighter
-// https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/diff.htmln
-
 function MarkdownFile({ path, content }) {
     const name = basename(path);
     const parent = dirname(path);
 
-    // const MarkdownComponents = {
-    //     code({ node, inline, className, children, ...args }) {
-    //         if (!className) {
-    //             className = '';
-    //         }
-
-    //         console.log(node);
-    //         console.log(node?.data);
-
-    //         return;
-
-    //         const source = children.toString().replace(/\n+$/, ''); // remove any trailing newlines
-    //         const language = /language-(\w+)/.exec(className); // syntax highlighter expects only the language name ('cpp' from 'language-cpp')
-
-    //         if (inline || (className == '')) {
-    //             // inline code, or code without an explicit language specification
-    //             //
-    //             // ```inline code```
-    //             //
-    //             // ```
-    //             // code with no language
-    //             // ```
-    //             // return (
-    //             //     <code style={darcula} {...args}>
-    //             //         {source}
-    //             //     </code>
-    //             // )
-    //         }
-    //         else {
-    //             let split = source.split('\n');
-
-    //             // manually support git diff syntax to maintain main language syntax highlighting
-    //             // '+' for added line, '-' for removed line (must be the first character of the line)
-    //             const added = split.map((_, lineNumber) => lineNumber).filter(lineNumber => split[lineNumber].match(/^[+].*/));
-    //             const removed = split.map((_, lineNumber) => lineNumber).filter(lineNumber => split[lineNumber].match(/^[-].*/));
-
-    //             // adding a '!' to the beginning of any line causes the line appearing highlighted
-    //             const highlighted = split.map((_, lineNumber) => lineNumber).filter(lineNumber => split[lineNumber].match(/^[!].*/));
-
-    //             // remove '!' from highlighted lines.
-    //             for (let i = 0; i < highlighted.length; i++) {
-    //                 split[highlighted[i]] = split[highlighted[i]].substring(1);
-    //             }
-
-    //             return (
-    //                 <SyntaxHighlighter
-    //                     language={language[1]}
-    //                     style={darcula}
-    //                     showLineNumbers={true}
-    //                     startingLineNumber={0}
-    //                     customStyle={{
-    //                         padding: 0,
-    //                         borderRadius: '10px'
-    //                     }}
-    //                     lineNumberContainerStyle={{
-    //                         display: 'none',
-    //                         minWidth: 0,
-    //                         paddingRight: 0
-    //                     }}
-    //                     lineNumberStyle={
-    //                         {
-    //                             display: 'none',
-    //                             minWidth: 0,
-    //                             paddingRight: 0
-    //                         }
-    //                     }
-    //                     wrapLines={true}
-    //                     children={split.join('\n')}
-    //                     lineProps={lineNumber => {
-    //                         const style = {
-    //                             display: 'block',
-    //                             paddingRight: '1em',
-    //                             paddingLeft: '1em'
-    //                         };
-
-    //                         if (lineNumber == 0) {
-    //                             style.paddingTop = '0.5em';
-    //                         }
-    //                         else if (lineNumber == split.length - 1) {
-    //                             style.paddingBottom = '0.5em';
-    //                         }
-
-
-    //                         if (added.includes(lineNumber)) {
-    //                             style.backgroundColor = "rgb(40, 125, 62)";
-    //                         }
-    //                         else if (removed.includes(lineNumber)) {
-    //                             style.backgroundColor = "#FF5555";
-    //                         }
-    //                         else if (highlighted.includes(lineNumber)) {
-    //                             style.backgroundColor = "#44475a";
-    //                         }
-
-    //                         return { style };
-    //                     }}
-    //                     {...args}>
-
-
-    //                 </SyntaxHighlighter>
-    //             )
-    //         }
-    //     }
-    // }
-
-    // // define custom renderers for markdown components
-    // const MarkdownComponents = {
-    //     code({ node, inline, className, children, ...args }) {
-    //         if (!className) {
-    //             className = '';
-    //         }
-
-    //         // parse the code block language.
-    //         let regex = /language-(\w+)/;
-    //         const language = regex.test(className) ? regex.exec(className)[1] : null;
-    //         const hasMetadata = node?.data?.meta ? true : false;
-
-    //         // 
-    //         const highlight = (lineNumber) => {
-    //             const style = {};
-
-    //             if (!hasMetadata) {
-    //                 return { style };
-    //             }
-
-    //             // 
-    //             regex = /{([\d,-]+)}/;
-    //             const metadata = node.data.meta?.replace(/\s/g, ''); // remove spaces
-
-    //             // 
-    //             if (!regex.test(metadata)) {
-    //                 return { style };
-    //             }
-
-    //             const lines = rangeParser(regex.exec(metadata)[1]); // only use first group
-    //             if (!lines.includes(lineNumber)) {
-    //                 return { style };
-    //             }
-
-    //             // highlighted line css style
-    //             style.display = 'block';
-    //             style.minWidth = scroll;
-    //             style.overflow = 'hidden';
-    //             style.background = "#44475a";
-    //             return { style };
-    //         }
-
-    //         if (language) {
-    //             return <SyntaxHighlighter
-    //                 language={language}
-    //                 style={darcula}
-    //                 showLineNumbers={true}
-    //                 startingLineNumber={1}
-    //                 customStyle={{
-    //                     padding: 0,
-    //                     borderRadius: '10px',
-    //                 }}
-    //                 // lineNumberContainerStyle={{
-    //                 //     display: 'none',
-    //                 // }}
-    //                 // lineNumberStyle={{
-    //                 //     display: 'none',
-    //                 // }}
-    //                 wrapLines={hasMetadata}
-    //                 children={children}
-    //                 lineProps={lineNumber => (highlight(lineNumber))}
-    //             >
-    //             </SyntaxHighlighter>
-    //         }
-    //         else {
-    //             // inline code block
-    //         }
-    //     }
-    // }
-    {/* {({ className, style, tokens, getLineProps, getTokenProps }) => (
-                        <pre className={className} style={style}>
-                            {tokens.map((line, i) => (
-                                <pre {...getLineProps({ line, key: i })} style={{ margin: '0', borderRadius: '10px' }} >
-                                    {line.map((token, key) => (
-                                        <span {...getTokenProps({ token, key })} />
-                                    ))}
-                                </pre>
-                            ))}
-                        </pre>
-                    )} */}
     const MarkdownComponents = {
         code({ node, inline, className, children, ...args }) {
 
             const source = children.toString().replace(/\n+$/, ''); // remove any trailing newlines
+            let split = source.split('\n');
 
             // parse the code block language.
             let regex = /language-(\w+)/;
             const language = regex.test(className) ? regex.exec(className)[1] : '';
 
             // code block metadata stores which lines to highlight
-            regex = /{([\d,-]+)}/;
-            const metadata = node?.data?.meta?.replace(/\s/g, ''); // remove spaces
+            const metadata = node?.data?.meta;
+            console.log(metadata);
+
+            let namespaces = new Set();
+
+            if (metadata) {
+                let match;
+
+                // added lines (file diff)
+                let added = [];
+                regex = new RegExp('added:{([\\d,-]+)}', 'g');
+                while ((match = regex.exec(metadata)) !== null) {
+                    added.push(...rangeParser(match[1]));
+                }
+                console.log('added: ' + added);
+
+                // removed lines (file diff)
+                let removed = [];
+                regex = new RegExp('removed:{([\\d,-]+)}', 'g');
+                while ((match = regex.exec(metadata)) !== null) {
+                    removed.push(...rangeParser(match[1]));
+                }
+                console.log('removed: ' + removed);
+
+                // modified lines (file diff)
+                regex = /modified:{([\d,-]+)}/g;
+
+                // highlighted lines
+                regex = /highlight:{([\d,-]+)}/g;
+
+                // class names
+                regex = /class-names:{([\d,-]+)}/g;
+
+                // namespace names
 
 
-            //             const added = split.map((_, lineNumber) => lineNumber).filter(lineNumber => split[lineNumber].match(/^[+].*/));
-            //             const removed = split.map((_, lineNumber) => lineNumber).filter(lineNumber => split[lineNumber].match(/^[-].*/));
+                // preprocessor directives
+                regex = /directives:{([\d,-]+)}/g;
+            }
 
+            const parseNamespaces = (line) => {
+                // https://en.cppreference.com/w/cpp/language/namespace
 
+                // parsing: namespace::member
+                {
+                    let regex = /^[\s]*([\s]*[\w]+[\s]*(::)+)+/g // matches up until 'member' (exclusively, as 'member' is a member of the namespace and not a namespace itself)
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        console.log(match[0])
+                        // parse match for namespace names
+                        const names = match[0].replace(/\s+/g, '')         // remove any spaces between namespace names
+                                              .split('::')                 // split on scope resolution operator
+                                              .filter(element => element); // remove empty elements 
+
+                        names.forEach(element => namespaces.add(element));
+                    } 
+                }
+
+                // parsing: namespace first::second::third {}
+                {
+                    let regex = /^[\s]*namespace([\s]*[\w]+[\s]*(::)*)+/g;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        // parse match for namespace names
+                        const names = match[0].replace(/[\s]*namespace[\s]+/, '') // remove leading 'namespace' keyword
+                                              .replace(/\s+/g, '')                // remove any spaces between namespace names
+                                              .split('::')                        // split on scope resolution operator
+                                              .filter(element => element);        // remove empty elements 
+                    
+                        names.forEach(element => namespaces.add(element));
+                    }
+                }
+
+                // parsing: inline namespace first::second::third {}
+
+                // parsing: using namespace first::second {}
+
+                // parsing: namespace alias = first::second;
+
+                // (4)
+
+                // (5)
+                
+                // (6)
+
+                // (7)
+
+                // (8)
+
+                // (9)
+
+            };
 
             return (
-                <Highlight {...defaultProps} code={source} language={language} theme={theme}>
+                <Highlight {...defaultProps} code={source} language={language}>
                     {
-                        function ({ className, style, tokens, getLineProps, getTokenProps }) {
+                        function ({ className, tokens, getLineProps, getTokenProps }) {
                             // individual line scope
                             return (
-                                <pre className={className} style={style} >
+                                <pre className={className} style={{}} >
                                     {
                                         tokens.map(function (line, lineNumber) {
                                             // individual token scope
 
+                                            let string = '';
+                                            for (let token of line) {
+                                                string += token.content;
+                                            }
+                                            parseNamespaces(string);
+
                                             const lineProps = getLineProps({ line, key: lineNumber });
-                                            console.log(lineProps);
+
+                                            let isNamespace = false;
+                                            for (let token of line) {
+                                                let content = token.content.replace(/\s+/g, '');
+                                                let types = token.types;
+
+                                                if (content == 'namespace') {
+                                                    //  current line contains a namespace definition
+                                                    isNamespace = true;
+                                                    continue;
+                                                }
+                                                else if (namespaces.includes(content)) {
+                                                    types.push('namespace-name');
+                                                }
+
+                                                if (isNamespace) {
+                                                    let isPlain = false;
+                                                    for (let i = types.length - 1; i >= 0; --i) {
+                                                        if (types[i] == 'plain') {
+                                                            // only tokens that are marked as 'plain' (i.e. namespace names) should be highlighted as namespace tokens
+                                                            types.splice(i);
+                                                            isPlain = true;
+                                                        }
+                                                    }
+
+                                                    if (isPlain) {
+                                                         // recategorize 'plain' tokens into 'namespace-name' tokens for proper css styling
+                                                        types.push('namespace-name');
+                                                    }
+
+                                                    if (!namespaces.includes(content)) {
+                                                        // register namespace name
+                                                        namespaces.push(content);
+                                                    }
+                                                }
+                                            }
 
                                             return (
-                                                <pre {...getLineProps({ line, key: lineNumber })} key={lineNumber}>
+                                                <pre {...lineProps} style={{}} key={lineNumber}>
                                                     {
                                                         line.map(function (token, index) {
+                                                            // token style overrides
+                                                            let tokenProps = getTokenProps({ token, index });
+                                                            let style = tokenProps.style;
+                                                            let className = tokenProps.className;
+
+                                                            // 
+                                                            if (language == 'cpp') {
+                                                                if (className.includes('directive keyword')) {
+                                                                    style.color = 'rgb(207, 201, 31)';
+                                                                    className = className.replace('keyword', '');
+                                                                }
+                                                            }
+
+                                                            tokenProps.className = className;
+                                                            tokenProps.style = style;
+
                                                             return (
-                                                                <span {...getTokenProps({ token, index })} key={index} >
+                                                                <span {...tokenProps} style={{}} key={index} >
                                                                 </span>
                                                             )
                                                         })
@@ -309,86 +259,15 @@ function MarkdownFile({ path, content }) {
                     }
                 </Highlight>
             )
-
-
-            // // 
-            // const highlight = (lineNumber) => {
-            //     const style = {};
-
-            //     if (!hasMetadata) {
-            //         return { style };
-            //     }
-
-            //     // 
-            //     regex = /{([\d,-]+)}/;
-            //     const metadata = node.data.meta?.replace(/\s/g, ''); // remove spaces
-
-            //     // 
-            //     if (!regex.test(metadata)) {
-            //         return { style };
-            //     }
-
-            //     const lines = rangeParser(regex.exec(metadata)[1]); // only use first group
-            //     if (!lines.includes(lineNumber)) {
-            //         return { style };
-            //     }
-
-            //     // highlighted line css style
-            //     style.display = 'block';
-            //     style.minWidth = scroll;
-            //     style.overflow = 'hidden';
-            //     style.background = "#44475a";
-            //     return { style };
-            // }
-
-            return (
-                <SyntaxHighlighter language={language} style={darcula}>
-                    {children}
-                </SyntaxHighlighter>
-            )
-
-            //className={'language-diff-' + language + ' diff-highlight'}>
-            return (
-                <React.Fragment>
-                    <pre >
-                        <code className={className}>
-                            {children}
-                        </code>
-                    </pre>
-                </React.Fragment>
-            );
         }
-    };
+    }
 
-
-    return (
-        //     // <React.Fragment>
-        //     //     <header>
-        //     //         <Link to={parent} style={{ textDecoration: "none", fontWeight: "bold", fontSize: "2em" }}>..</Link>
-        //     //         <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-        //     //             <h1> {name} </h1>
-        //     //             <h1 style={{ textAlign: "right", fontWeight: "normal" }}>01/24/2023</h1>
-        //     //         </div>
-        //     //     </header>
-        <React.Fragment>
+    return(
+        <React.Fragment >
             <ReactMarkdown components={MarkdownComponents}>
                 {content}
             </ReactMarkdown>
-        </React.Fragment>
+        </React.Fragment >
         //     // </React.Fragment>
-    )
+    );
 }
-
-// import { remark } from "remark";
-// import html from "remark-html";
-// import remarkPrism from "remark-prism";
-
-// async function markdownToHtml(markdown) {
-//   const result = await remark()
-//     .use(html, { sanitize: false })
-//     .use(remarkPrism, { plugins: ["line-numbers"] })
-//     .process(markdown);
-
-//   return result.toString();
-// }
-

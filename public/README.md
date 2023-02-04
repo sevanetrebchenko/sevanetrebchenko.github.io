@@ -12,11 +12,50 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp
+```cpp added:{1-2} removed:{4-5} modified:{} class-names:{Transform} directives:{}
+#include <iostream>
+#include <string>
+
+template<typename T>
+class MyClass {
+ public:
+  #define MY_PROPERTY T
+  T my_property;
+};
+
+const constant = 4;
+
+int main() {
+  MyClass<int> my_object;
+  my_object.my_property = 42;
+  my_object.my_property = 'd';
+  my_object.call_function();
+
+  const CONSANT = 123123;
+
+  std::cout << my_object.my_property << std::endl;
+  return 0;
+}
+
+
+ namespace lightswitch::    asdf   {
+  class Derived : protected Base<float> {
+        public:
+
+        protected:
+
+        private:
+         int m_member;
+  };
+}
+
+lightswitch::Derived a;
+
 void TransformSystem::Update(float deltaTime) {
-+    for (Transform& transformComponent : allTransformComponents) {
+    #define HEHEHAHA
+    for (Transform& transformComponent : allTransformComponents) {
         // Update transform component here.
-+       ...
--  }
+       ...
+    }
 }
 ```
