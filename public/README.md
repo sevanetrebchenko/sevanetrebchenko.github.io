@@ -54,17 +54,16 @@ int main() {
   };
 }
 
-using name::classs;
 using namespace a::b::c::d;
 namespace alias = ab::t::trad;
 
-lightswitch::Derived a;
 
 void TransformSystem::Update(float deltaTime) {
-  lightswitch::asdf::Derived::m_member;
+  using U = lightswitch::asdf::Derived::m_member;
+lightswitch::asdf::Derived a;
 
     if (test) {
-        using U = std::unique_ptr<int, float, tt>::type;
+        using U = std::unique_ptr<const int*, float, tt>::type;
     }
 
     #define HEHEHAHA

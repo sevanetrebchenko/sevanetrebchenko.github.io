@@ -118,19 +118,24 @@ function MarkdownFile({ path, content }) {
                 'std',
                 'chrono',
 
+                // standard types
+                'uin32_t',
+
                 // standard types / containers
                 'vector',
                 'unordered_map',
                 'unique_ptr',
                 'weak_ptr',
-                'shared_ptr'
+                'shared_ptr',
+                'type', // std:: ... ::type
+                'value', // std:: ... ::value
             ];
 
-            const parseCollections = (line) => {
-                // 'line' is an array of tokens, where Token = { types: [ ... ], content: '...' }
+            const parseCollections = (tokens) => {
+                // 'tokens' is an array of tokens, where Token = { types: [ ... ], content: '...' }
 
                 // parse class names
-                for (let token of line) {
+                for (let token of tokens) {
                     if (token.types.includes('class-name')) {
                         let name = token.content.replace(/[\s]+/g, '');
                         if (!collections.includes(name)) {
@@ -146,44 +151,40 @@ function MarkdownFile({ path, content }) {
                 //   - namespace alias = a::b::c;
                 //   - using a::b; (namespace class member)
 
-                let source = '';
-                for (let token of line) {
-                    source += token.content;
+                let line = '';
+                for (let token of tokens) {
+                    line += token.content;
                 }
 
                 // parsing: namespace a::b::c { ... }
-                // notes: a, b, and c are all valid namespace names
                 {
-                    let regex = /^\s*namespace (\w+(:{2}| {))+/;
-                    let match = regex.exec(source);
+                    let regex = /^\s*namespace [\w\s:]+/;
+                    let match = regex.exec(line);
 
                     if (match) {
                         // parse match for namespace names
-                        const names = match[0].replace(/(\s*namespace )|( {)/, '') // remove leading 'namespace ' and trailing ' {'
-                                              .split(/:{2}/);                      // split on scope resolution operator
+                        const names = match[0].replace(/(\s*namespace )|\s/g, '') // remove leading 'namespace ' and whitespace
+                                              .split(/:{2}/);                     // split on scope resolution operator
                     
                         for (let name of names) {
                             if (name == '') {
                                 continue;
                             }
 
-                            if (collections.includes(name)) {
-                                continue;
+                            if (!collections.includes(name)) {
+                                collections.push(name);
                             }
-
-                            collections.push(name);
                         }
                     }
                 }
 
                 // parsing: using namespace a::b::c;
-                // notes: a, b, and c are all valid namespace names
                 {
-                    let regex = /^\s*using namespace (\w+(:{2}|;))+/;
-                    let match = regex.exec(source);
+                    let regex = /^\s*using namespace [\w\s:]+/;
+                    let match = regex.exec(line);
 
                     if (match) {
-                        const names = match[0].replace(/(\s*using namespace )|(;)/, '') // remove leading 'using namespace ' and trailing ';'
+                        const names = match[0].replace(/(\s*using namespace )|\s/g, '') // remove leading 'using namespace ' and whitespace
                                               .split(/:{2}/);                           // split on scope resolution operator
                         
                         for (let name of names) {
@@ -191,52 +192,83 @@ function MarkdownFile({ path, content }) {
                                 continue;
                             }
 
-                            if (collections.includes(name)) {
-                                continue;
+                            if (!collections.includes(name)) {
+                                collections.push(name);
                             }
-
-                            collections.push(name);
                         }
                     }
                 }
                 
                 // parsing: namespace alias = a::b::c;
-                // notes: alias, a, b, and c are all valid namespace names
                 {
-                    let regex = /^\s*namespace \w+ = (\w+(:{2}|;))+/;
-                    let match = regex.exec(source);
+                    let regex = /^\s*namespace \w+ = [\w\s:]+/;
+                    let match = regex.exec(line);
 
                     if (match) {
-                        const names = match[0].replace(/(\s*namespace )|;/, '') // replace leading 'namespace ' and trailing ';'
-                                              .replace(/( = )/, '::')             // replace ' = ' with '::'
-                                              .split(/:{2}/);                   // split on scope resolution operator
+                        const names = match[0].replace(/(\s*namespace )|\s/g, '') // replace leading 'namespace ' and whitespace
+                                              .replace(/=/, '::')                 // replace ' = ' with '::'
+                                              .split(/:{2}/);                     // split on scope resolution operator
 
                         for (let name of names) {
                             if (name == '') {
                                 continue;
                             }
 
-                            if (collections.includes(name)) {
-                                continue;
+                            if (!collections.includes(name)) {
+                                collections.push(name);
                             }
-
-                            collections.push(name);
                         }
                     }
                 }
 
                 // parsing: using alias = a::b::c; (where c is a namespace class member)
+                // note: this assumes 'c' is not a global / static variable, which is usually the case for my personal coding style
                 {
                     let regex = /^\s*using \w+ = [\w\s,<>:]+/;
-                    let match = regex.exec(source);
+                    let match = regex.exec(line);
+
+                    let primitives = [
+                        'bool', 'b8',
+                        'char', 'u8', 'i8',
+                        'short', 'u16', 'i16',
+                        'int', 'u32', 'i32',
+                        'float', 'f32',
+                        'double', 'f64',
+                        'void'
+                    ]
+
+                    let keywords = [
+                        'unsigned', 'signed',
+                        'const'
+                    ]
 
                     if (match) {
-                        const names = match[0].replace(/(\s*using )|;/g, '')           // replace leading 'using ' and trailing ';' 
-                                              .replace(/( = )|[,(\s,)<>(::)]+/g, '::') // replace separators with '::'
-                                              .split('::');                            // split on scope resolution operator
+                        const names = match[0].replace(/(\s*using )/, '')           // replace leading 'using ' and trailing ';' 
+                                              .replace(/( = )|[,\s<>:{2}]+/g, '::') // replace separators with '::'
+                                              .split('::');                         // split on scope resolution operator
 
                         for (let name of names) {
-                            if (!collections.includes(name)) {
+                            if (name == '') {
+                                continue;
+                            }
+
+                            // template arguments may have type decorators (references, pointers)
+                            name = name.replace(/[*&]+/g, '');
+
+                            // template arguments may be of a primitive type
+                            if (primitives.includes(name)) {
+                                continue;
+                            }
+
+                            // template arguments may be qualified
+                            if (keywords.includes(name)) {
+                                continue;
+                            }
+
+                            // snake_case styling for variables (class names are CamelCase, and will have uppercase letters)
+                            // note that if 'c' is a class static, it is still not a collection and will be handled elsewhere
+                            const lowercase = /^[a-z_]*$/.test(name);
+                            if (!collections.includes(name) && !lowercase) {
                                 collections.push(name);
                             }
                         }
@@ -260,135 +292,89 @@ function MarkdownFile({ path, content }) {
                                 <pre className={className} style={{}} >
                                     {
                                         tokens.map(function (line, lineNumber) {
-                                            // register class names + namespaces from this line
                                             parseCollections(line);
                                             console.log(collections);
 
                                             // re-parse certain tokens for more tailored syntax highlighting
                                             let tokens = [];
+
                                             for (let i = 0; i < line.length; ++i) {
                                                 // token = line[i], where Token { types:[], content:'' }
                                                 let content = line[i].content;
                                                 let types = line[i].types;
 
                                                 // tokens marked as 'plain' may contain namespace / class names that need to be recategorized
-                                                if (types.includes('plain') || types.includes('class-name')) {
-                                                    // tokens may have multiple elements (separated by spaces) that need to be split and recategorized
-                                                    let regex = /[\s]*[\w]+/g;
-                                                    let match = null;
-                                                    while ((match = regex.exec(content)) !== null) {
-                                                        let token = match[0].replace(/\s+/g, '');
+                                                if (types.includes('plain')) {
 
-                                                        if (collections.includes(token)) {
+                                                    let split = content.trim().split(/\s/); // remove leading and trailing spaces
+                                                    if (split.length > 1) {
+                                                        // token has multiple elements (separated by spaces) that need to be split
+                                                        let regex = /\s*\w+/g;
+                                                        let match = null;
 
-                                                            // console.log(token);
+                                                        while ((match = regex.exec(content)) !== null) {
+                                                            let token = match[0].trim();
+                                                            let typesLocal = [...types];
 
-                                                            // token is either a namespace or the name of a class
-                                                            types.splice(types.indexOf('plain'), 1); // remove 'plain' tag
-                                                            types.push('container');
+                                                            if (collections.includes(token)) {
+                                                                // token is a collection
+                                                                typesLocal.splice(types.indexOf('plain'), 1); // remove 'plain' tag
+                                                                typesLocal.push('collection-name');
+                                                            }
+
+                                                            tokens.push({
+                                                                types: typesLocal,
+                                                                content: match[0]
+                                                            });
                                                         }
                                                     }
-                                                }
+                                                    else {
+                                                        let token = content.trim();
+                                                        let typesLocal = [...types];
 
-                                                tokens.push({
-                                                    types: types,
-                                                    content: content
-                                                });
+                                                        console.log(token);
+
+                                                        if (collections.includes(token)) {
+                                                            // token is a collection
+                                                            typesLocal.splice(types.indexOf('plain'), 1); // remove 'plain' tag
+                                                            typesLocal.push('collection-name');
+                                                        }
+
+                                                        tokens.push({
+                                                            types: typesLocal,
+                                                            content: content
+                                                        });
+                                                    }
+                                                }
+                                                else if (types.includes('class-name')) {
+                                                    let token = content.trim();
+
+                                                    if (collections.includes(token)) {
+                                                        // token is a collection
+                                                        types.splice(types.indexOf('plain'), 1); // remove 'plain' tag
+                                                        types.push('collection-name');
+                                                    }
+
+                                                    tokens.push({
+                                                        types: types,
+                                                        content: content
+                                                    });
+                                                }
+                                                else {
+                                                    tokens.push({
+                                                        types: types,
+                                                        content: content
+                                                    });
+                                                }
                                             }
 
-                                            line.tokens = tokens;
-
-                                            // for (let i in line) {
-                                            //     let token = line[i];
-
-                                            //     if (token.types.includes('plain')) {
-                                            //         // let content = token.content;
-                                            //         // let s = content.split(/\s/);
-                                            //         // if (s.length > 1) {
-                                            //         //     line.splice(i, 1);
-
-                                            //         //     let change = line;
-                                            //         //     for (let j = 0; j < s.length; ++j) {
-                                            //         //         change = insert(change, i + j, s[j])
-                                            //         //     }
-                                            //         //     console.log(change);
-                                            //         // }
-                                            //     }
-                                            // }
-
-                                            // let string = '';
-                                            // for (let token of line) {
-                                            //     // replace leading and trailing whitespace
-
-                                                
-
-                                            //     string += token.content;
-                                            // }
-                                            // parseNamespaces(string);
-
-                                            // let isNamespace = false;
-                                            // for (let token of line) {
-                                            //     let content = token.content.replace(/\s+/g, '');
-                                            //     let types = token.types;
-
-                                            //     if (content == 'namespace') {
-                                            //         //  current line contains a namespace definition
-                                            //         isNamespace = true;
-                                            //         continue;
-                                            //     }
-                                            //     else if (identifiers.includes(content)) {
-                                            //         types.push('namespace-name');
-                                            //     }
-
-                                            //     if (isNamespace) {
-                                            //         let isPlain = false;
-                                            //         for (let i = types.length - 1; i >= 0; --i) {
-                                            //             if (types[i] == 'plain') {
-                                            //                 // only tokens that are marked as 'plain' (i.e. namespace names) should be highlighted as namespace tokens
-                                            //                 types.splice(i);
-                                            //                 isPlain = true;
-                                            //             }
-                                            //         }
-
-                                            //         if (isPlain) {
-                                            //              // recategorize 'plain' tokens into 'namespace-name' tokens for proper css styling
-                                            //             types.push('namespace-name');
-                                            //         }
-
-                                            //         if (!identifiers.includes(content)) {
-                                            //             // register namespace name
-                                            //             identifiers.push(content);
-                                            //         }
-                                            //     }
-                                            // }
+                                            line = tokens;
 
                                             return (
                                                 <pre {...getLineProps({line, key: lineNumber})} style={{}} key={lineNumber}>
                                                     {
                                                         line.map(function (token, index) {
-
-                                                            // parseClassNames(token);
-
-                                                            // // token style overrides
                                                             let tokenProps = getTokenProps({ token, index });
-                                                            // let style = tokenProps.style;
-                                                            // let className = tokenProps.className;
-
-                                                            // // 
-                                                            // if (language == 'cpp') {
-                                                            //     // if (className.includes('directive keyword')) {
-                                                            //     //     style.color = 'rgb(207, 201, 31)';
-                                                            //     //     className = className.replace('keyword', '');
-                                                            //     // }
-
-                                                            //     if (className.includes('plain') && classNames.includes(token.content.replace(/[\s]+/g, ''))) {
-                                                            //         className = className.replace('plain', 'class-name');
-                                                            //     }
-                                                            //  }
-
-                                                            // tokenProps.className = className;
-                                                            // tokenProps.style = style;
-
                                                             return (
                                                                 <span {...tokenProps} style={{}} key={index} >
                                                                 </span>
