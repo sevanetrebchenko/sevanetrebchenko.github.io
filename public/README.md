@@ -12,16 +12,21 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-2} removed:{4-5} modified:{} class-names:{Transform} directives:{}
+```cpp added:{1-6, 7} removed:{4-5} modified:{} class-names:{Transform} directives:{}
 #include <iostream>
 #include <string>
 
-template<typename T>
+template <typename Tddd>
 class MyClass {
  public:
-  #define MY_PROPERTY T
-  T my_property;
+  #define MY_PROPERTY Tddd
+  Tddd my_property;
 };
+
+        enum class Mode {
+            MODE_STICKY_KEYS          = 1u << 0u,
+            MODE_STICKY_MOUSE_BUTTONS = 1u << 1u,
+        };
 
 const constant = 4;
 
@@ -31,7 +36,7 @@ int main() {
   my_object.my_property = 'd';
   my_object.call_function();
 
-  const CONSANT = 123123;
+  const CONSTANT = 123123u;
 
   std::cout << my_object.my_property << std::endl;
   return 0;
@@ -49,11 +54,22 @@ int main() {
   };
 }
 
+using name::classs;
+using namespace a::b::c::d;
+namespace alias = ab::t::trad;
+
 lightswitch::Derived a;
 
 void TransformSystem::Update(float deltaTime) {
+  lightswitch::asdf::Derived::m_member;
+
+    if (test) {
+        using U = std::unique_ptr<int, float, tt>::type;
+    }
+
     #define HEHEHAHA
     for (Transform& transformComponent : allTransformComponents) {
+      transformComponent->m_member;
         // Update transform component here.
        ...
     }
