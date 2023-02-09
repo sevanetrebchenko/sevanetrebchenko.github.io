@@ -352,11 +352,32 @@ function MarkdownFile({ path, content }) {
             }
 
             let preprocessorDirectives = [];
+            let defined = true;
 
             const parsePreprocessorDirectives = (tokens) => {
                 let line = '';
                 for (let token of tokens) {
                     line += token.content.toString();
+                }
+
+                // parsing: #else
+                {
+                    let regex = /^\s*#else/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        return !defined;
+                    }
+                }
+
+                // parsing: #endif
+                {
+                    let regex = /\s*#endif/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        return true;
+                    }
                 }
 
                 // parsing: #define <TOKEN>
@@ -369,75 +390,83 @@ function MarkdownFile({ path, content }) {
                         if (!preprocessorDirectives.includes(directive)) {
                             preprocessorDirectives.push(directive);
                         }
+
+                        return defined;
                     }
                 }
 
-                // // parsing: #ifdef <TOKEN>
-                // {
-                //     let regex = /^\s*#ifdef [A-Z0-9_]+/;
-                //     let match = regex.exec(line);
+                if (!defined) {
+                    return false;
+                }
 
-                //     if (match) {
-                //         let directive = match[0].replace(/[#if\sdef()]+/g, '');
+                // parsing: #ifdef <TOKEN>
+                {
+                    let regex = /^\s*#ifdef [A-Z0-9_]+/;
+                    let match = regex.exec(line);
 
-                //         if (preprocessorDirectives.includes(directive)) {
-                //             preprocessorDirectiveScopes.push(directive);
-                //         }
-                //     }
-                // }
+                    if (match) {
+                        let directive = match[0].replace(/[#ifdef\s]+/g, '');
+                        return preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                // // parsing: #if defined(<TOKEN>)
-                // {
-                //     let regex = /^\s*#if defined\([A-Z0-9]+\)/;
-                //     let match = regex.exec(line);
+                // parsing: #if defined(<TOKEN>)
+                {
+                    let regex = /^\s*#if defined\([A-Z0-9_]+\)/;
+                    let match = regex.exec(line);
 
-                //     if (match) {
-                //         let directive = match[0].replace(/[#if\sdefined()]+/g, '').trim();
-                //         scopes.push(directive);
-                //     }
-                // }
+                    if (match) {
+                        let directive = match[0].replace(/[#if\sdefined()]+/g, '');
+                        return preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                // // parsing: #elifdef <TOKEN>
-                // {
-                //     let regex = /^\s*#elifdef \([A-Z0-9]+\)/;
-                //     let match = regex.exec(line);
+                // parsing: #if !defined(<TOKEN>)
+                {
+                    let regex = /^\s*#if !defined\([A-Z0-9_]+\)/;
+                    let match = regex.exec(line);
 
-                //     if (match) {
-                //         let directive = match[0].replace(/[#elifdef\s()]/g, '').trim();
-                //         scopes.push(directive);
-                //     }
-                // }
+                    if (match) {
+                        let directive = match[0].replace(/[!#if\sdefined()]+/g, '');
+                        return !preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                // // parsing: #elif defined(<TOKEN>)
-                // {
-                //     let regex = /^\s*#elif defined\([A-Z0-9]+\)/;
-                //     let match = regex.exec(line);
+                // parsing: #elifdef <TOKEN>
+                {
+                    let regex = /^\s*#elifdef \([A-Z0-9]+\)/;
+                    let match = regex.exec(line);
 
-                //     if (match) {
-                //         let directive = match[0].replace(/[#elifdefined\s()]/g, '').trim();
-                //         scopes.push(directive);
-                //     }
-                // }
+                    if (match) {
+                        let directive = match[0].replace(/[#elifdef\s()]/g, '');
+                        return preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                // // parsing: #else
-                // {
-                //     let regex = /^\s*#else/;
-                //     let match = regex.exec(line);
+                // parsing: #elif defined(<TOKEN>)
+                {
+                    let regex = /^\s*#elif defined\([A-Z0-9]+\)/;
+                    let match = regex.exec(line);
 
-                //     if (match) {
+                    if (match) {
+                        let directive = match[0].replace(/[#elifdefined\s()]/g, '');
+                        return preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                //     }
-                // }
+                // parsing: #elif !defined(<TOKEN>)
+                {
+                    let regex = /^\s*#elif !defined\([A-Z0-9]+\)/;
+                    let match = regex.exec(line);
 
-                // // parsing: #endif
-                // {
-                //     let regex = /\s*#endif/;
-                //     let match = regex.exec(line);
+                    if (match) {
+                        let directive = match[0].replace(/[!#elifdefined\s()]/g, '');
+                        return !preprocessorDirectives.includes(directive);
+                    }
+                }
 
-                //     if (match) {
-                //         scopes.pop();
-                //     }
-                // }
+                // unknown / unprocessed preprocessor directive, follow default behavior
+                return defined;
             }
 
             const updateSyntaxHighlighting = (tokens) => {
@@ -554,7 +583,7 @@ function MarkdownFile({ path, content }) {
                             // defined ( #if defined(...) / #if defined ... or #elif defined(...) / #elif defined ... )
                             updated.push({
                                 content: tokens[i].content,
-                                types: ['token', 'macro', 'property', 'directive']
+                                types: ['token', 'macro', 'property', 'directive', 'keyword']
                             });
 
                             if (++i == tokens.length) {
@@ -613,7 +642,7 @@ function MarkdownFile({ path, content }) {
                         }
                     }
                     else if (tokens[i].types.includes('plain')) {
-                        // namespace + class names
+                        // namespace + class + macro names
 
                         if (namespaces.includes(tokens[i].content)) {
                             updated.push({
@@ -625,6 +654,12 @@ function MarkdownFile({ path, content }) {
                             updated.push({
                                 content: tokens[i].content,
                                 types: ['token', 'class-name']
+                            });
+                        }
+                        else if (preprocessorDirectives.includes(tokens[i].content)) {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'macro', 'property', 'macro-name']
                             });
                         }
                         else {
@@ -643,6 +678,12 @@ function MarkdownFile({ path, content }) {
                     }
                 }
 
+                for (let i in updated) {
+                    if (!defined) {
+                        updated[i].types.push('undefined'); // top-level css style
+                    }
+                }
+
                 return updated;
             }
 
@@ -651,17 +692,28 @@ function MarkdownFile({ path, content }) {
                 <Highlight {...defaultProps} code={children.toString()} language={language}>
                     {
                         function ({ className, tokens, getLineProps, getTokenProps }) {
+
                             for (let i in tokens) {
                                 tokens[i] = splitJoinedTokens(tokens[i]);
 
                                 parseNamespaceNames(tokens[i]);
                                 parseClassNames(tokens[i]);
-                                parsePreprocessorDirectives(tokens[i]);
 
-                                tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                                // preprocessor directives that change whether code should appear defined or not should still appear defined
+                                // only the code within undefined preprocessor directive scopes should appear undefined
+                                let shouldAppearDefined = parsePreprocessorDirectives(tokens[i]);
+                                if (defined && !shouldAppearDefined) {
+                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                                    defined = false;
+                                }
+                                else if (!defined && shouldAppearDefined) {
+                                    defined = true;
+                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                                }
+                                else {
+                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                                }
                             }
-
-                            console.log(preprocessorDirectives);
 
                             return (
                                 <pre className={className} style={{}} >

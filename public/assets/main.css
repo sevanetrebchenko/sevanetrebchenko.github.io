@@ -113,7 +113,9 @@ pre[class*="language-"] .token-line {
 /* language: cpp */
 
 /* base */
-pre.language-cpp .token 
+pre.language-cpp .token,
+pre.language-cpp .token.punctuation,
+pre.language-cpp .token.macro.property.expression.punctuation
 {
     color: rgb(169, 183, 198);
 }
@@ -144,9 +146,32 @@ pre.language-cpp .token.macro.property.directive
 {
     color: rgb(187, 181, 41);
 }
-pre.language-cpp .token.macro.property.macro-name 
+pre.language-cpp .token.macro.property.macro-name
 {
     color: 	rgb(144, 139, 37);
+}
+pre.language-cpp .token.plain.undefined,
+pre.language-cpp .token.number.undefined,
+pre.language-cpp .token.string.undefined,
+pre.language-cpp .token.char.undefined,
+pre.language-cpp .token.comment.undefined,
+pre.language-cpp .token.punctuation.undefined,
+pre.language-cpp .token.operator.undefined,
+pre.language-cpp .token.keyword.undefined,
+pre.language-cpp .token.base-clause.keyword.undefined,
+pre.language-cpp .token.base-clause.class-name.undefined,
+pre.language-cpp .token.base-clause.operator.undefined,
+pre.language-cpp .token.class-name.undefined,
+pre.language-cpp .token.namespace-name.undefined,
+pre.language-cpp .token.function.undefined,
+pre.language-cpp .token.member-variable.undefined,
+pre.language-cpp .token.macro.property.directive-hash.undefined,
+pre.language-cpp .token.macro.property.directive.keyword.undefined,
+pre.language-cpp .token.macro.property.macro-name.undefined,
+pre.language-cpp .token.macro.property.expression.undefined,
+pre.language-cpp .token.macro.property.expression.punctuation.undefined
+{
+    color: 	rgb(104, 106, 78);
 }
 
 /* functions */

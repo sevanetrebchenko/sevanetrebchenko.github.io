@@ -13,15 +13,42 @@ The way in which groups of components are stored will ultimately an impact on th
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
 ```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{}
+#pragma once
 #include <iostream>
 #include <string>
 
-#ifdef IFDEFTOKEN
+#define TEST_DEFINE_1 1
+// #define TEST_DEFINE_2 2
+// #define TEST_DEFINE_3 3
 
-#if defined(ASF)
-  int asdf;
-#elif
-  int bsdf;
+#if defined(TEST_DEFINE_1)
+
+  // This should appear defined.
+  int my_defined_value = 4;
+
+#else
+
+  // This should appear undefined.
+  int my_undefined_value = 6;
+
+#endif
+
+
+#ifdef TEST_DEFINE_2
+
+  // This should appear undefined.
+  // ...
+
+#elifdef TEST_DEFINE_3
+
+  // This should appear undefined.
+  // ...
+
+#elifdef TEST_DEFINE_1
+
+  // This should appear defined.
+  // ...
+
 #endif
 
 template <typename Tddd>
