@@ -12,15 +12,23 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-6, 7} removed:{4-5} modified:{} class-names:{Transform} directives:{}
+```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{}
 #include <iostream>
 #include <string>
+
+#ifdef IFDEFTOKEN
+
+#if defined ASF
+  int asdf;
+#elif
+  int bsdf;
+#endif
 
 template <typename Tddd>
 class MyClass {
  public:
-  #define MY_PROPERTY Tddd
-  Tddd my_property;
+  #define MY_PROPERTY      Tddd
+  MY_PROPERTY  my_property;
 };
 
         enum class Mode {
@@ -59,11 +67,11 @@ namespace alias = ab::t::trad;
 
 
 void TransformSystem::Update(float deltaTime) {
-  using U = lightswitch::asdf::Derived::m_member;
-lightswitch::asdf::Derived a;
+  using U = lightswitch::asdf::Derived::
+lightswitch::asdf::Derived affff;
 
     if (test) {
-        using U = std::unique_ptr<const int*, float, tt>::type;
+        using U = std::unique_ptr<const int*, float, Tt>::type;
     }
 
     #define HEHEHAHA

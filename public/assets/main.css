@@ -156,7 +156,8 @@ pre.language-cpp .token.function
 }
 
 /* class names */
-pre.language-cpp .token.collection-name
+pre.language-cpp .token.class-name,
+pre.language-cpp .token.namespace-name
 {
     color: rgb(181, 182, 227);
 }
@@ -168,7 +169,8 @@ pre.language-cpp .token.symbol
     color: rgb(104, 151, 187);
 }
 
-pre.language-cpp .token.constant 
+pre.language-cpp .token.constant,
+pre.language-cpp .token.member-variable
 {
     color: rgb(152, 118, 170);
 }
