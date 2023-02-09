@@ -71,8 +71,6 @@ function MarkdownFile({ path, content }) {
             let hidden = [];
             let highlighted = []; // lines in the code block that have been emphasized
 
-            let containers = []; // namespace + class names
-            let directives = [];
 
             const parseMetadata = (line) => {
                 // parsing: added lines
@@ -112,136 +110,6 @@ function MarkdownFile({ path, content }) {
                 }
             }
 
-            let scopes = [];
-
-            // returns the index of the first occurerence of 'type' in 'tokens'
-            const indexOf = (tokens, ...types) => {
-                for (let i in tokens) {
-                    let token = tokens[i];
-
-                    let valid = true;
-
-                    for (let type of types) {
-                        if (!token.types.includes(type)) {
-                            valid = false;
-                            break;
-                        }
-                    }
-
-                    if (valid) {
-                        return i;
-                    }
-                }
-
-                return -1; // not found
-            }
-
-            // called when processing a line declaring a preprocessor directive
-            const processDirective = (tokens) => {
-
-
-
-
-                if (indexOf(tokens, 'macro', 'property', 'directive-hash') == -1) {
-                    return;
-                }
-
-                let directiveIndex = indexOf(tokens, 'macro', 'property', 'directive');
-                let directive = directiveIndex != -1 ? tokens[directiveIndex].content.trim() : null;
-
-                let expressionIndex = indexOf(tokens, 'macro', 'property', 'expression');
-                let expression = expressionIndex != -1 ? tokens[expressionIndex].content.trim() : null;
-
-                console.log(directive);
-                console.log(expression);
-            }
-
-
-
-            const parseScopes = (tokens) => {
-                let line = '';
-                for (let token of tokens) {
-                    line += token.content;
-                }
-
-                // parsing: #define <TOKEN>
-                {
-                    let regex = /^\s*#define [A-Z0-9]+/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#define\s()]/g, '').trim();
-                        if (!directives.includes(directive)) {
-                            directives.push(directive);
-                        }
-                    }
-                }
-
-                // parsing: #ifdef <TOKEN>
-                {
-                    let regex = /^\s*#ifdef [A-Z0-9]+/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#if\sdef()]+/g, '').trim();
-                        scopes.push(directive);
-                    }
-                }
-
-                // parsing: #if defined(<TOKEN>)
-                {
-                    let regex = /^\s*#if defined\([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#if\sdefined()]+/g, '').trim();
-                        scopes.push(directive);
-                    }
-                }
-
-                // parsing: #elifdef <TOKEN>
-                {
-                    let regex = /^\s*#elifdef \([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#elifdef\s()]/g, '').trim();
-                        scopes.push(directive);
-                    }
-                }
-
-                // parsing: #elif defined(<TOKEN>)
-                {
-                    let regex = /^\s*#elif defined\([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#elifdefined\s()]/g, '').trim();
-                        scopes.push(directive);
-                    }
-                }
-
-                // parsing: #else
-                {
-                    let regex = /^\s*#else/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-
-                    }
-                }
-
-                // parsing: #endif
-                {
-                    let regex = /\s*#endif/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        scopes.pop();
-                    }
-                }
-            }
-
             // parse the code block language.
             let regex = /language-(\w+)/;
             const language = regex.test(className) ? regex.exec(className)[1] : '';
@@ -258,6 +126,10 @@ function MarkdownFile({ path, content }) {
 
                     if (!types.includes('comment')) {
                         for (let element of token.content.split(/(\s+)/)) {
+                            if (element.length == 0) {
+                                continue;
+                            }
+
                             if (element.replace(/\s/g, '').length == 0) {
                                 // empty elements (only whitespace) are categorized as 'plain' tokens.
                                 split.push({
@@ -456,10 +328,7 @@ function MarkdownFile({ path, content }) {
                     ];
 
                     if (match) {
-                        console.log(match[0]);
                         const names = match[0].replace(/(\s*using )/, '').replace(/( = )|[,\s<>]+/g, '::').split(/:{2}/);
-
-                        console.log(names);
 
                         for (let i in names) {
                             let name = names[i];
@@ -482,72 +351,296 @@ function MarkdownFile({ path, content }) {
                 }
             }
 
+            let preprocessorDirectives = [];
+
+            const parsePreprocessorDirectives = (tokens) => {
+                let line = '';
+                for (let token of tokens) {
+                    line += token.content.toString();
+                }
+
+                // parsing: #define <TOKEN>
+                {
+                    let regex = /^\s*#define [A-Z0-9_]+/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        let directive = match[0].replace(/[#define\s()]/g, '').trim();
+                        if (!preprocessorDirectives.includes(directive)) {
+                            preprocessorDirectives.push(directive);
+                        }
+                    }
+                }
+
+                // // parsing: #ifdef <TOKEN>
+                // {
+                //     let regex = /^\s*#ifdef [A-Z0-9_]+/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+                //         let directive = match[0].replace(/[#if\sdef()]+/g, '');
+
+                //         if (preprocessorDirectives.includes(directive)) {
+                //             preprocessorDirectiveScopes.push(directive);
+                //         }
+                //     }
+                // }
+
+                // // parsing: #if defined(<TOKEN>)
+                // {
+                //     let regex = /^\s*#if defined\([A-Z0-9]+\)/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+                //         let directive = match[0].replace(/[#if\sdefined()]+/g, '').trim();
+                //         scopes.push(directive);
+                //     }
+                // }
+
+                // // parsing: #elifdef <TOKEN>
+                // {
+                //     let regex = /^\s*#elifdef \([A-Z0-9]+\)/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+                //         let directive = match[0].replace(/[#elifdef\s()]/g, '').trim();
+                //         scopes.push(directive);
+                //     }
+                // }
+
+                // // parsing: #elif defined(<TOKEN>)
+                // {
+                //     let regex = /^\s*#elif defined\([A-Z0-9]+\)/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+                //         let directive = match[0].replace(/[#elifdefined\s()]/g, '').trim();
+                //         scopes.push(directive);
+                //     }
+                // }
+
+                // // parsing: #else
+                // {
+                //     let regex = /^\s*#else/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+
+                //     }
+                // }
+
+                // // parsing: #endif
+                // {
+                //     let regex = /\s*#endif/;
+                //     let match = regex.exec(line);
+
+                //     if (match) {
+                //         scopes.pop();
+                //     }
+                // }
+            }
+
             const updateSyntaxHighlighting = (tokens) => {
                 let updated = [];
 
                 for (let i = 0; i < tokens.length; ++i) {
-                    let token = tokens[i];
-                    let content = token.content;
-                    let types = token.types;
+                    if (tokens[i].content.length == 0) {
+                        continue;
+                    }
 
-                    if (types.includes('punctuation') || types.includes('operator')) {
-                        let before = token.content;
+                    if (tokens[i].types.includes('punctuation') || tokens[i].types.includes('operator')) {
+                        // namespace + member variables
 
-                        // punctuation token remains unmodified
-                        updated.push({
-                            content: content,
-                            types: types
-                        });
+                        if (tokens[i].content == '::') {
+                            // punctuation token remains unmodified
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
 
-                        token = tokens[++i];
-                        content = token.content;
-                        types = token.types;
+                            if (++i == tokens.length) {
+                                break;
+                            }
 
-                        if (before == '::') {
-                            if (types.includes('plain')) {
-                                if (namespaces.includes(content)) {
-                                    types = ['token', 'namespace-name'];
+                            if (tokens[i].types.includes('plain')) {
+                                if (namespaces.includes(tokens[i].content)) {
+                                    updated.push({
+                                        content: tokens[i].content,
+                                        types: ['token', 'namespace-name']
+                                    });
                                 }
-                                else if (classes.includes(content)) {
-                                    types = ['token', 'class-name'];
+                                else if (classes.includes(tokens[i].content)) {
+                                    updated.push({
+                                        content: tokens[i].content,
+                                        types: ['token', 'class-name']
+                                    });
                                 }
                                 else {
-                                    const lowercase = /^[a-z_]*$/.test(content);
+                                    const lowercase = /^[a-z_]*$/.test(tokens[i].content);
 
-                                    // handle ... ::type separately (and first before general classname pass) so that variables named 'type' do not highlight as class names
                                     if (lowercase) {
-                                        if (content == 'type') {
-                                            types = ['token', 'class-name'];
+                                        if (tokens[i].content == 'type') {
+                                            // handle ... ::type separately (and first before general classname pass) so that variables named 'type' do not highlight as class names
+                                            updated.push({
+                                                content: tokens[i].content,
+                                                types: ['token', 'class-name']
+                                            });
                                         }
                                         else {
-                                            types = ['token', 'member-variable'];
+                                            updated.push({
+                                                content: tokens[i].content,
+                                                types: ['token', 'member-variable']
+                                            });
                                         }
                                     }
                                     else {
-                                        types = ['token', 'class-name'];
+                                        updated.push({
+                                            content: tokens[i].content,
+                                            types: ['token', 'class-name']
+                                        });
                                     }
                                 }
                             }
                         }
-                        else if (before == '.' || before == '->') {
-                            if (types.includes('plain')) {
-                                types = ['token', 'member-variable'];
+                        else if (tokens[i].content == '.' || tokens[i].content == '->') {
+                            // operator token remains unmodified
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            if (tokens[i].types.includes('plain')) {
+                                updated.push({
+                                    content: tokens[i].content,
+                                    types: ['token', 'member-variable']
+                                });
                             }
                         }
-                    }
-                    else if (types.includes('plain')) {
-                        if (namespaces.includes(content)) {
-                            types = ['token', 'namespace-name'];
-                        }
-                        else if (classes.includes(content)) {
-                            types = ['token', 'class-name'];
+                        else {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
                         }
                     }
+                    else if (tokens[i].types.includes('directive')) {
+                        // preprocessor directives
 
-                    updated.push({
-                        content: content,
-                        types: types
-                    });
+                        if (tokens[i].content == 'if' || tokens[i].content == 'elif') {
+                            // if / elif
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // whitespace
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // defined ( #if defined(...) / #if defined ... or #elif defined(...) / #elif defined ... )
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'macro', 'property', 'directive']
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // opening parenthese / whitespace token (unmodified)
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // macro name
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'macro', 'property', 'macro-name']
+                            });
+                        }
+                        else if (tokens[i].content == 'ifdef' || tokens[i].content == 'ifndef') {
+                            // ifdef / ifndef
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // whitespace
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+
+                            if (++i == tokens.length) {
+                                break;
+                            }
+
+                            // macro name
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'macro', 'property', 'macro-name']
+                            });
+                        }
+                        else {
+                            // unmodified (include, endif)
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+                        }
+                    }
+                    else if (tokens[i].types.includes('plain')) {
+                        // namespace + class names
+
+                        if (namespaces.includes(tokens[i].content)) {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'namespace-name']
+                            });
+                        }
+                        else if (classes.includes(tokens[i].content)) {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'class-name']
+                            });
+                        }
+                        else {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: tokens[i].types
+                            });
+                        }
+                    }
+                    else {
+                        // unmodified
+                        updated.push({
+                            content: tokens[i].content,
+                            types: tokens[i].types
+                        });
+                    }
                 }
 
                 return updated;
@@ -563,12 +656,12 @@ function MarkdownFile({ path, content }) {
 
                                 parseNamespaceNames(tokens[i]);
                                 parseClassNames(tokens[i]);
+                                parsePreprocessorDirectives(tokens[i]);
 
                                 tokens[i] = updateSyntaxHighlighting(tokens[i]);
                             }
 
-                            console.log(classes);
-                            console.log(namespaces);
+                            console.log(preprocessorDirectives);
 
                             return (
                                 <pre className={className} style={{}} >

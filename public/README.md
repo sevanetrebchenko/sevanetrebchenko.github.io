@@ -18,7 +18,7 @@ Let's say we have a Transform system that operates on any entity that has a Tran
 
 #ifdef IFDEFTOKEN
 
-#if defined ASF
+#if defined(ASF)
   int asdf;
 #elif
   int bsdf;
