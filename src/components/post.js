@@ -573,20 +573,16 @@ function MarkdownFile({ path, content }) {
                             return (
                                 <pre className={className} style={{}} >
                                     {
-                                        tokens.map(function (line, lineNumber) {
-                                            return (
-                                                <pre {...getLineProps({ line, key: lineNumber })} style={{}} key={lineNumber}>
-                                                    {
-                                                        line.map(function (token, index) {
-                                                            return (
-                                                                <span {...getTokenProps({ token, index })} style={{}} key={index} >
-                                                                </span>
-                                                            )
-                                                        })
-                                                    }
-                                                </pre>
-                                            )
-                                        })
+                                        tokens.map((line, lineNumber) => (
+                                            <pre {...getLineProps({ line, key: lineNumber })} style={{}} key={lineNumber}>
+                                                {
+                                                    line.map((token, index) => (
+                                                        <span {...getTokenProps({ token, index })} style={{}} key={index} >
+                                                        </span>
+                                                    ))
+                                                }
+                                            </pre>
+                                        ))
                                     }
                                 </pre>
                             )
