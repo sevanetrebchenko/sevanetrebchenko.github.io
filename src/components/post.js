@@ -352,32 +352,10 @@ function MarkdownFile({ path, content }) {
             }
 
             let preprocessorDirectives = [];
-            let defined = true;
-
             const parsePreprocessorDirectives = (tokens) => {
                 let line = '';
                 for (let token of tokens) {
                     line += token.content.toString();
-                }
-
-                // parsing: #else
-                {
-                    let regex = /^\s*#else/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        return !defined;
-                    }
-                }
-
-                // parsing: #endif
-                {
-                    let regex = /\s*#endif/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        return true;
-                    }
                 }
 
                 // parsing: #define <TOKEN>
@@ -387,86 +365,102 @@ function MarkdownFile({ path, content }) {
 
                     if (match) {
                         let directive = match[0].replace(/[#define\s()]/g, '').trim();
+
                         if (!preprocessorDirectives.includes(directive)) {
                             preprocessorDirectives.push(directive);
                         }
-
-                        return defined;
                     }
                 }
+            }
 
-                if (!defined) {
-                    return false;
+            let memberVariables = [];
+
+            const parseMemberVariables = (tokens) => {
+                if (typeof parseMemberVariables.initialized == 'undefined') {
+                    parseMemberVariables.current = -1;
+                    parseMemberVariables.scopes = [];
+                    parseMemberVariables.initialized = true;
                 }
 
-                // parsing: #ifdef <TOKEN>
-                {
-                    let regex = /^\s*#ifdef [A-Z0-9_]+/;
-                    let match = regex.exec(line);
+                let line = '';
+                for (const token of tokens) {
+                    line += token.content.toString();
+                }
 
-                    if (match) {
-                        let directive = match[0].replace(/[#ifdef\s]+/g, '');
-                        return preprocessorDirectives.includes(directive);
+                // looking for class definition ( class <NAME> : ... { )
+                // note: my personal coding style always has the scope opening brace on the same line
+
+                let regex = /^\s*(class [a-zA-Z0-9]+)/;
+                let match = regex.exec(line);
+
+                if (match) {
+                    let open = false;
+                    for (const token of tokens) {
+                        if (token.types.includes('punctuation') && token.content == '{') {
+                            // register start of class definition (not just declaration)
+                            open = true;
+                            break;
+                        }       
+                    }
+
+                    if (!open) {
+                        // class declaration has no member variables
+                        return;
+                    }
+
+                    console.log('registering new line ' + line);
+                    parseMemberVariables.scopes[++parseMemberVariables.current] = true;
+                    return;
+                }
+
+                // determine if current line is opening a new scope
+                for (const token of tokens) {
+                    if (token.types.includes('punctuation') && token.content == '{') {
+                        // new scope is a function / lambda (if new scope was a nested class / struct ir would have been processed above)
+                        // do not register member variables from functions / lambdas
+                        parseMemberVariables.scopes[++parseMemberVariables.current] = false;
+                        return;
+                    }       
+                }
+
+                // determine if current line is closing an existing scope
+                for (const token of tokens) {
+                    if (token.types.includes('punctuation') && token.content == '}') {
+                        if (parseMemberVariables.scopes.length > 0) {
+                            parseMemberVariables.scopes.pop();
+                        }
+
+                        parseMemberVariables.current--;
+                        return;
+                    }       
+                }
+
+                for (const token of tokens) {
+                    const content = token.content;
+                    const types = token.types;
+
+                    if (types.includes('plain') && parseMemberVariables.scopes[parseMemberVariables.current]) {
+                        if (content.replace(/\s/g, '').length == 0) {
+                            // ignore whitespace tokens
+                            continue;
+                        }
+
+                        // ignore tokens that have been classified as other (custom) types but have not had their token types updated
+                        if (classes.includes(content)) {
+                            continue;
+                        }
+
+                        if (namespaces.includes(content)) {
+                            continue;
+                        }
+
+                        if (preprocessorDirectives.includes(content)) {
+                            continue;
+                        }
+
+                        memberVariables.push(content);
                     }
                 }
-
-                // parsing: #if defined(<TOKEN>)
-                {
-                    let regex = /^\s*#if defined\([A-Z0-9_]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#if\sdefined()]+/g, '');
-                        return preprocessorDirectives.includes(directive);
-                    }
-                }
-
-                // parsing: #if !defined(<TOKEN>)
-                {
-                    let regex = /^\s*#if !defined\([A-Z0-9_]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[!#if\sdefined()]+/g, '');
-                        return !preprocessorDirectives.includes(directive);
-                    }
-                }
-
-                // parsing: #elifdef <TOKEN>
-                {
-                    let regex = /^\s*#elifdef \([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#elifdef\s()]/g, '');
-                        return preprocessorDirectives.includes(directive);
-                    }
-                }
-
-                // parsing: #elif defined(<TOKEN>)
-                {
-                    let regex = /^\s*#elif defined\([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[#elifdefined\s()]/g, '');
-                        return preprocessorDirectives.includes(directive);
-                    }
-                }
-
-                // parsing: #elif !defined(<TOKEN>)
-                {
-                    let regex = /^\s*#elif !defined\([A-Z0-9]+\)/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        let directive = match[0].replace(/[!#elifdefined\s()]/g, '');
-                        return !preprocessorDirectives.includes(directive);
-                    }
-                }
-
-                // unknown / unprocessed preprocessor directive, follow default behavior
-                return defined;
             }
 
             const updateSyntaxHighlighting = (tokens) => {
@@ -548,6 +542,12 @@ function MarkdownFile({ path, content }) {
                                     types: ['token', 'member-variable']
                                 });
                             }
+                            else {
+                                updated.push({
+                                    content: tokens[i].content,
+                                    types: tokens[i].types
+                                });
+                            }
                         }
                         else {
                             updated.push({
@@ -606,7 +606,7 @@ function MarkdownFile({ path, content }) {
                                 types: ['token', 'macro', 'property', 'macro-name']
                             });
                         }
-                        else if (tokens[i].content == 'ifdef' || tokens[i].content == 'ifndef') {
+                        else if (tokens[i].content == 'ifdef' || tokens[i].content == 'ifndef' || tokens[i].content == 'elifdef' || tokens[i].content == 'elifndef') {
                             // ifdef / ifndef
                             updated.push({
                                 content: tokens[i].content,
@@ -662,6 +662,12 @@ function MarkdownFile({ path, content }) {
                                 types: ['token', 'macro', 'property', 'macro-name']
                             });
                         }
+                        else if (memberVariables.includes(tokens[i].content)) {
+                            updated.push({
+                                content: tokens[i].content,
+                                types: ['token', 'member-variable']
+                            });
+                        }
                         else {
                             updated.push({
                                 content: tokens[i].content,
@@ -675,12 +681,6 @@ function MarkdownFile({ path, content }) {
                             content: tokens[i].content,
                             types: tokens[i].types
                         });
-                    }
-                }
-
-                for (let i in updated) {
-                    if (!defined) {
-                        updated[i].types.push('undefined'); // top-level css style
                     }
                 }
 
@@ -698,22 +698,13 @@ function MarkdownFile({ path, content }) {
 
                                 parseNamespaceNames(tokens[i]);
                                 parseClassNames(tokens[i]);
+                                parsePreprocessorDirectives(tokens[i]);
+                                parseMemberVariables(tokens[i]);
 
-                                // preprocessor directives that change whether code should appear defined or not should still appear defined
-                                // only the code within undefined preprocessor directive scopes should appear undefined
-                                let shouldAppearDefined = parsePreprocessorDirectives(tokens[i]);
-                                if (defined && !shouldAppearDefined) {
-                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                                    defined = false;
-                                }
-                                else if (!defined && shouldAppearDefined) {
-                                    defined = true;
-                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                                }
-                                else {
-                                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                                }
+                                tokens[i] = updateSyntaxHighlighting(tokens[i]);
                             }
+
+                            console.log(memberVariables);
 
                             return (
                                 <pre className={className} style={{}} >

@@ -18,44 +18,48 @@ Let's say we have a Transform system that operates on any entity that has a Tran
 #include <string>
 
 #define TEST_DEFINE_1 1
-// #define TEST_DEFINE_2 2
+#define TEST_DEFINE_2 2
 // #define TEST_DEFINE_3 3
 
 #if defined(TEST_DEFINE_1)
 
-  // This should appear defined.
-  int my_defined_value = 4;
+  // hahahehe
+
+#elif defined(TEST_DEFINE_2)
+
+  // hahahehe
 
 #else
 
-  // This should appear undefined.
-  int my_undefined_value = 6;
+  // hahahehe
 
 #endif
 
 
-#ifdef TEST_DEFINE_2
+// #ifdef TEST_DEFINE_2
 
-  // This should appear undefined.
-  // ...
+//   // This should appear undefined.
+//   // ...
 
-#elifdef TEST_DEFINE_3
+// #elifdef TEST_DEFINE_3
 
-  // This should appear undefined.
-  // ...
+//   // This should appear undefined.
+//   // ...
 
-#elifdef TEST_DEFINE_1
+// #elifdef TEST_DEFINE_1
 
-  // This should appear defined.
-  // ...
+//   // This should appear defined.
+//   // ...
 
-#endif
+// #endif
 
 template <typename Tddd>
 class MyClass {
  public:
   #define MY_PROPERTY      Tddd
   MY_PROPERTY  my_property;
+
+   ...
 };
 
         enum class Mode {
@@ -79,7 +83,7 @@ int main() {
 
 
  namespace lightswitch::    asdf   {
-  class Derived : protected Base<float> {
+  class Derived : protected Base<float...> {
         public:
 
         protected:
