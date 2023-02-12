@@ -56,7 +56,7 @@ Let's say we have a Transform system that operates on any entity that has a Tran
 template <typename Tddd>
 class MyClass {
  public:
-  #define MY_PROPERTY      Tddd
+  #define MY_PROPERTY      const Tddd* 
   MY_PROPERTY  my_property;
 
    ...

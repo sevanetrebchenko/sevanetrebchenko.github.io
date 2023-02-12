@@ -68,7 +68,7 @@ function MarkdownFile({ path, content }) {
             let added = [];       // lines in the code block that have been added
             let removed = [];     // lines in the code block that have been removed
             let modified = [];    // lines in the code block that have been modified
-            let hidden = [];
+            let hidden = [];      // lines in the code block that should appear hidden
             let highlighted = []; // lines in the code block that have been emphasized
 
 
@@ -634,14 +634,14 @@ function MarkdownFile({ path, content }) {
                             });
                         }
                         else {
-                            // unmodified (include, endif)
+                            // unmodified (include, endif, define)
                             updated.push({
                                 content: tokens[i].content,
                                 types: tokens[i].types
                             });
                         }
                     }
-                    else if (tokens[i].types.includes('plain')) {
+                    else if (tokens[i].types.includes('plain') || (tokens[i].types.includes('macro') && tokens[i].types.includes('expression'))) {
                         // namespace + class + macro names
 
                         if (namespaces.includes(tokens[i].content)) {
@@ -703,8 +703,6 @@ function MarkdownFile({ path, content }) {
 
                                 tokens[i] = updateSyntaxHighlighting(tokens[i]);
                             }
-
-                            console.log(memberVariables);
 
                             return (
                                 <pre className={className} style={{}} >
