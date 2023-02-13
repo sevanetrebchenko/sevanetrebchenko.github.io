@@ -352,11 +352,32 @@ function MarkdownFile({ path, content }) {
             }
 
             let preprocessorDirectives = [];
-            const parsePreprocessorDirectives = (tokens) => {
+            let defined = true;
+
+            const parsePreprocessorDirectives = function(tokens) {
+                if (typeof parsePreprocessorDirectives.initialized == 'undefined') {
+                    parsePreprocessorDirectives.current = -1;
+                    parsePreprocessorDirectives.scopes = []; // {  }
+
+                    parsePreprocessorDirectives.initialized = true;
+                }
+
+                for (const token of tokens) {
+                    if (token.types.includes('comment')) {
+                        return {
+                            override: false,
+                            visible: defined
+                        };
+                    }
+                }
+
                 let line = '';
                 for (let token of tokens) {
                     line += token.content.toString();
                 }
+
+                console.log(parsePreprocessorDirectives.scopes);
+                console.log(line);
 
                 // parsing: #define <TOKEN>
                 {
@@ -366,11 +387,88 @@ function MarkdownFile({ path, content }) {
                     if (match) {
                         let directive = match[0].replace(/[#define\s()]/g, '').trim();
 
-                        if (!preprocessorDirectives.includes(directive)) {
-                            preprocessorDirectives.push(directive);
+                        if (defined) {
+                            if (!preprocessorDirectives.includes(directive)) {
+                                preprocessorDirectives.push(directive);
+                            }
                         }
+
+                        return {
+                            override: defined,
+                            visible: defined
+                        };
                     }
                 }
+
+                // parsing: #if defined(<TOKEN>)
+                {
+                    let regex = /^\s*#if defined\([A-Z0-9_]+\)/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        const directive = match[0].replace(/[#if\sdefined()]+/g, '').trim();
+                        const active = preprocessorDirectives.includes(directive);
+
+                        parsePreprocessorDirectives.scopes.push({
+                            active: active,
+                            before: defined
+                        });
+                        parsePreprocessorDirectives.current++;
+
+                        return {
+                            override: parsePreprocessorDirectives.current == 0 || defined,
+                            visible: active && defined
+                        };
+                    }
+                }
+
+                // parsing: #elif defined(<TOKEN>)
+                {
+                    let regex = /^\s*#elif defined\([A-Z0-9_]+\)/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        const directive = match[0].replace(/[#elifdefined\s()]/g, '').trim();
+                        return {
+                            override: parsePreprocessorDirectives.current == 0 || defined,
+                            visible: preprocessorDirectives.includes(directive) && !parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current].active && defined
+                        };
+                    }
+                }
+
+                // parsing: #else
+                {
+                    let regex = /^\s*#else/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        return {
+                            override: parsePreprocessorDirectives.current == 0 || defined,
+                            visible: !parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current].active && defined
+                        };
+                    }
+                }
+
+                // parsing: #endif
+                {
+                    let regex = /\s*#endif/;
+                    let match = regex.exec(line);
+
+                    if (match) {
+                        const before = parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current--].before;
+                        parsePreprocessorDirectives.scopes.pop();
+
+                        return {
+                            override: parsePreprocessorDirectives.current == -1 || before,
+                            visible: before
+                        };
+                    }
+                }
+
+                return {
+                    override: false,
+                    visible: defined
+                };
             }
 
             let memberVariables = [];
@@ -379,6 +477,7 @@ function MarkdownFile({ path, content }) {
                 if (typeof parseMemberVariables.initialized == 'undefined') {
                     parseMemberVariables.current = -1;
                     parseMemberVariables.scopes = [];
+
                     parseMemberVariables.initialized = true;
                 }
 
@@ -408,7 +507,6 @@ function MarkdownFile({ path, content }) {
                         return;
                     }
 
-                    console.log('registering new line ' + line);
                     parseMemberVariables.scopes[++parseMemberVariables.current] = true;
                     return;
                 }
@@ -684,6 +782,12 @@ function MarkdownFile({ path, content }) {
                     }
                 }
 
+                for (let i in updated) {
+                    if (!defined) {
+                        updated[i].types.push('undefined'); // top-level css style
+                    }
+                }
+
                 return updated;
             }
 
@@ -698,10 +802,12 @@ function MarkdownFile({ path, content }) {
 
                                 parseNamespaceNames(tokens[i]);
                                 parseClassNames(tokens[i]);
-                                parsePreprocessorDirectives(tokens[i]);
                                 parseMemberVariables(tokens[i]);
 
+                                const { override, visible } = parsePreprocessorDirectives(tokens[i]);
+                                defined |= override;
                                 tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                                defined = visible;
                             }
 
                             return (

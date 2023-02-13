@@ -23,11 +23,29 @@ Let's say we have a Transform system that operates on any entity that has a Tran
 
 #if defined(TEST_DEFINE_1)
 
+  #if defined(TEST_DEFINE_2)
+
+    // test code hahah hehe
+    // more test code
+  #else 
+
+    // asdf asdf asdf 
+    ...
+  #endif
+
   // hahahehe
 
 #elif defined(TEST_DEFINE_2)
 
-  // hahahehe
+  #if defined(TEST_DEFINE_1)
+
+    // test code hahah hehe
+    // more test code
+  #else 
+
+    // asdf asdf asdf 
+    ...
+  #endif
 
 #else
 
