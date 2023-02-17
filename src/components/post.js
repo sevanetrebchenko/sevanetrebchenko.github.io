@@ -352,23 +352,18 @@ function MarkdownFile({ path, content }) {
             }
 
             let preprocessorDirectives = [];
-            let defined = true;
+            let isDefined = true; 
 
             const parsePreprocessorDirectives = function(tokens) {
                 if (typeof parsePreprocessorDirectives.initialized == 'undefined') {
-                    parsePreprocessorDirectives.current = -1;
-                    parsePreprocessorDirectives.scopes = []; // {  }
+                    // scopes keep track of conditional preprocessor branches
+                    // {
+                    //     hasActiveBranch: whether conditional preprocessor block has an active (defined) branch
+                    //     originalState: defined state before current conditional preprocessor block
+                    // }
+                    parsePreprocessorDirectives.scopes = []; 
 
                     parsePreprocessorDirectives.initialized = true;
-                }
-
-                for (const token of tokens) {
-                    if (token.types.includes('comment')) {
-                        return {
-                            override: false,
-                            visible: defined
-                        };
-                    }
                 }
 
                 let line = '';
@@ -376,62 +371,77 @@ function MarkdownFile({ path, content }) {
                     line += token.content.toString();
                 }
 
-                console.log(parsePreprocessorDirectives.scopes);
-                console.log(line);
+                // notes: 
+                //  - asserting position at the beginning of the line in regex (^) guarantees preprocessor directives that have been commented out do not return valid matches
+                //  - top-level preprocessor directives always appear defined
 
                 // parsing: #define <TOKEN>
                 {
-                    let regex = /^\s*#define [A-Z0-9_]+/;
-                    let match = regex.exec(line);
+                    const regex = /^\s*#define [A-Z0-9_]+/;
+                    const match = regex.exec(line);
 
                     if (match) {
-                        let directive = match[0].replace(/[#define\s()]/g, '').trim();
+                        const directive = match[0].replace(/[#define\s()]/g, '').trim();
 
-                        if (defined) {
+                        if (isDefined) {
+                            // preprocessor defines are only valid if they appear within a defined preprocessor block
                             if (!preprocessorDirectives.includes(directive)) {
                                 preprocessorDirectives.push(directive);
                             }
                         }
 
                         return {
-                            override: defined,
-                            visible: defined
+                            forceDefine: isDefined,
+                            isNextDefined: isDefined
                         };
                     }
                 }
 
                 // parsing: #if defined(<TOKEN>)
                 {
-                    let regex = /^\s*#if defined\([A-Z0-9_]+\)/;
-                    let match = regex.exec(line);
+                    const regex = /^\s*#if defined\([A-Z0-9_]+\)/;
+                    const match = regex.exec(line);
 
                     if (match) {
                         const directive = match[0].replace(/[#if\sdefined()]+/g, '').trim();
-                        const active = preprocessorDirectives.includes(directive);
+                        const isBranchActive = preprocessorDirectives.includes(directive);
+                        const isTopLevel = parsePreprocessorDirectives.scopes.length == 0;
 
                         parsePreprocessorDirectives.scopes.push({
-                            active: active,
-                            before: defined
+                            hasActiveBranch: isBranchActive,
+                            originalState: isDefined
                         });
-                        parsePreprocessorDirectives.current++;
 
                         return {
-                            override: parsePreprocessorDirectives.current == 0 || defined,
-                            visible: active && defined
+                            forceDefine: isTopLevel || isDefined,
+                            isNextDefined: isBranchActive && isDefined
                         };
                     }
                 }
 
                 // parsing: #elif defined(<TOKEN>)
                 {
-                    let regex = /^\s*#elif defined\([A-Z0-9_]+\)/;
-                    let match = regex.exec(line);
+                    const regex = /^\s*#elif defined\([A-Z0-9_]+\)/;
+                    const match = regex.exec(line);
 
                     if (match) {
                         const directive = match[0].replace(/[#elifdefined\s()]/g, '').trim();
+                        const isBranchActive = preprocessorDirectives.includes(directive);
+
+                        if (parsePreprocessorDirectives.scopes.length == 0) {
+                            // invalid syntax, but process it like it is
+                            console.error("Encountered #elif(...) preprocessor directive without prior #if(...) directive (invalid syntax).");
+                            return {
+                                forceDefine: isDefined,
+                                isNextDefined: isBranchActive && isDefined
+                            };
+                        }
+
+                        const isTopLevel = parsePreprocessorDirectives.scopes.length == 1; // #if(...) directive opened a new scope
+                        const hasActiveBranch = parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.scopes.length - 1].hasActiveBranch;
                         return {
-                            override: parsePreprocessorDirectives.current == 0 || defined,
-                            visible: preprocessorDirectives.includes(directive) && !parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current].active && defined
+                            forceDefine: isTopLevel || isDefined,
+                            isNextDefined: !hasActiveBranch && isBranchActive && isDefined
                         };
                     }
                 }
@@ -442,32 +452,53 @@ function MarkdownFile({ path, content }) {
                     let match = regex.exec(line);
 
                     if (match) {
+                        if (parsePreprocessorDirectives.scopes.length == 0) {
+                            // invalid syntax, but process it like it is
+                            console.error("Encountered #else preprocessor directive without prior #if(...) directive (invalid syntax).");
+                            return {
+                                forceDefine: isDefined,
+                                isNextDefined: isDefined
+                            };
+                        }
+
+                        const isTopLevel = parsePreprocessorDirectives.scopes.length == 1;
+                        const hasActiveBranch = parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.scopes.length - 1].hasActiveBranch;
                         return {
-                            override: parsePreprocessorDirectives.current == 0 || defined,
-                            visible: !parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current].active && defined
+                            forceDefine: isTopLevel || isDefined,
+                            isNextDefined: !hasActiveBranch && isDefined
                         };
                     }
                 }
 
                 // parsing: #endif
                 {
-                    let regex = /\s*#endif/;
+                    let regex = /^\s*#endif/;
                     let match = regex.exec(line);
 
                     if (match) {
-                        const before = parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.current--].before;
-                        parsePreprocessorDirectives.scopes.pop();
+                        if (parsePreprocessorDirectives.scopes.length == 0) {
+                            // invalid syntax, but process like it is
+                            console.error("Encountered #endif preprocessor directive without prior #if(...) directive (invalid syntax).");
+                            return {
+                                forceDefine: isDefined,
+                                isNextDefined: isDefined
+                            }; 
+                        }
+
+                        const isTopLevel = parsePreprocessorDirectives.scopes.length == 1;
+                        const originalState = parsePreprocessorDirectives.scopes[parsePreprocessorDirectives.scopes.length - 1].originalState;
+                        parsePreprocessorDirectives.scopes.pop(); // clear preprocessor block scope
 
                         return {
-                            override: parsePreprocessorDirectives.current == -1 || before,
-                            visible: before
+                            forceDefine: isTopLevel || originalState,
+                            isNextDefined: originalState
                         };
                     }
                 }
 
                 return {
-                    override: false,
-                    visible: defined
+                    forceDefine: false,
+                    isNextDefined: isDefined
                 };
             }
 
@@ -783,7 +814,7 @@ function MarkdownFile({ path, content }) {
                 }
 
                 for (let i in updated) {
-                    if (!defined) {
+                    if (!isDefined) {
                         updated[i].types.push('undefined'); // top-level css style
                     }
                 }
@@ -804,10 +835,14 @@ function MarkdownFile({ path, content }) {
                                 parseClassNames(tokens[i]);
                                 parseMemberVariables(tokens[i]);
 
-                                const { override, visible } = parsePreprocessorDirectives(tokens[i]);
-                                defined |= override;
+                                const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
+
+                                if (forceDefine) {
+                                    isDefined = true;
+                                }
+
                                 tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                                defined = visible;
+                                isDefined = isNextDefined;
                             }
 
                             return (
