@@ -65,27 +65,27 @@ function MarkdownFile({ path, content }) {
     const MarkdownComponents = {
         code({ node, inline, className, children, ...args }) {
             // for combining diff syntax highlighting with regular code highlighting
-            let added = [];       // lines in the code block that have been added
-            let removed = [];     // lines in the code block that have been removed
-            let modified = [];    // lines in the code block that have been modified
-            let hidden = [];      // lines in the code block that should appear hidden
-            let highlighted = []; // lines in the code block that have been emphasized
+            let added = [];
+            let removed = [];
+            let modified = [];
+            let hidden = [];
+            let highlighted = [];
 
-
-            const parseMetadata = (line) => {
-                // parsing: added lines
+            const parseMetadata = function (line) {
+                // parsing: added lines 
                 {
-                    let regex = /added:{[-,\d\s]+}/g;
-                    let match = regex.exec(line);
+                    const regex = /added:{[-,\d\s]+}/g;
+                    const match = regex.exec(line);
                     if (match) {
                         added.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
+                        console.log(added);
                     }
                 }
 
                 // parsing: removed lines
                 {
-                    let regex = /removed:{[-,\d\s]+}/g;
-                    let match = regex.exec(line);
+                    const regex = /removed:{[-,\d\s]+}/g;
+                    const match = regex.exec(line);
                     if (match) {
                         removed.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
                     }
@@ -93,30 +93,31 @@ function MarkdownFile({ path, content }) {
 
                 // parsing: modified lines
                 {
-                    let regex = /modified:{[-,\d\s]+}/g;
-                    let match = regex.exec(line);
+                    const regex = /modified:{[-,\d\s]+}/g;
+                    const match = regex.exec(line);
                     if (match) {
                         modified.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
                     }
                 }
 
+                // parsing: hidden lines
+                {
+                    const regex = /hidden:{[-,\d\s]+}/g;
+                    const match = regex.exec(line);
+                    if (match) {
+                        hidden.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
+                    }
+                }
+
                 // parsing: highlighted lines
                 {
-                    let regex = /highlighted:{[-,\d\s]+}/g;
-                    let match = regex.exec(line);
+                    const regex = /highlighted:{[-,\d\s]+}/g;
+                    const match = regex.exec(line);
                     if (match) {
                         highlighted.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
                     }
                 }
             }
-
-            // parse the code block language.
-            let regex = /language-(\w+)/;
-            const language = regex.test(className) ? regex.exec(className)[1] : '';
-
-            // code block metadata stores which lines to highlight
-            parseMetadata(node?.data?.meta);
-
 
             const splitJoinedTokens = (tokens) => {
                 let split = [];
@@ -352,16 +353,16 @@ function MarkdownFile({ path, content }) {
             }
 
             let preprocessorDirectives = [];
-            let isDefined = true; 
+            let isDefined = true;
 
-            const parsePreprocessorDirectives = function(tokens) {
+            const parsePreprocessorDirectives = function (tokens) {
                 if (typeof parsePreprocessorDirectives.initialized == 'undefined') {
                     // scopes keep track of conditional preprocessor branches
                     // {
                     //     hasActiveBranch: whether conditional preprocessor block has an active (defined) branch
                     //     originalState: defined state before current conditional preprocessor block
                     // }
-                    parsePreprocessorDirectives.scopes = []; 
+                    parsePreprocessorDirectives.scopes = [];
 
                     parsePreprocessorDirectives.initialized = true;
                 }
@@ -482,7 +483,7 @@ function MarkdownFile({ path, content }) {
                             return {
                                 forceDefine: isDefined,
                                 isNextDefined: isDefined
-                            }; 
+                            };
                         }
 
                         const isTopLevel = parsePreprocessorDirectives.scopes.length == 1;
@@ -530,7 +531,7 @@ function MarkdownFile({ path, content }) {
                             // register start of class definition (not just declaration)
                             open = true;
                             break;
-                        }       
+                        }
                     }
 
                     if (!open) {
@@ -549,7 +550,7 @@ function MarkdownFile({ path, content }) {
                         // do not register member variables from functions / lambdas
                         parseMemberVariables.scopes[++parseMemberVariables.current] = false;
                         return;
-                    }       
+                    }
                 }
 
                 // determine if current line is closing an existing scope
@@ -561,7 +562,7 @@ function MarkdownFile({ path, content }) {
 
                         parseMemberVariables.current--;
                         return;
-                    }       
+                    }
                 }
 
                 for (const token of tokens) {
@@ -823,12 +824,19 @@ function MarkdownFile({ path, content }) {
             }
 
 
+
+            // parse the code block language.
+            const regex = /language-(\w+)/;
+            const language = regex.test(className) ? regex.exec(className)[1] : '';
+
+            // code block metadata stores which lines to highlight
+            parseMetadata(node?.data?.meta);
+
             return (
                 <Highlight {...defaultProps} code={children.toString()} language={language}>
                     {
                         function ({ className, tokens, getLineProps, getTokenProps }) {
-
-                            for (let i in tokens) {
+                            for (let i = 0; i < tokens.length; ++i) {
                                 tokens[i] = splitJoinedTokens(tokens[i]);
 
                                 parseNamespaceNames(tokens[i]);
@@ -843,6 +851,47 @@ function MarkdownFile({ path, content }) {
 
                                 tokens[i] = updateSyntaxHighlighting(tokens[i]);
                                 isDefined = isNextDefined;
+                            }
+
+                            for (let i = 0; i < tokens.length; ++i) {
+                                if (hidden.includes(i)) {
+                                    tokens.splice(i, 1);
+                                }
+                            }
+
+                            const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
+
+                            for (let i = 0; i < tokens.length; ++i) {
+                                if (added.includes(i)) {
+                                    tokens[i].unshift({
+                                        content: '  +  ',
+                                        types: ['diff', 'added']
+                                    });
+                                }
+                                else if (removed.includes(i)) {
+                                    tokens[i].unshift({
+                                        content: '  -  ',
+                                        types: ['diff', 'removed']
+                                    });
+                                }
+                                else if (modified.includes(i)) {
+                                    tokens[i].unshift({
+                                        content: '     ',
+                                        types: ['diff', 'modified']
+                                    });
+                                }
+                                else if (highlighted.includes(i)) {
+                                    tokens[i].unshift({
+                                        content: '  !  ',
+                                        types: ['diff', 'highlighted']
+                                    });
+                                }
+                                else if (requiresPadding) {
+                                    tokens[i].unshift({
+                                        content: '     ',
+                                        types: ['diff', 'padding']
+                                    });
+                                }
                             }
 
                             return (
@@ -874,6 +923,5 @@ function MarkdownFile({ path, content }) {
                 {content}
             </ReactMarkdown>
         </React.Fragment >
-        //     // </React.Fragment>
     );
 }

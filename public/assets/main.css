@@ -2,7 +2,7 @@ body {
     color: black;
     font-family: monospace;
     font-size: 16px;
-    line-height: 1.4;
+    line-height: 1.5em;
     margin: 0 auto;
     max-width: 720px;
     min-height: 100%;
@@ -89,9 +89,11 @@ header {
 pre[class*="language-"] {
     background-color: rgb(43, 43, 43);
 
+    display: flex;
+    flex-direction: column;
+
     margin: 0em;
     padding: 1em;
-
     border-radius: 10px;
 
     -moz-tab-size: 4;
@@ -106,7 +108,10 @@ pre[class*="language-"] {
 
 pre[class*="language-"] .token-line {
     margin: 0;
-    padding: 0;
+    padding: 0em;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 
@@ -198,6 +203,11 @@ pre.language-cpp .token.constant,
 pre.language-cpp .token.member-variable
 {
     color: rgb(152, 118, 170);
+}
+
+/* diff */
+pre.language-cpp .token.diff.added {
+    background-color: rgb(41, 68, 54);
 }
 
 /* 

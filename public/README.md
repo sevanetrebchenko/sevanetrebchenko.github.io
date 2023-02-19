@@ -12,7 +12,7 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{}
+```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{1-5}
 #pragma once
 #include <iostream>
 #include <string>
