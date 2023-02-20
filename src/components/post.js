@@ -78,7 +78,6 @@ function MarkdownFile({ path, content }) {
                     const match = regex.exec(line);
                     if (match) {
                         added.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
-                        console.log(added);
                     }
                 }
 
@@ -825,94 +824,190 @@ function MarkdownFile({ path, content }) {
 
 
 
-            // parse the code block language.
+            // mak
             const regex = /language-(\w+)/;
             const language = regex.test(className) ? regex.exec(className)[1] : '';
 
-            // code block metadata stores which lines to highlight
             parseMetadata(node?.data?.meta);
+
+            const syntaxHighlighter = function (tokens) {
+                for (let i = 0; i < tokens.length; ++i) {
+                    console.log(tokens[i]);
+                    tokens[i] = splitJoinedTokens(tokens[i]);
+
+                    parseNamespaceNames(tokens[i]);
+                    parseClassNames(tokens[i]);
+                    parseMemberVariables(tokens[i]);
+
+                    const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
+                    if (forceDefine) {
+                        isDefined = true;
+                    }
+
+                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                    isDefined = isNextDefined;
+                }
+
+                // remove hidden lines
+                for (let i = tokens.length - 1; i >= 0; --i) {
+                    if (hidden.includes(i)) {
+                        tokens.splice(i, 1);
+                    }
+                }
+
+                // generate react elements for line numbers
+                let lineNumbers = [];
+                const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
+
+                for (let i = 0; i < tokens.length; ++i) {
+                    if (added.includes(i)) {
+                        lineNumbers.push({
+                            content: '+',
+                            className: 'diff added'
+                        });
+                    }
+                    else if (removed.includes(i)) {
+                        lineNumbers.push({
+                            content: '-',
+                            className: 'diff removed'
+                        });
+                    }
+                    else if (modified.includes(i)) {
+                        lineNumbers.push({
+                            content: ' ',
+                            className: 'diff modified'
+                        });
+                    }
+                    else if (highlighted.includes(i)) {
+                        lineNumbers.push({
+                            content: ' ',
+                            className: 'diff highlighted'
+                        });
+                    }
+                    else if (requiresPadding) {
+                        lineNumbers.push({
+                            content: ' ',
+                            className: ''
+                        });
+                    }
+                }
+
+                return (
+                    <pre className={className}>
+                        <pre className='meta'>
+                            {
+                                lineNumbers.map((element, index) => (
+                                    <span className={element.className} key={index}>
+                                        {element.content}
+                                    </span>
+                                ))
+                            }
+                        </pre>
+                        <pre className='code'>
+                            {
+                                tokens.map((line, index) => (
+                                    <pre className='line' key={index}>
+                                        {
+                                            line.map((token, index) => (
+                                                <span className={token.types.join(' ')} key={index}>
+                                                    { token.content }
+                                                </span>
+                                            ))
+                                        }
+                                    </pre>
+                                ))
+                            }
+                        </pre>
+                    </pre>
+                );
+            };
 
             return (
                 <Highlight {...defaultProps} code={children.toString()} language={language}>
-                    {
-                        function ({ className, tokens, getLineProps, getTokenProps }) {
-                            for (let i = 0; i < tokens.length; ++i) {
-                                tokens[i] = splitJoinedTokens(tokens[i]);
-
-                                parseNamespaceNames(tokens[i]);
-                                parseClassNames(tokens[i]);
-                                parseMemberVariables(tokens[i]);
-
-                                const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
-
-                                if (forceDefine) {
-                                    isDefined = true;
-                                }
-
-                                tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                                isDefined = isNextDefined;
-                            }
-
-                            for (let i = 0; i < tokens.length; ++i) {
-                                if (hidden.includes(i)) {
-                                    tokens.splice(i, 1);
-                                }
-                            }
-
-                            const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
-
-                            for (let i = 0; i < tokens.length; ++i) {
-                                if (added.includes(i)) {
-                                    tokens[i].unshift({
-                                        content: '  +  ',
-                                        types: ['diff', 'added']
-                                    });
-                                }
-                                else if (removed.includes(i)) {
-                                    tokens[i].unshift({
-                                        content: '  -  ',
-                                        types: ['diff', 'removed']
-                                    });
-                                }
-                                else if (modified.includes(i)) {
-                                    tokens[i].unshift({
-                                        content: '     ',
-                                        types: ['diff', 'modified']
-                                    });
-                                }
-                                else if (highlighted.includes(i)) {
-                                    tokens[i].unshift({
-                                        content: '  !  ',
-                                        types: ['diff', 'highlighted']
-                                    });
-                                }
-                                else if (requiresPadding) {
-                                    tokens[i].unshift({
-                                        content: '     ',
-                                        types: ['diff', 'padding']
-                                    });
-                                }
-                            }
-
-                            return (
-                                <pre className={className} style={{}} >
-                                    {
-                                        tokens.map((line, lineNumber) => (
-                                            <pre {...getLineProps({ line, key: lineNumber })} style={{}} key={lineNumber}>
-                                                {
-                                                    line.map((token, index) => (
-                                                        <span {...getTokenProps({ token, index })} style={{}} key={index} >
-                                                        </span>
-                                                    ))
-                                                }
-                                            </pre>
-                                        ))
-                                    }
-                                </pre>
-                            )
-                        }
-                    }
+                    {({ className, style, tokens, getLineProps, getTokenProps }) => (syntaxHighlighter(tokens))}
                 </Highlight>
+
+
+                //                 syntaxHighlighting
+                //                 function ({ className, tokens, getLineProps, getTokenProps }) {
+                //                     console.log(className);
+                //                     for (let i = 0; i < tokens.length; ++i) {
+                //                         tokens[i] = splitJoinedTokens(tokens[i]);
+
+                //                         parseNamespaceNames(tokens[i]);
+                //                         parseClassNames(tokens[i]);
+                //                         parseMemberVariables(tokens[i]);
+
+                //                         const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
+
+                //                         if (forceDefine) {
+                //                             isDefined = true;
+                //                         }
+
+                //                         tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                //                         isDefined = isNextDefined;
+                //                     }
+
+                //                     // remove hidden lines
+                //                     for (let i = tokens.length - 1; i >= 0; --i) {
+                //                         if (hidden.includes(i)) {
+                //                             tokens.splice(i, 1);
+                //                         }
+                //                     }
+
+                //                     return (
+                //                         <pre className={className} style={{}} >
+                //                             {
+                //                                 tokens.map(function (line, lineNumber) {
+
+                //                                     const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
+                //                                     let content = '';
+                //                                     let className = '';
+
+                //                                     if (added.includes(lineNumber)) {
+                //                                         content = '  +  ';
+                //                                         className = 'token diff added';
+                //                                     }
+                //                                     else if (removed.includes(lineNumber)) {
+                //                                         content = '  -  ';
+                //                                         className = 'token diff removed';
+                //                                     }
+                //                                     else if (modified.includes(lineNumber)) {
+                //                                         content = '     ';
+                //                                         className = 'token diff modified';
+                //                                     }
+                //                                     else if (highlighted.includes(lineNumber)) {
+                //                                         content = '     ';
+                //                                         className = 'token diff highlighted';
+                //                                     }
+                //                                     else if (requiresPadding) {
+                //                                         content = '     ';
+                //                                     }
+
+                //                                     return (
+                //                                         <pre className='token line' style={{ display: "inline-flex" }}>
+                //                                             <span className={className}>
+                //                                                 {
+                //                                                     content
+                //                                                 }
+                //                                             </span>
+                //                                             <pre {...getLineProps({ line, key: lineNumber })} style={{}} key={lineNumber}>
+                //                                                 {
+                //                                                     line.map((token, index) => (
+                //                                                         <span {...getTokenProps({ token, index })} style={{}} key={index} >
+                //                                                         </span>
+                //                                                     ))
+                //                                                 }
+                //                                             </pre>
+                //                                         </pre>
+                //                                     );
+                //                                 })
+                //                             }
+                //                         </pre>
+                //                     )
+                //                 }
+                //             }
+                //         </Highlight>
             )
         }
     }

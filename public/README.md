@@ -12,7 +12,7 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{1-5}
+```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{1-5} line-numbers:{true}
 #pragma once
 #include <iostream>
 #include <string>
@@ -52,24 +52,6 @@ Let's say we have a Transform system that operates on any entity that has a Tran
   // hahahehe
 
 #endif
-
-
-// #ifdef TEST_DEFINE_2
-
-//   // This should appear undefined.
-//   // ...
-
-// #elifdef TEST_DEFINE_3
-
-//   // This should appear undefined.
-//   // ...
-
-// #elifdef TEST_DEFINE_1
-
-//   // This should appear defined.
-//   // ...
-
-// #endif
 
 template <typename Tddd>
 class MyClass {
