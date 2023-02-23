@@ -7,8 +7,10 @@ import ReactMarkdown from 'react-markdown'
 import RemarkGFM from 'remark-gfm'
 import RehypeRaw from 'rehype-raw'
 
-import Highlight, { defaultProps } from "prism-react-renderer";
+import { Prism } from "prism-react-renderer";
 import rangeParser from 'parse-numeric-range'
+import { lang } from 'moment'
+import { Token } from 'prismjs'
 
 export default function Post({ parent }) {
     const { name } = useParams();
@@ -64,6 +66,8 @@ function MarkdownFile({ path, content }) {
 
     const MarkdownComponents = {
         code({ node, inline, className, children, ...args }) {
+            const source = children;
+
             // for combining diff syntax highlighting with regular code highlighting
             let added = [];
             let removed = [];
@@ -830,185 +834,203 @@ function MarkdownFile({ path, content }) {
 
             parseMetadata(node?.data?.meta);
 
-            const syntaxHighlighter = function (tokens) {
-                for (let i = 0; i < tokens.length; ++i) {
-                    console.log(tokens[i]);
-                    tokens[i] = splitJoinedTokens(tokens[i]);
+            const processToken = function (token, parentTypes = []) {
+                let tokenized = [];
 
-                    parseNamespaceNames(tokens[i]);
-                    parseClassNames(tokens[i]);
-                    parseMemberVariables(tokens[i]);
-
-                    const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
-                    if (forceDefine) {
-                        isDefined = true;
+                if (typeof token == 'string') {
+                    // split on newlines and whitespace characters
+                    let temp = [];
+                    for (let word of token.split(/(?=[\n\s])|(?<=[\n\s])/g)) {
+                        temp.push(word);
                     }
 
-                    tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                    isDefined = isNextDefined;
-                }
+                    console.log(temp);
 
-                // remove hidden lines
-                for (let i = tokens.length - 1; i >= 0; --i) {
-                    if (hidden.includes(i)) {
-                        tokens.splice(i, 1);
-                    }
-                }
+                    for (let i = 0; i < temp.length; ++i) {
+                        if (temp[i] == '\n' || temp[i].length > 1) {
+                            // newlines and words get appended unchanged
+                            // newlines are excluded as they will be used for splitting lines
+                            tokenized.push({
+                                types: ['plain'],
+                                content: temp[i]
+                            });
+                        }
+                        else {
+                            // combine adjacent (identical) whitespace into a single token
+                            let result = temp[i];
+                            for (let j = i + 1; j < temp.length; j++, i++) {
+                                if (temp[i] !== temp[j]) {
+                                    break;
+                                }
 
-                // generate react elements for line numbers
-                let lineNumbers = [];
-                const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
-
-                for (let i = 0; i < tokens.length; ++i) {
-                    if (added.includes(i)) {
-                        lineNumbers.push({
-                            content: '+',
-                            className: 'diff added'
-                        });
-                    }
-                    else if (removed.includes(i)) {
-                        lineNumbers.push({
-                            content: '-',
-                            className: 'diff removed'
-                        });
-                    }
-                    else if (modified.includes(i)) {
-                        lineNumbers.push({
-                            content: ' ',
-                            className: 'diff modified'
-                        });
-                    }
-                    else if (highlighted.includes(i)) {
-                        lineNumbers.push({
-                            content: ' ',
-                            className: 'diff highlighted'
-                        });
-                    }
-                    else if (requiresPadding) {
-                        lineNumbers.push({
-                            content: ' ',
-                            className: ''
-                        });
-                    }
-                }
-
-                return (
-                    <pre className={className}>
-                        <pre className='meta'>
-                            {
-                                lineNumbers.map((element, index) => (
-                                    <span className={element.className} key={index}>
-                                        {element.content}
-                                    </span>
-                                ))
+                                result += temp[j];
                             }
-                        </pre>
-                        <pre className='code'>
-                            {
-                                tokens.map((line, index) => (
-                                    <pre className='line' key={index}>
-                                        {
-                                            line.map((token, index) => (
-                                                <span className={token.types.join(' ')} key={index}>
-                                                    { token.content }
-                                                </span>
-                                            ))
-                                        }
-                                    </pre>
-                                ))
+
+                            tokenized.push({
+                                types: ['plain'],
+                                content: result
+                            });
+                        }
+                    }
+                }
+                else { // if (typeof input == 'object') {
+                    let types = [...parentTypes];
+                    if (!parentTypes.includes(token.type)) {
+                        types.push(token.type);
+                    }
+
+                    if (token.content instanceof Array) {
+                        for (let element of token.content) {
+                            // certain token types (ex. macro expressions) appear as nested 'string' tokens and 
+                            // should be manually processed to maintain token typing
+                            if (typeof element == 'string') {
+                                tokenized.push({
+                                    types: types,
+                                    content: element
+                                });
                             }
-                        </pre>
-                    </pre>
-                );
-            };
+                            else {
+                                tokenized = tokenized.concat(processToken(element, types));
+                            }
+                        }
+                    }
+                    else {
+                        tokenized.push({
+                            types: types,
+                            content: token.content
+                        });
+                    }
+                }
+
+                return tokenized;
+            }
+
+            const tokenize = function (source, language) {
+                let tokens = [[]]; // Token[][]
+                let index = 0;
+
+                let line = [];
+
+                for (let token of Prism.tokenize(source.toString(), Prism.languages[language])) {
+                    console.log(token);
+                    let current = processToken(token);
+                    console.log(current);
+
+                    for (let element of current) {
+                        line.push(element);
+
+                        if (element.content === '\n') {
+                            tokens[index] = [...line];
+                            tokens[++index] = [];
+
+                            line = []; // clear
+                        }
+                    }
+                }
+
+                return tokens;
+            }
+
+
+            // tokenize source code using parsed language
+            const tokens = tokenize(children.toString(), language);
+
+            // const prismTokens = processedTokens.map((line) => line.map((token) => ({
+            //   types: token.type.split(' '),
+            //   content: token.content,
+            // })));
+
+            // console.log(prismTokens);
+
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     console.log(tokens[i]);
+            //     tokens[i] = splitJoinedTokens(tokens[i]);
+
+            //     parseNamespaceNames(tokens[i]);
+            //     parseClassNames(tokens[i]);
+            //     parseMemberVariables(tokens[i]);
+
+            //     const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
+            //     if (forceDefine) {
+            //         isDefined = true;
+            //     }
+
+            //     tokens[i] = updateSyntaxHighlighting(tokens[i]);
+            //     isDefined = isNextDefined;
+            // }
+
+            // // remove hidden lines
+            // for (let i = tokens.length - 1; i >= 0; --i) {
+            //     if (hidden.includes(i)) {
+            //         tokens.splice(i, 1);
+            //     }
+            // }
+
+            // generate react elements for line numbers
+            // let lineNumbers = [];
+            // const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
+
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     if (added.includes(i)) {
+            //         lineNumbers.push({
+            //             content: '+',
+            //             className: 'diff added'
+            //         });
+            //     }
+            //     else if (removed.includes(i)) {
+            //         lineNumbers.push({
+            //             content: '-',
+            //             className: 'diff removed'
+            //         });
+            //     }
+            //     else if (modified.includes(i)) {
+            //         lineNumbers.push({
+            //             content: ' ',
+            //             className: 'diff modified'
+            //         });
+            //     }
+            //     else if (highlighted.includes(i)) {
+            //         lineNumbers.push({
+            //             content: ' ',
+            //             className: 'diff highlighted'
+            //         });
+            //     }
+            //     else if (requiresPadding) {
+            //         lineNumbers.push({
+            //             content: ' ',
+            //             className: ''
+            //         });
+            //     }
+            // }
 
             return (
-                <Highlight {...defaultProps} code={children.toString()} language={language}>
-                    {({ className, style, tokens, getLineProps, getTokenProps }) => (syntaxHighlighter(tokens))}
-                </Highlight>
-
-
-                //                 syntaxHighlighting
-                //                 function ({ className, tokens, getLineProps, getTokenProps }) {
-                //                     console.log(className);
-                //                     for (let i = 0; i < tokens.length; ++i) {
-                //                         tokens[i] = splitJoinedTokens(tokens[i]);
-
-                //                         parseNamespaceNames(tokens[i]);
-                //                         parseClassNames(tokens[i]);
-                //                         parseMemberVariables(tokens[i]);
-
-                //                         const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
-
-                //                         if (forceDefine) {
-                //                             isDefined = true;
-                //                         }
-
-                //                         tokens[i] = updateSyntaxHighlighting(tokens[i]);
-                //                         isDefined = isNextDefined;
-                //                     }
-
-                //                     // remove hidden lines
-                //                     for (let i = tokens.length - 1; i >= 0; --i) {
-                //                         if (hidden.includes(i)) {
-                //                             tokens.splice(i, 1);
-                //                         }
-                //                     }
-
-                //                     return (
-                //                         <pre className={className} style={{}} >
-                //                             {
-                //                                 tokens.map(function (line, lineNumber) {
-
-                //                                     const requiresPadding = added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0;
-                //                                     let content = '';
-                //                                     let className = '';
-
-                //                                     if (added.includes(lineNumber)) {
-                //                                         content = '  +  ';
-                //                                         className = 'token diff added';
-                //                                     }
-                //                                     else if (removed.includes(lineNumber)) {
-                //                                         content = '  -  ';
-                //                                         className = 'token diff removed';
-                //                                     }
-                //                                     else if (modified.includes(lineNumber)) {
-                //                                         content = '     ';
-                //                                         className = 'token diff modified';
-                //                                     }
-                //                                     else if (highlighted.includes(lineNumber)) {
-                //                                         content = '     ';
-                //                                         className = 'token diff highlighted';
-                //                                     }
-                //                                     else if (requiresPadding) {
-                //                                         content = '     ';
-                //                                     }
-
-                //                                     return (
-                //                                         <pre className='token line' style={{ display: "inline-flex" }}>
-                //                                             <span className={className}>
-                //                                                 {
-                //                                                     content
-                //                                                 }
-                //                                             </span>
-                //                                             <pre {...getLineProps({ line, key: lineNumber })} style={{}} key={lineNumber}>
-                //                                                 {
-                //                                                     line.map((token, index) => (
-                //                                                         <span {...getTokenProps({ token, index })} style={{}} key={index} >
-                //                                                         </span>
-                //                                                     ))
-                //                                                 }
-                //                                             </pre>
-                //                                         </pre>
-                //                                     );
-                //                                 })
-                //                             }
-                //                         </pre>
-                //                     )
-                //                 }
-                //             }
-                //         </Highlight>
-            )
+                <pre className={className}>
+                    {/* <pre className='meta'>
+                        {
+                            lineNumbers.map((element, index) => (
+                                <span className={element.className} key={index}>
+                                    {element.content}
+                                </span>
+                            ))
+                        }
+                    </pre> */}
+                    <pre className='code'>
+                        {
+                            tokens.map((line, index) => (
+                                <pre className='line' key={index}>
+                                    {
+                                        line.map((token, index) => (
+                                            <span className={token.types.join(' ')} key={index}>
+                                                {token.content}
+                                            </span>
+                                        ))
+                                    }
+                                </pre>
+                            ))
+                        }
+                    </pre>
+                </pre>
+            );
         }
     }
 
