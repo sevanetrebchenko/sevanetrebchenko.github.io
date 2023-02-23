@@ -510,9 +510,7 @@ function MarkdownFile({ path, content }) {
 
             const parseMemberVariables = (tokens) => {
                 if (typeof parseMemberVariables.initialized == 'undefined') {
-                    parseMemberVariables.current = -1;
                     parseMemberVariables.scopes = [];
-
                     parseMemberVariables.initialized = true;
                 }
 
@@ -521,10 +519,14 @@ function MarkdownFile({ path, content }) {
                     line += token.content.toString();
                 }
 
-                // looking for class definition ( class <NAME> : ... { )
-                // note: my personal coding style always has the scope opening brace on the same line
+                console.log(line);
 
-                let regex = /^\s*(class [a-zA-Z0-9]+)/;
+                // regex for class / enum definition:
+                //  - class ... {
+                //  - enum class ... {
+                //  - enum ... {  
+                // note: my personal coding style always has the scope opening brace on the same line
+                let regex = /^\s*(?:(?:\benum\b\s+)?\bclass\b\s+[a-zA-Z0-9]+|\benum\b\s+[a-zA-Z0-9]+)/;
                 let match = regex.exec(line);
 
                 if (match) {
@@ -542,7 +544,7 @@ function MarkdownFile({ path, content }) {
                         return;
                     }
 
-                    parseMemberVariables.scopes[++parseMemberVariables.current] = true;
+                    parseMemberVariables.scopes.push(true);
                     return;
                 }
 
@@ -551,7 +553,7 @@ function MarkdownFile({ path, content }) {
                     if (token.types.includes('punctuation') && token.content == '{') {
                         // new scope is a function / lambda (if new scope was a nested class / struct ir would have been processed above)
                         // do not register member variables from functions / lambdas
-                        parseMemberVariables.scopes[++parseMemberVariables.current] = false;
+                        parseMemberVariables.scopes.push(false);
                         return;
                     }
                 }
@@ -559,39 +561,38 @@ function MarkdownFile({ path, content }) {
                 // determine if current line is closing an existing scope
                 for (const token of tokens) {
                     if (token.types.includes('punctuation') && token.content == '}') {
-                        if (parseMemberVariables.scopes.length > 0) {
-                            parseMemberVariables.scopes.pop();
-                        }
-
-                        parseMemberVariables.current--;
+                        parseMemberVariables.scopes.pop();
                         return;
                     }
                 }
 
-                for (const token of tokens) {
-                    const content = token.content;
-                    const types = token.types;
-
-                    if (types.includes('plain') && parseMemberVariables.scopes[parseMemberVariables.current]) {
-                        if (content.replace(/\s/g, '').length == 0) {
-                            // ignore whitespace tokens
-                            continue;
+                if (parseMemberVariables.scopes.length > 0) {
+                    for (const token of tokens) {
+                        const content = token.content;
+                        const types = token.types;
+                        const isScopeValid = parseMemberVariables.scopes[parseMemberVariables.scopes.length - 1];
+    
+                        if (types.includes('plain') && isScopeValid) {
+                            if (content.replace(/\s/g, '').length == 0) {
+                                // ignore whitespace tokens
+                                continue;
+                            }
+    
+                            // ignore tokens that have been classified as other (custom) types but have not had their token types updated
+                            if (classes.includes(content)) {
+                                continue;
+                            }
+    
+                            if (namespaces.includes(content)) {
+                                continue;
+                            }
+    
+                            if (preprocessorDirectives.includes(content)) {
+                                continue;
+                            }
+    
+                            memberVariables.push(content);
                         }
-
-                        // ignore tokens that have been classified as other (custom) types but have not had their token types updated
-                        if (classes.includes(content)) {
-                            continue;
-                        }
-
-                        if (namespaces.includes(content)) {
-                            continue;
-                        }
-
-                        if (preprocessorDirectives.includes(content)) {
-                            continue;
-                        }
-
-                        memberVariables.push(content);
                     }
                 }
             }
@@ -884,6 +885,8 @@ function MarkdownFile({ path, content }) {
                             // certain token types (ex. macro expressions) appear as nested 'string' tokens and 
                             // should be manually processed to maintain token typing
                             if (typeof element == 'string') {
+                                console.log(element); // ' Tddd'
+
                                 tokenized.push({
                                     types: types,
                                     content: element
@@ -931,34 +934,24 @@ function MarkdownFile({ path, content }) {
                 return tokens;
             }
 
-
             // tokenize source code using parsed language
             const tokens = tokenize(children.toString(), language);
 
-            // const prismTokens = processedTokens.map((line) => line.map((token) => ({
-            //   types: token.type.split(' '),
-            //   content: token.content,
-            // })));
+            for (let i = 0; i < tokens.length; ++i) {
+                parseNamespaceNames(tokens[i]);
+                parseClassNames(tokens[i]);
+                parseMemberVariables(tokens[i]);
 
-            // console.log(prismTokens);
+                const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
+                if (forceDefine) {
+                    isDefined = true;
+                }
 
-            // for (let i = 0; i < tokens.length; ++i) {
-            //     console.log(tokens[i]);
-            //     tokens[i] = splitJoinedTokens(tokens[i]);
+                tokens[i] = updateSyntaxHighlighting(tokens[i]);
+                isDefined = isNextDefined;
+            }
 
-            //     parseNamespaceNames(tokens[i]);
-            //     parseClassNames(tokens[i]);
-            //     parseMemberVariables(tokens[i]);
-
-            //     const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
-            //     if (forceDefine) {
-            //         isDefined = true;
-            //     }
-
-            //     tokens[i] = updateSyntaxHighlighting(tokens[i]);
-            //     isDefined = isNextDefined;
-            // }
-
+            console.log(memberVariables);
             // // remove hidden lines
             // for (let i = tokens.length - 1; i >= 0; --i) {
             //     if (hidden.includes(i)) {

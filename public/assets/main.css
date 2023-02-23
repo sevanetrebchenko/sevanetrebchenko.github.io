@@ -144,7 +144,7 @@ pre.language-cpp .comment
 
 /* keywords */
 pre.language-cpp .keyword,
-pre.language-cpp .boolean 
+pre.language-cpp .boolean
 {
 	color: rgb(206, 136, 70);
 }
@@ -157,12 +157,12 @@ pre.language-cpp .char
 }
 
 /* preprocessor directives */
-pre.language-cpp .macro.property.directive-hash,
-pre.language-cpp .macro.property.directive
+pre.language-cpp .macro.directive-hash,
+pre.language-cpp .macro.directive
 {
     color: rgb(187, 181, 41);
 }
-pre.language-cpp .macro.property.macro-name
+pre.language-cpp .macro.macro-name
 {
     color: 	rgb(144, 139, 37);
 }
@@ -181,11 +181,11 @@ pre.language-cpp .class-name.undefined,
 pre.language-cpp .namespace-name.undefined,
 pre.language-cpp .function.undefined,
 pre.language-cpp .member-variable.undefined,
-pre.language-cpp .macro.property.directive-hash.undefined,
-pre.language-cpp .macro.property.directive.keyword.undefined,
-pre.language-cpp .macro.property.macro-name.undefined,
-pre.language-cpp .macro.property.expression.undefined,
-pre.language-cpp .macro.property.expression.punctuation.undefined
+pre.language-cpp .macro.directive-hash.undefined,
+pre.language-cpp .macro.directive.keyword.undefined,
+pre.language-cpp .macro.macro-name.undefined,
+pre.language-cpp .macro.expression.undefined,
+pre.language-cpp .macro.expression.punctuation.undefined
 {
     color: 	rgb(104, 106, 78);
 }
