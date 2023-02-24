@@ -66,8 +66,6 @@ function MarkdownFile({ path, content }) {
 
     const MarkdownComponents = {
         code({ node, inline, className, children, ...args }) {
-            const source = children;
-
             // for combining diff syntax highlighting with regular code highlighting
             let added = [];
             let removed = [];
@@ -78,7 +76,7 @@ function MarkdownFile({ path, content }) {
             const parseMetadata = function (line) {
                 // parsing: added lines 
                 {
-                    const regex = /added:{[-,\d\s]+}/g;
+                    const regex = /\badded\b:{[-,\d\s]+}/g;
                     const match = regex.exec(line);
                     if (match) {
                         added.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
@@ -87,7 +85,7 @@ function MarkdownFile({ path, content }) {
 
                 // parsing: removed lines
                 {
-                    const regex = /removed:{[-,\d\s]+}/g;
+                    const regex = /\bremoved\b:{[-,\d\s]+}/g;
                     const match = regex.exec(line);
                     if (match) {
                         removed.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
@@ -96,7 +94,7 @@ function MarkdownFile({ path, content }) {
 
                 // parsing: modified lines
                 {
-                    const regex = /modified:{[-,\d\s]+}/g;
+                    const regex = /\bmodified\b:{[-,\d\s]+}/g;
                     const match = regex.exec(line);
                     if (match) {
                         modified.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
@@ -105,7 +103,7 @@ function MarkdownFile({ path, content }) {
 
                 // parsing: hidden lines
                 {
-                    const regex = /hidden:{[-,\d\s]+}/g;
+                    const regex = /\bhidden\b:{[-,\d\s]+}/g;
                     const match = regex.exec(line);
                     if (match) {
                         hidden.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
@@ -114,7 +112,7 @@ function MarkdownFile({ path, content }) {
 
                 // parsing: highlighted lines
                 {
-                    const regex = /highlighted:{[-,\d\s]+}/g;
+                    const regex = /\bhighlighted\b:{[-,\d\s]+}/g;
                     const match = regex.exec(line);
                     if (match) {
                         highlighted.push(...rangeParser(match[0].replace(/[^-,\d]+/g, '')));
@@ -122,238 +120,7 @@ function MarkdownFile({ path, content }) {
                 }
             }
 
-            const splitJoinedTokens = (tokens) => {
-                let split = [];
-
-                for (let token of tokens) {
-                    let types = token.types;
-
-                    if (!types.includes('comment')) {
-                        for (let element of token.content.split(/(\s+)/)) {
-                            if (element.length == 0) {
-                                continue;
-                            }
-
-                            if (element.replace(/\s/g, '').length == 0) {
-                                // empty elements (only whitespace) are categorized as 'plain' tokens.
-                                split.push({
-                                    content: element,
-                                    types: ['plain']
-                                });
-                            }
-                            else {
-                                // split tokens receive the same types as the parent
-                                split.push({
-                                    content: element,
-                                    types: types
-                                });
-                            }
-                        }
-                    }
-                    else {
-                        split.push({
-                            content: token.content,
-                            types: types
-                        });
-                    }
-                }
-
-                return split;
-            }
-
-            let classes = [
-                // standard class types
-                'cout',
-                'endl',
-                'unique_ptr',
-                'weak_ptr',
-                'shared_ptr',
-                'type', // std:: ... :: type
-
-                // standard containers
-                'vector',
-                'unordered_map',
-                'unordered_set',
-                'stack',
-                'queue',
-                'deque',
-            ];
-
-            let namespaces = [
-                // standard namespaces
-                'std'
-            ];
-
-            const parseNamespaceNames = (tokens) => {
-                // namespaces are more easily parsed with regex
-                let line = '';
-                for (let token of tokens) {
-                    line += token.content.toString();
-                }
-
-                // valid syntax highlighting variants:
-                //   - namespace a::b::c { ... }
-                //   - using namespace a::b::c;
-                //   - namespace alias = a::b::c;
-                //   - using a::b; (namespace class member)
-
-                {
-                    let regex = /^\s*namespace [\w\s:]+/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        // parse match for namespace names
-                        const names = match[0].replace(/(\s*namespace )|\s/g, '').split(/:{2}/);
-
-                        for (let name of names) {
-                            if (name == '') {
-                                continue;
-                            }
-
-                            if (!namespaces.includes(name)) {
-                                namespaces.push(name);
-                            }
-                        }
-                    }
-                }
-
-                // parsing: using namespace a::b::c;
-                {
-                    let regex = /^\s*using namespace [\w\s:]+/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        const names = match[0].replace(/(\s*using namespace )|\s/g, '').split(/:{2}/);
-
-                        for (let name of names) {
-                            if (name == '') {
-                                continue;
-                            }
-
-                            if (!namespaces.includes(name)) {
-                                namespaces.push(name);
-                            }
-                        }
-                    }
-                }
-
-                // parsing: namespace alias = a::b::c;
-                {
-                    let regex = /^\s*namespace \w+ = [\w\s:]+/;
-                    let match = regex.exec(line);
-
-                    if (match) {
-                        const names = match[0].replace(/(\s*namespace )|\s/g, '').replace(/=/, '::').split(/:{2}/);
-
-                        for (let name of names) {
-                            if (name == '') {
-                                continue;
-                            }
-
-                            if (!namespaces.includes(name)) {
-                                namespaces.push(name);
-                            }
-                        }
-                    }
-                }
-
-                // parsing: using alias = a::b::c; (where c is a namespace class member)
-                {
-                    let regex = /^\s*using \w+ = [\s\S]+/;
-                    let match = regex.exec(line);
-
-                    let keywords = [
-                        'bool', 'b8',
-                        'char', 'u8', 'i8',
-                        'short', 'u16', 'i16',
-                        'int', 'u32', 'i32',
-                        'float', 'f32',
-                        'double', 'f64',
-                        'void',
-                        'unsigned', 'signed',
-                        'const'
-                    ];
-
-                    if (match) {
-                        const names = match[0].replace(/(\s*using )/, '').replace(/( = )|[,\s<>:{2}]+/g, '::').split(/:{2}/);
-
-                        for (let i in names) {
-                            let name = names[i];
-                            name = name.replace(/[*&]+/g, '');
-
-                            if (name == '') {
-                                continue;
-                            }
-
-                            if (keywords.includes(name)) {
-                                continue;
-                            }
-
-                            const lowercase = /^[a-z_]*$/.test(name);
-                            if (!classes.includes(name) && !namespaces.includes(name) && lowercase && i != names.length) {
-                                namespaces.push(name);
-                            }
-                        }
-                    }
-                }
-            }
-
-            const parseClassNames = (tokens) => {
-                // register classes properly parsed by the parsing library
-                for (let token of tokens) {
-                    let content = token.content;
-                    let types = token.types;
-
-                    if (types.includes('class-name') && !classes.includes(content)) {
-                        classes.push(content);
-                    }
-                }
-
-                let line = '';
-                for (let token of tokens) {
-                    line += token.content.toString();
-                }
-
-                // parsing: using alias = a::b::c; (where c is a namespace class member)
-                {
-                    let regex = /^\s*using \w+ = [\s\S]+/;
-                    let match = regex.exec(line);
-
-                    let keywords = [
-                        'bool', 'b8',
-                        'char', 'u8', 'i8',
-                        'short', 'u16', 'i16',
-                        'int', 'u32', 'i32',
-                        'float', 'f32',
-                        'double', 'f64',
-                        'void',
-                        'unsigned', 'signed',
-                        'const'
-                    ];
-
-                    if (match) {
-                        const names = match[0].replace(/(\s*using )/, '').replace(/( = )|[,\s<>]+/g, '::').split(/:{2}/);
-
-                        for (let i in names) {
-                            let name = names[i];
-                            name = name.replace(/[*&]+/g, '');
-
-                            if (name == '') {
-                                continue;
-                            }
-
-                            if (keywords.includes(name)) {
-                                continue;
-                            }
-
-                            const lowercase = /^[a-z_]*$/.test(name);
-                            if (!classes.includes(name) && !lowercase) {
-                                classes.push(name);
-                            }
-                        }
-                    }
-                }
-            }
+            
 
             let preprocessorDirectives = [];
             let isDefined = true;
@@ -518,8 +285,6 @@ function MarkdownFile({ path, content }) {
                 for (const token of tokens) {
                     line += token.content.toString();
                 }
-
-                console.log(line);
 
                 // regex for class / enum definition:
                 //  - class ... {
@@ -845,8 +610,6 @@ function MarkdownFile({ path, content }) {
                         temp.push(word);
                     }
 
-                    console.log(temp);
-
                     for (let i = 0; i < temp.length; ++i) {
                         if (temp[i] == '\n' || temp[i].length > 1) {
                             // newlines and words get appended unchanged
@@ -915,9 +678,9 @@ function MarkdownFile({ path, content }) {
                 let line = [];
 
                 for (let token of Prism.tokenize(source.toString(), Prism.languages[language])) {
-                    console.log(token);
+                    // console.log(token);
                     let current = processToken(token);
-                    console.log(current);
+                    // console.log(current);
 
                     for (let element of current) {
                         line.push(element);
@@ -951,7 +714,6 @@ function MarkdownFile({ path, content }) {
                 isDefined = isNextDefined;
             }
 
-            console.log(memberVariables);
             // // remove hidden lines
             // for (let i = tokens.length - 1; i >= 0; --i) {
             //     if (hidden.includes(i)) {
@@ -1034,4 +796,190 @@ function MarkdownFile({ path, content }) {
             </ReactMarkdown>
         </React.Fragment >
     );
+}
+
+// utility functionality
+const code = new function() {
+    this.cpp = new function() {
+        let classes = [
+            // standard class types
+            'cout',
+            'endl',
+            'unique_ptr',
+            'weak_ptr',
+            'shared_ptr',
+            'type', // std:: ... :: type
+
+            // standard containers
+            'vector',
+            'unordered_map',
+            'unordered_set',
+            'stack',
+            'queue',
+            'deque',
+        ];
+
+        let namespaces = [
+            // standard namespaces
+            'std'
+        ];
+
+        const parseNamespaceNames = (tokens) => {
+            let line = '';
+            for (let token of tokens) {
+                line += token.content.toString();
+            }
+
+            // valid syntax highlighting variants:
+            //   - namespace a::b::c { ... }
+            //   - using namespace a::b::c;
+            //   - namespace alias = a::b::c;
+            //   - using a::b; (namespace class member)
+
+            // parsing: namespace a::b::c { ... }
+            {
+                let regex = /^\s*(?:\bnamespace\b)\s+[a-zA-Z0-9:\s]+/;
+                let match = regex.exec(line);
+
+                if (match) {
+                    // split by scope resolution operator
+                    const names = match[0].replace(/\bnamespace\b|[:]/g, ' ').trim().split(/\s+/);
+
+                    for (let name of names) {
+                        if (!namespaces.includes(name)) {
+                            namespaces.push(name);
+                        }
+                    }
+                }
+            }
+
+            // parsing: using namespace a::b::c;
+            {
+                let regex = /^\s*(?:\busing\b)\s+(?:\bnamespace\b)\s+[a-zA-Z0-9:\s]+/;
+                let match = regex.exec(line);
+
+                if (match) {
+                    // split by scope resolution operator
+                    const names = match[0].replace(/(\busing\b)|(\bnamespace\b)|[:]/g, ' ').trim().split(/\s+/);
+
+                    for (let name of names) {
+                        if (!namespaces.includes(name)) {
+                            namespaces.push(name);
+                        }
+                    }
+                }
+            }
+
+            // parsing: namespace alias = a::b::c;
+            {
+                let regex = /^\s*(?:\bnamespace\b)\s+\w+\s+=\s+[a-zA-Z0-9:\s]+/;
+                let match = regex.exec(line);
+
+                if (match) {
+                    const names = match[0].replace(/(\bnamespace\b)|[:=]/g, ' ').trim().split(/\s+/);
+
+                    for (let name of names) {
+                        if (!namespaces.includes(name)) {
+                            namespaces.push(name);
+                        }
+                    }
+                }
+            }
+
+            // parsing: using alias = a::b::c; (where c is a namespace class member)
+            {
+                let regex = /^\s*(?:\busing\b)\s+\w+\s+=\s+[a-zA-Z0-9:<>,\*&\s]+/;
+                let match = regex.exec(line);
+
+                let keywords = [
+                    'bool', 'b8',
+                    'char', 'u8', 'i8',
+                    'short', 'u16', 'i16',
+                    'int', 'u32', 'i32',
+                    'float', 'f32',
+                    'double', 'f64',
+                    'void',
+                    'unsigned', 'signed',
+                    'const'
+                ];
+
+                if (match) {
+                    const names = match[0].replace(/(\busing\b)|[:<>,\*&\s=]/g, ' ').trim().split(/\s+/g);
+                    console.log(names);
+
+                    for (let name of names) {
+                        if (keywords.includes(name)) {
+                            continue;
+                        }
+
+                        const isLowercase = /^[a-z_]*$/.test(name);
+
+                        // namespaces are always going to be lowercase
+                        if (!classes.includes(name) && !namespaces.includes(name) && isLowercase) {
+                            namespaces.push(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        const parseClassNames = (tokens) => {
+            // register classes properly parsed by the parsing library
+            for (let token of tokens) {
+                let content = token.content;
+                let types = token.types;
+
+                if (types.includes('class-name') && !classes.includes(content)) {
+                    classes.push(content);
+                }
+            }
+
+            let line = '';
+            for (let token of tokens) {
+                line += token.content.toString();
+            }
+
+            // parsing: using alias = a::b::c; (where c is a namespace class member)
+            {
+                let regex = /^\s*using \w+ = [\s\S]+/;
+                let match = regex.exec(line);
+
+                let keywords = [
+                    'bool', 'b8',
+                    'char', 'u8', 'i8',
+                    'short', 'u16', 'i16',
+                    'int', 'u32', 'i32',
+                    'float', 'f32',
+                    'double', 'f64',
+                    'void',
+                    'unsigned', 'signed',
+                    'const'
+                ];
+
+                if (match) {
+                    const names = match[0].replace(/(\s*using )/, '').replace(/( = )|[,\s<>]+/g, '::').split(/:{2}/);
+
+                    for (let i in names) {
+                        let name = names[i];
+                        name = name.replace(/[*&]+/g, '');
+
+                        if (name == '') {
+                            continue;
+                        }
+
+                        if (keywords.includes(name)) {
+                            continue;
+                        }
+
+                        const lowercase = /^[a-z_]*$/.test(name);
+                        if (!classes.includes(name) && !lowercase) {
+                            classes.push(name);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
 }
