@@ -114,6 +114,19 @@ pre[class*="language-"] .meta {
 
     display: inline-flex;
     flex-direction: column;
+
+    text-align: right;
+
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+pre[class*="language-"] .meta .line-number {
+    padding-right: 1em;
+    border-right: #777;
+    border-width: 1px;
+    border-style: none solid none none;
 }
 
 pre[class*="language-"] .code {
@@ -166,26 +179,7 @@ pre.language-cpp .macro.macro-name
 {
     color: 	rgb(144, 139, 37);
 }
-pre.language-cpp .plain.undefined,
-pre.language-cpp .number.undefined,
-pre.language-cpp .string.undefined,
-pre.language-cpp .char.undefined,
-pre.language-cpp .comment.undefined,
-pre.language-cpp .punctuation.undefined,
-pre.language-cpp .operator.undefined,
-pre.language-cpp .keyword.undefined,
-pre.language-cpp .base-clause.keyword.undefined,
-pre.language-cpp .base-clause.class-name.undefined,
-pre.language-cpp .base-clause.operator.undefined,
-pre.language-cpp .class-name.undefined,
-pre.language-cpp .namespace-name.undefined,
-pre.language-cpp .function.undefined,
-pre.language-cpp .member-variable.undefined,
-pre.language-cpp .macro.directive-hash.undefined,
-pre.language-cpp .macro.directive.keyword.undefined,
-pre.language-cpp .macro.macro-name.undefined,
-pre.language-cpp .macro.expression.undefined,
-pre.language-cpp .macro.expression.punctuation.undefined
+pre.language-cpp .undefined
 {
     color: 	rgb(104, 106, 78);
 }
@@ -217,7 +211,11 @@ pre.language-cpp .member-variable
 }
 
 /* diff */
-pre.language-cpp .diff.added {
+pre.language-cpp .code .diff.added {
+    background-color: rgb(41, 68, 54);
+}
+
+pre.language-cpp .meta .diff.added {
     background-color: rgb(41, 68, 54);
     min-width: 1ch;
     max-width: 1ch;
