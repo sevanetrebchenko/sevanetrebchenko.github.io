@@ -100,7 +100,7 @@ function parseNamespaceNames(tokens) {
 
     // parsing: namespace a::b::c { ... }
     {
-        let regex = /^\s*(?:\bnamespace\b)\s+[a-zA-Z0-9:\s]+/;
+        let regex = /^\s*(?:\bnamespace\b)\s+[a-zA-Z0-9_:\s]+/;
         let match = regex.exec(line);
 
         if (match) {
@@ -117,7 +117,7 @@ function parseNamespaceNames(tokens) {
 
     // parsing: using namespace a::b::c;
     {
-        let regex = /^\s*(?:\busing\b)\s+(?:\bnamespace\b)\s+[a-zA-Z0-9:\s]+/;
+        let regex = /^\s*(?:\busing\b)\s+(?:\bnamespace\b)\s+[a-zA-Z0-9_:\s]+/;
         let match = regex.exec(line);
 
         if (match) {
@@ -134,7 +134,7 @@ function parseNamespaceNames(tokens) {
 
     // parsing: namespace alias = a::b::c;
     {
-        let regex = /^\s*(?:\bnamespace\b)\s+\w+\s+=\s+[a-zA-Z0-9:\s]+/;
+        let regex = /^\s*(?:\bnamespace\b)\s+\w+\s+=\s+[a-zA-Z0-9_:\s]+/;
         let match = regex.exec(line);
 
         if (match) {
@@ -150,7 +150,7 @@ function parseNamespaceNames(tokens) {
 
     // parsing: using alias = a::b::c; (where c is a namespace class member)
     {
-        let regex = /^\s*(?:\busing\b)\s+\w+\s+=\s+[a-zA-Z0-9:<>,\*&\s]+/;
+        let regex = /^\s*(?:\busing\b)\s+\w+\s+=\s+[a-zA-Z0-9_:<>,\*&\s]+/;
         let match = regex.exec(line);
 
         let keywords = [

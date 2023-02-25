@@ -245,12 +245,21 @@ function MarkdownFile({ path, content }) {
                     <pre className='meta'>
                         {
                             tokens.map((line, index) => (
+                                // start line numbers at 1
                                 <span className='line-number' key={index}>
-                                    {index}
+                                    {index + 1}
                                 </span>
                             ))
                         }
                     </pre>
+                );
+
+                elements.push(
+                    <div className='padding'></div>
+                );
+
+                elements.push(
+                    <div className='separator'></div>
                 );
             }
 
@@ -297,6 +306,11 @@ function MarkdownFile({ path, content }) {
                             ))
                         }
                     </pre>
+                );
+            }
+            else {
+                elements.push(
+                    <div className='padding'></div>
                 );
             }
 

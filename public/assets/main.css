@@ -85,6 +85,21 @@ header {
 
 /* SECTION: Language syntax hightlighting ------------------------------------------------------ */
 
+pre {
+    font-size: 16px;
+    line-height: 1.5em;
+}
+
+div.padding {
+    padding: 0em 0.5em 0em 0.5em
+}
+
+div.separator {
+    color: rgb(93, 96, 99);
+    border-width: 1px;
+    border-style: none solid none none;
+}
+
 /* general */
 pre[class*="language-"] {
     background-color: rgb(43, 43, 43);
@@ -128,10 +143,8 @@ pre[class*="language-"] .meta {
     user-select: none;
 }
 
-pre[class*="language-"] .meta .line-number {
-    padding-right: 1em;
-    border-width: 1px;
-    border-style: none solid none none;
+pre[class*="language-"] .meta .padding {
+    padding: 0.5em;
 }
 
 pre[class*="language-"] .code {

@@ -12,7 +12,7 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-6, 7} removed:{4-5} modified:{} hidden:{1-5} line-numbers:{enable}
+```cpp added:{1-7} removed:{} modified:{} hidden:{1-5} line-numbers:{enable}
 #pragma once
 #include <iostream>
 #include <string>
@@ -102,7 +102,7 @@ void TransformSystem::Update(float deltaTime) {
 lightswitch::asdf::Derived affff;
 
     if (test) {
-        using U = std::unique_ptr<const int*, float, Tt>::type;
+        using U = std::unique_ptr<const int*, float, Tt>::gg;
     }
 
     #define HEHEHAHA
