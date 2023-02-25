@@ -1,7 +1,7 @@
 
 import React from 'react'
 import { useState, useEffect } from "react"
-import { Link, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { join, basename, dirname, extname } from 'path-browserify'
 import ReactMarkdown from 'react-markdown'
 import RemarkGFM from 'remark-gfm'
@@ -66,6 +66,8 @@ function MarkdownFile({ path, content }) {
 
     const MarkdownComponents = {
         code({ node, inline, className, children, ...args }) {
+            console.log('found on line ' + node.position.start.line);
+
             let added = [];
             let removed = [];
             let modified = [];
@@ -215,10 +217,10 @@ function MarkdownFile({ path, content }) {
                 return tokens;
             }
 
-            // parse metadata block
+            // parse code block metadata
             const regex = /language-(\w+)/;
             const language = regex.test(className) ? regex.exec(className)[1] : '';
-            parseMetadata(node?.data?.meta);
+            parseMetadata(content.split('\n')[node.position.start.line - 1]);
 
             // tokenize source code using detected language
             let tokens = [];
@@ -330,7 +332,7 @@ function MarkdownFile({ path, content }) {
     }
 
     return (
-        <ReactMarkdown components={MarkdownComponents}>
+        <ReactMarkdown components={MarkdownComponents} rehypePlugins={[RehypeRaw]} remarkPlugins={[RemarkGFM]}>
             {content}
         </ReactMarkdown>
     );
