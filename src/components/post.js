@@ -239,12 +239,14 @@ function MarkdownFile({ path, content }) {
 
             let elements = [];
 
+            console.log(tokens.length)
+
             // html block for line numbers
             if (useLineNumbers) {
                 elements.push(
                     <pre className='meta'>
                         {
-                            tokens.map((line, index) => (
+                            tokens.map((_, index) => (
                                 // start line numbers at 1
                                 <span className='line-number' key={index}>
                                     {index + 1}
