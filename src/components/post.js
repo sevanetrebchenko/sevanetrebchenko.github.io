@@ -204,11 +204,7 @@ function MarkdownFile({ path, content }) {
                     for (let element of processToken(token)) {
                         line.push(element);
                         if (element.content === '\n') {
-                            tokens.push({
-                                types: ['line'],
-                                content: line
-                            });
-
+                            tokens.push(line);
                             line = [];
                         }
                     }
@@ -237,112 +233,91 @@ function MarkdownFile({ path, content }) {
                 }
             }
 
-            let elements = [];
+            let lines = [];
 
-            console.log(tokens.length)
+            for (let i = 0; i < tokens.length; ++i) {
+                let elements = [];
 
-            // html block for line numbers
-            if (useLineNumbers) {
-                elements.push(
-                    <pre className='meta'>
-                        {
-                            tokens.map((_, index) => (
-                                // start line numbers at 1
-                                <span className='line-number' key={index}>
-                                    {index + 1}
-                                </span>
-                            ))
-                        }
-                    </pre>
-                );
+                let types = ['code-block'];
 
-                elements.push(
-                    <div className='padding'></div>
-                );
+                // line numbers
+                {
+                    // right-justify line number text
+                    let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
+                    elements.push(<div className='line-number no-select'>{content}</div>);
 
-                elements.push(
-                    <div className='separator'></div>
-                );
-            }
-
-            // html block for diff syntax
-            if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
-                let diff = [];
-
-                for (let i = 0; i < tokens.length; ++i) {
-                    let content = ' ';
-                    let types = [];
-
-                    if (added.includes(i)) {
-                        content = '+';
-                        types = ['diff', 'added'];
-                    }
-                    else if (removed.includes(i)) {
-                        content = '-';
-                        types = ['diff', 'removed'];
-                    }
-                    else if (modified.includes(i)) {
-                        types = ['diff', 'modified'];
-                    }
-                    else if (highlighted.includes(i)) {
-                        types = ['diff', 'highlighted'];
-                    }
-                    // empty token serves as padding
-                    // else { ... }
-
-                    diff.push({
-                        content: content,
-                        className: types.join(' ')
-                    });
-
-                    tokens[i].types.push(...types);
+                    elements.push(<div className='padding no-select'></div>); // padding
+                    elements.push(<div className='separator no-select' />);    // separator
                 }
 
-                elements.push(
-                    <pre className='meta'>
+                // diff
+                {
+                    if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
+                        if (added.includes(i)) {
+                            elements.push(<div className='diff added no-select'>+</div>);
+                            types.push('added');
+                        }
+                        else if (removed.includes(i)) {tokens
+                            elements.push(<div className='diff removed no-select'>-</div>);
+                            types.push('added');
+                        }
+                        else if (modified.includes(i)) {
+                            elements.push(<div className='diff modified no-select'> </div>);
+                            types.push('modified');
+                        }
+                        else if (highlighted.includes(i)) {
+                            elements.push(<div className='diff highlighted no-select'> </div>);
+                            types.push('highlighted');
+                        }
+                        else {
+                            // empty 'diff' element for padding purposes
+                            elements.push(<div className='diff no-select'> </div>);
+                        }
+                    }
+                    else {
+                        elements.push(<div className='padding no-select'></div>); // padding
+                    }
+                }
+
+                // code block
+                {
+                    elements.push(
+                        <div className={types.join(' ')}>
+                            {
+                                tokens[i].map((token, index) => (
+                                    <span className={token.types.join(' ')} key={index}>
+                                        {token.content}
+                                    </span>
+                                ))
+                            }
+                        </div>
+                    );
+                }
+
+                lines.push(
+                    <div className='line-container'>
                         {
-                            diff.map((element, index) => (
-                                <span className={element.className} key={index}>
-                                    {element.content}
-                                </span>
+                            elements.map((element, index) => (
+                                <React.Fragment key={index}>
+                                    {element}
+                                </React.Fragment>
                             ))
                         }
-                    </pre>
-                );
-            }
-            else {
-                elements.push(
-                    <div className='padding'></div>
+                    </div>
                 );
             }
 
-            // html block for code
-            elements.push(
-                <pre className='code'>
-                    {
-                        tokens.map((line, index) => (
-                            <pre className={line.types.join(' ')} key={index}>
-                                {
-                                    line.content.map((token, index) => (
-                                        <span className={token.types.join(' ')} key={index}>
-                                            {token.content}
-                                        </span>
-                                    ))
-                                }
-                            </pre>
-                        ))
-                    }
-                </pre>
-            );
-
+            let types = ['code-container', className];
             return (
-                <pre className={className}>
+                <div className={types.join(' ')}>
                     {
-                        elements.map((element, index) => (
-                            <React.Fragment key={index}> {element} </React.Fragment>
+                        lines.map((element, index) => (
+                            <React.Fragment key={index}>
+                                {element}
+                            </React.Fragment>
                         ))
                     }
-                </pre>
+                </div>
             );
         }
     }

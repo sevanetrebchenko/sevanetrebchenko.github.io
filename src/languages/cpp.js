@@ -27,6 +27,9 @@ let namespaces = [
 let preprocessorDirectives = [];
 let isDefined = true;
 
+function isLowercase(token) {
+    return /^[a-z0-9_]*$/.test(token);
+}
 
 function parseClassNames(tokens) {
     // register classes parsed by the parsing library
@@ -77,8 +80,7 @@ function parseClassNames(tokens) {
                 }
 
                 // lowercase identifiers typically represent global variables or namespaces
-                const isLowercase = /^[a-z_]*$/.test(name);
-                if (!classes.includes(name) && !isLowercase) {
+                if (!classes.includes(name) && !isLowercase(name)) {
                     classes.push(name);
                 }
             }
@@ -148,7 +150,7 @@ function parseNamespaceNames(tokens) {
         }
     }
 
-    // parsing: using alias = a::b::c; (where c is a namespace class member)
+    // parsing: using alias = a::b::c;
     {
         let regex = /^\s*(?:\busing\b)\s+\w+\s+=\s+[a-zA-Z0-9_:<>,\*&\s]+/;
         let match = regex.exec(line);
@@ -168,16 +170,27 @@ function parseNamespaceNames(tokens) {
         if (match) {
             const names = match[0].replace(/(\busing\b)|[:<>,\*&\s=]/g, ' ').trim().split(/\s+/g);
 
+            // 'c' from the above comment can either be a namespace class member or a global namespace variable
+            const c = names.pop();
+
+            if (!isLowercase(c) && !classes.includes(c)) {
+                // all lowercase trailing identifier is a global namespace member variable and has no syntax highlighting
+                classes.push(c);
+            }
+
             for (let name of names) {
                 if (keywords.includes(name)) {
                     continue;
                 }
 
-                const isLowercase = /^[a-z_]*$/.test(name);
-
                 // namespaces are always going to be lowercase
-                if (!classes.includes(name) && !namespaces.includes(name) && isLowercase) {
-                    namespaces.push(name);
+                if (isLowercase(name)) {
+                    if (!namespaces.includes(name)) {
+                        namespaces.push(name);
+                    }
+                }
+                else if (!classes.includes(name)) {
+                    classes.push(name);
                 }
             }
         }
@@ -384,7 +397,6 @@ function parseMemberVariables(tokens) {
     for (const token of tokens) {
         if (token.types.includes('punctuation') && token.content == '}') {
             parseMemberVariables.scopes.pop();
-            return;
         }
     }
 
@@ -420,151 +432,254 @@ function parseMemberVariables(tokens) {
 }
 
 function updateSyntaxHighlighting(tokens) {
-    let updated = [];
+    let updatedTokens = [];
 
     for (let i = 0; i < tokens.length; ++i) {
-        if (tokens[i].content.length == 0) {
-            continue;
-        }
+        if (tokens[i].types.includes('punctuation')) {
+            const content = tokens[i].content;
 
-        if (tokens[i].types.includes('punctuation') || tokens[i].types.includes('operator')) {
-            // namespace + member variables
-
-            if (tokens[i].content == '::') {
-                // punctuation token remains unmodified
-                updated.push({
-                    content: tokens[i].content,
-                    types: tokens[i].types
-                });
-
+            // parsing: dot operator (.)
+            if (content == '.') {
                 if (++i == tokens.length) {
                     break;
                 }
 
-                if (tokens[i].types.includes('plain')) {
-                    if (namespaces.includes(tokens[i].content)) {
-                        updated.push({
-                            content: tokens[i].content,
-                            types: ['token', 'namespace-name']
-                        });
-                    }
-                    else if (classes.includes(tokens[i].content)) {
-                        updated.push({
-                            content: tokens[i].content,
-                            types: ['token', 'class-name']
-                        });
-                    }
-                    else {
-                        const lowercase = /^[a-z_]*$/.test(tokens[i].content);
+                if (tokens[i].types.includes('function')) {
+                    // token: . 
+                    updatedTokens.push({
+                        content: content,
+                        types: ['operator']
+                    });
 
-                        if (lowercase) {
-                            if (tokens[i].content == 'type') {
-                                // handle ... ::type separately (and first before general classname pass) so that variables named 'type' do not highlight as class names
-                                updated.push({
-                                    content: tokens[i].content,
-                                    types: ['token', 'class-name']
-                                });
-                            }
-                            else {
-                                updated.push({
-                                    content: tokens[i].content,
-                                    types: ['token', 'member-variable']
-                                });
-                            }
-                        }
-                        else {
-                            updated.push({
-                                content: tokens[i].content,
-                                types: ['token', 'class-name']
-                            });
-                        }
-                    }
-                }
-            }
-            else if (tokens[i].content == '.' || tokens[i].content == '->') {
-                // operator token remains unmodified
-                updated.push({
-                    content: tokens[i].content,
-                    types: tokens[i].types
-                });
-
-                if (++i == tokens.length) {
-                    break;
-                }
-
-                if (tokens[i].types.includes('plain')) {
-                    updated.push({
+                    // token: function
+                    updatedTokens.push({
                         content: tokens[i].content,
-                        types: ['token', 'member-variable']
+                        types: ['function']
                     });
                 }
                 else {
-                    updated.push({
+                    // token: . 
+                    updatedTokens.push({
+                        content: content,
+                        types: ['operator']
+                    });
+
+                    if (memberVariables.includes(tokens[i].content)) {
+                        // token: member variable
+                        updatedTokens.push({
+                            content: tokens[i].content,
+                            types: ['member-variable']
+                        });
+                    }
+                    else {
+                        // token: other
+                        updatedTokens.push({
+                            content: tokens[i].content,
+                            types: tokens[i].types
+                        });
+                    }
+                }
+            }
+            else {
+                // unmodified
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: tokens[i].types
+                });
+            }
+        }
+        else if (tokens[i].types.includes('operator')) {
+            // parsing: arrow operator
+            if (tokens[i].content == '->') {
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: tokens[i].types
+                });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                if (memberVariables.includes(tokens[i].content)) {
+                    // token: member variable
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: ['member-variable']
+                    });
+                }
+                else {
+                    // token: other
+                    updatedTokens.push({
                         content: tokens[i].content,
                         types: tokens[i].types
                     });
                 }
             }
             else {
-                updated.push({
+                // unmodified
+                updatedTokens.push({
                     content: tokens[i].content,
                     types: tokens[i].types
                 });
             }
         }
-        else if (tokens[i].types.includes('directive')) {
-            // preprocessor directives
+        else if (tokens[i].types.includes('double-colon')) {
+            // parsing: scope resolution operator (namespace / class name)
+            // token: scope resolution operator
+            updatedTokens.push({
+                content: tokens[i].content,
+                types: tokens[i].types
+            });
 
-            if (tokens[i].content == 'if' || tokens[i].content == 'elif') {
-                // if / elif
-                updated.push({
+            if (++i == tokens.length) {
+                break;
+            }
+
+            console.log(namespaces);
+
+            if (tokens[i].types.includes('plain')) {
+                if (namespaces.includes(tokens[i].content)) {
+                    // token: namespace name
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: ['namespace-name']
+                    });
+                }
+                else if (classes.includes(tokens[i].content) || tokens[i].content == 'type') {
+                    // token: class name or ...::type 
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: ['class-name']
+                    });
+                }
+                else {
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: tokens[i].types
+                    });
+                }
+            }
+            else {
+                // unmodified
+                updatedTokens.push({
                     content: tokens[i].content,
                     types: tokens[i].types
-                });
-
-                if (++i == tokens.length) {
-                    break;
-                }
-
-                // whitespace
-                updated.push({
-                    content: tokens[i].content,
-                    types: tokens[i].types
-                });
-
-                if (++i == tokens.length) {
-                    break;
-                }
-
-                // defined ( #if defined(...) / #if defined ... or #elif defined(...) / #elif defined ... )
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'macro', 'property', 'directive', 'keyword']
-                });
-
-                if (++i == tokens.length) {
-                    break;
-                }
-
-                // opening parenthese / whitespace token (unmodified)
-                updated.push({
-                    content: tokens[i].content,
-                    types: tokens[i].types
-                });
-
-                if (++i == tokens.length) {
-                    break;
-                }
-
-                // macro name
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'macro', 'property', 'macro-name']
                 });
             }
+        }
+        else if (tokens[i].types.includes('directive-hash')) {
+            // token: preprocessor directive
+            updatedTokens.push({
+                content: tokens[i].content,
+                types: ['macro-directive-hash']
+            });
+
+            if (++i == tokens.length) {
+                break;
+            }
+
+            // note: I make the assumption that preprocessor directives do not have spaces between the directive hash and the directive
+
+            // parsing: #if defined(...) / #if defined ... or #elif defined(...) / #elif defined ...
+            if (tokens[i].content == 'if' || tokens[i].content == 'elif') {
+                // token: if / elif
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: ['macro-directive']
+                });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                // token: whitespace
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: tokens[i].types
+                });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                // token: defined 
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: ['macro-directive']
+                });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                {
+                    // remove 'macro' and 'expression' types from opening parentheses ( defined(...) ) or whitespace ( defined ... )
+                    //                                                                         ^                              ^   
+                    let types = [];
+                    for (let type of tokens[i].types) {
+                        if (type == 'macro') {
+                            continue;
+                        }
+
+                        if (type == 'expression') {
+                            continue;
+                        }
+
+                        types.push(type);
+                    }
+
+                    // token: whitespace or (
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: types
+                    });
+
+                    if (++i == tokens.length) {
+                        break;
+                    }
+                }
+
+                // token: macro name
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: ['macro-name']
+                });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                {
+                    // remove 'macro' and 'expression' types from closing parentheses ( defined(...) ) or whitespace ( defined ... )
+                    //                                                                             ^                              ^
+                    let types = [];
+                    for (let type of tokens[i].types) {
+                        if (type == 'macro') {
+                            continue;
+                        }
+
+                        if (type == 'expression') {
+                            continue;
+                        }
+
+                        types.push(type);
+                    }
+
+                    if (types.length == 0) {
+                        types.push('plain');
+                    }
+
+                    // token: whitespace or )
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: types
+                    });
+                }
+            }
+            // parsing: #ifdef ... / #ifndef ... or #elifdef ... / #elifndef ...
             else if (tokens[i].content == 'ifdef' || tokens[i].content == 'ifndef' || tokens[i].content == 'elifdef' || tokens[i].content == 'elifndef') {
-                // ifdef / ifndef
-                updated.push({
+                // token: ifdef / ifndef / elifdef / elifndef
+                updatedTokens.push({
                     content: tokens[i].content,
                     types: tokens[i].types
                 });
@@ -573,8 +688,8 @@ function updateSyntaxHighlighting(tokens) {
                     break;
                 }
 
-                // whitespace
-                updated.push({
+                // token: whitespace
+                updatedTokens.push({
                     content: tokens[i].content,
                     types: tokens[i].types
                 });
@@ -583,87 +698,125 @@ function updateSyntaxHighlighting(tokens) {
                     break;
                 }
 
-                // macro name
-                updated.push({
+                // token: macro name
+                updatedTokens.push({
                     content: tokens[i].content,
-                    types: ['token', 'macro', 'property', 'macro-name']
+                    types: ['macro-name']
                 });
             }
             else {
-                // unmodified (include, endif, define)
-                updated.push({
+                // tokens: define, endif, pragma, include
+                updatedTokens.push({
                     content: tokens[i].content,
-                    types: tokens[i].types
+                    types: ['macro-directive']
                 });
+
+                if (++i == tokens.length) {
+                    break;
+                }
+
+                // token: whitespace
+                updatedTokens.push({
+                    content: tokens[i].content,
+                    types: ['plain']
+                });
+
+                // remove 'macro' and 'expression' types from any of the tokens in the expression
+                while (++i != tokens.length) {
+                    let types = [];
+
+                    // additional parsing for macro expression tokens
+                    if (namespaces.includes(tokens[i].content)) {
+                        types = ['namespace-name'];
+                    }
+                    else if (classes.includes(tokens[i].content)) {
+                        types = ['class-name'];
+                    }
+                    else if (memberVariables.includes(tokens[i].content)) {
+                        types = ['member-variable'];
+                    }
+                    else {
+                        for (let type of tokens[i].types) {
+                            if (type == 'macro') {
+                                continue;
+                            }
+
+                            if (type == 'expression') {
+                                continue;
+                            }
+
+                            types.push(type);
+                        }
+
+                        if (types.length == 0) {
+                            types.push('plain');
+                        }
+                    }
+
+                    updatedTokens.push({
+                        content: tokens[i].content,
+                        types: types
+                    });
+                }
             }
         }
-        else if (tokens[i].types.includes('plain') || (tokens[i].types.includes('macro') && tokens[i].types.includes('expression'))) {
+        else if (tokens[i].types.includes('plain')) {
             // namespace + class + macro names
+            let types = [];
 
             if (namespaces.includes(tokens[i].content)) {
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'namespace-name']
-                });
+                types = ['namespace-name'];
             }
             else if (classes.includes(tokens[i].content)) {
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'class-name']
-                });
-            }
-            else if (preprocessorDirectives.includes(tokens[i].content)) {
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'macro', 'property', 'macro-name']
-                });
+                types = ['class-name'];
             }
             else if (memberVariables.includes(tokens[i].content)) {
-                updated.push({
-                    content: tokens[i].content,
-                    types: ['token', 'member-variable']
-                });
+                types = ['member-variable'];
             }
             else {
-                updated.push({
-                    content: tokens[i].content,
-                    types: tokens[i].types
-                });
+                types = tokens[i].types;
             }
+
+            updatedTokens.push({
+                content: tokens[i].content,
+                types: types
+            });
         }
         else {
             // unmodified
-            updated.push({
+            updatedTokens.push({
                 content: tokens[i].content,
                 types: tokens[i].types
             });
         }
     }
 
-    for (let i in updated) {
+    for (let i in updatedTokens) {
         if (!isDefined) {
-            updated[i].types.push('undefined'); // top-level css style
+            updatedTokens[i].types.push('undefined'); // top-level css style
         }
     }
 
-    return updated;
+    return updatedTokens;
 }
 
 // cpp-specific processing
 export default function processLanguageCpp(tokens) {
-    for (let line of tokens) {
-        parseNamespaceNames(line.content);
-        parseClassNames(line.content);
-        parseMemberVariables(line.content);
-    
-        const { forceDefine, isNextDefined } = parsePreprocessorDirectives(line.content);
+    for (let i = 0; i < tokens.length; ++i) {
+        parseNamespaceNames(tokens[i]);
+        parseClassNames(tokens[i]);
+        parseMemberVariables(tokens[i]);
+
+        const { forceDefine, isNextDefined } = parsePreprocessorDirectives(tokens[i]);
         if (forceDefine) {
             isDefined = true;
         }
-    
-        line.content = updateSyntaxHighlighting(line.content);
+
+        tokens[i] = updateSyntaxHighlighting(tokens[i]);
         isDefined = isNextDefined;
     }
+
+    console.log(memberVariables);
 
     return tokens;
 }

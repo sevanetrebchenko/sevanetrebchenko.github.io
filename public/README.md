@@ -12,9 +12,9 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-7} removed:{} modified:{} hidden:{1-5} line-numbers:{enable}
+```cpp added:{1-7} removed:{} modified:{} hidden:{} line-numbers:{enable}
 #pragma once
-#include <iostream>
+#include <iostream> 
 #include <string>
 
 #define TEST_DEFINE_1 1
@@ -58,6 +58,9 @@ class MyClass {
  public:
   #define MY_PROPERTY      const Tddd* 
   MY_PROPERTY  my_property;
+
+    struct Features {
+    } m_features;
 
    ...
 };

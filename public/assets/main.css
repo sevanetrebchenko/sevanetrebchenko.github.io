@@ -82,38 +82,17 @@ header {
     background-size: 75% auto;
 }
 
-
-/* SECTION: Language syntax hightlighting ------------------------------------------------------ */
-
-pre {
-    font-size: 16px;
-    line-height: 1.5em;
-}
-
-div.padding {
-    padding: 0em 0.5em 0em 0.5em
-}
-
-div.separator {
-    color: rgb(93, 96, 99);
-    border-width: 1px;
-    border-style: none solid none none;
-}
-
-/* general */
-pre[class*="language-"] {
+.code-container {
     background-color: rgb(43, 43, 43);
-    color: rgb(169, 183, 198);
 
+    color: rgb(169, 183, 198);
     font-family: 'JetBrains Mono';
     font-style: normal;
     font-weight: 300;
 
-    display: flex;
-    flex-direction: row;
-    flex-grow: 1;
+    font-size: 16px;
+    line-height: 1.5em;
 
-    margin: 0em;
     padding: 1em;
     border-radius: 10px;
 
@@ -127,125 +106,102 @@ pre[class*="language-"] {
 	hyphens: none;
 }
 
-pre[class*="language-"] .meta {
-    color: rgb(93, 96, 99);
-
-    margin: 0;
+.line-container {
+    margin: 0em;
     padding: 0em;
 
-    display: inline-flex;
-    flex-direction: column;
+    display: flex;
+    flex-direction: row;
+}
 
-    text-align: right;
+.code-block {
+    display: flex;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
 
+.line-number,
+.separator {
+    color: rgb(93, 96, 99);
+}
+
+.separator {
+    border-width: 1px;
+    border-style: none solid none none;
+}
+
+.padding {
+    padding: 0em 0.5em 0em 0.5em
+}
+
+.no-select {
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
 }
 
-pre[class*="language-"] .meta .padding {
-    padding: 0.5em;
+/* diff */
+.diff {
+    padding: 0em 1em 0em 1em;
 }
 
-pre[class*="language-"] .code {
-    margin: 0;
-    padding: 0em;
-
-    display: inline-flex;
-    flex-direction: column;
-    flex-grow: 1;
+.added {
+    background-color: rgb(41, 68, 54);
 }
 
-pre[class*="language-"] .line {
-    font-family: 'JetBrains Mono';
-    font-style: normal;
-    font-weight: 300;
+/* SECTION: Language syntax hightlighting ------------------------------------------------------ */
 
-    margin: 0;
-    padding: 0em;
-    display: inline-flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-
-/* language: cpp */
-
-/* comments */
-pre.language-cpp .comment 
-{
+.language-cpp .comment {
     color: rgb(128, 128, 128);
 }
 
-/* keywords */
-pre.language-cpp .keyword,
-pre.language-cpp .boolean
+.language-cpp .keyword,
+.language-cpp .boolean
 {
 	color: rgb(206, 136, 70);
 }
 
-/* strings */
-pre.language-cpp .string,
-pre.language-cpp .char
+.language-cpp .string,
+.language-cpp .char
 {
     color: rgb(106, 135, 89);
 }
 
-/* preprocessor directives */
-pre.language-cpp .macro.directive-hash,
-pre.language-cpp .macro.directive
+.language-cpp .macro-directive-hash,
+.language-cpp .macro-directive,
+.language-cpp .macro-expression
 {
     color: rgb(187, 181, 41);
 }
-pre.language-cpp .macro.macro-name
+.language-cpp .macro-name
 {
     color: 	rgb(144, 139, 37);
 }
 
-/* functions */
-pre.language-cpp .function 
+.language-cpp .function 
 {
     color: 	rgb(255, 198, 109);
 }
 
-/* class names */
-pre.language-cpp .class-name,
-pre.language-cpp .namespace-name
+.language-cpp .class-name,
+.language-cpp .namespace-name
 {
     color: rgb(181, 182, 227);
 }
 
-/* numbers */
-pre.language-cpp .number,
-pre.language-cpp .symbol
+.language-cpp .number,
+.language-cpp .symbol
 {
     color: rgb(104, 151, 187);
 }
 
-pre.language-cpp .constant,
-pre.language-cpp .member-variable
+.language-cpp .constant,
+.language-cpp .member-variable
 {
     color: rgb(152, 118, 170);
 }
 
-pre.language-cpp .undefined,
-pre.language-cpp .macro.directive-hash.undefined,
-pre.language-cpp .macro.directive.undefined,
-pre.language-cpp .macro.macro-name.undefined
+.language-cpp .undefined
 {
     color: 	rgb(104, 106, 78);
-}
-
-/* diff */
-pre.language-cpp .code .line.diff.added {
-    background-color: rgb(41, 68, 54);
-}
-
-pre.language-cpp .meta .added {
-    background-color: rgb(41, 68, 54);
-    min-width: 1ch;
-    max-width: 1ch;
-    overflow: hidden;
-    padding-left: 1em;
-    padding-right: 1em;
 }
