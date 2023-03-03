@@ -241,7 +241,7 @@ function MarkdownFile({ path, content }) {
                 let types = ['code-block'];
 
                 // line numbers
-                {
+                if (useLineNumbers) {
                     // right-justify line number text
                     let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
                     elements.push(<div className='line-number no-select'>{content}</div>);
@@ -251,48 +251,44 @@ function MarkdownFile({ path, content }) {
                 }
 
                 // diff
-                {
-                    if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
-                        if (added.includes(i)) {
-                            elements.push(<div className='diff added no-select'>+</div>);
-                            types.push('added');
-                        }
-                        else if (removed.includes(i)) {tokens
-                            elements.push(<div className='diff removed no-select'>-</div>);
-                            types.push('added');
-                        }
-                        else if (modified.includes(i)) {
-                            elements.push(<div className='diff modified no-select'> </div>);
-                            types.push('modified');
-                        }
-                        else if (highlighted.includes(i)) {
-                            elements.push(<div className='diff highlighted no-select'> </div>);
-                            types.push('highlighted');
-                        }
-                        else {
-                            // empty 'diff' element for padding purposes
-                            elements.push(<div className='diff no-select'> </div>);
-                        }
+                if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
+                    if (added.includes(i)) {
+                        elements.push(<div className='diff added no-select'>+</div>);
+                        types.push('added');
+                    }
+                    else if (removed.includes(i)) {tokens
+                        elements.push(<div className='diff removed no-select'>-</div>);
+                        types.push('added');
+                    }
+                    else if (modified.includes(i)) {
+                        elements.push(<div className='diff modified no-select'> </div>);
+                        types.push('modified');
+                    }
+                    else if (highlighted.includes(i)) {
+                        elements.push(<div className='diff highlighted no-select'> </div>);
+                        types.push('highlighted');
                     }
                     else {
-                        elements.push(<div className='padding no-select'></div>); // padding
+                        // empty 'diff' element for padding purposes
+                        elements.push(<div className='diff no-select'> </div>);
                     }
+                }
+                else {
+                    elements.push(<div className='padding no-select'></div>); // padding
                 }
 
                 // code block
-                {
-                    elements.push(
-                        <div className={types.join(' ')}>
-                            {
-                                tokens[i].map((token, index) => (
-                                    <span className={token.types.join(' ')} key={index}>
-                                        {token.content}
-                                    </span>
-                                ))
-                            }
-                        </div>
-                    );
-                }
+                elements.push(
+                    <div className={types.join(' ')}>
+                        {
+                            tokens[i].map((token, index) => (
+                                <span className={token.types.join(' ')} key={index}>
+                                    {token.content}
+                                </span>
+                            ))
+                        }
+                    </div>
+                );
 
                 lines.push(
                     <div className='line-container'>
