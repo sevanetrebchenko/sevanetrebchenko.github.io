@@ -228,7 +228,7 @@ function MarkdownFile({ path, content }) {
 
             // remove hidden lines
             for (let i = tokens.length - 1; i >= 0; --i) {
-                if (hidden.includes(i)) {
+                if (hidden.includes(i + 1)) {
                     tokens.splice(i, 1);
                 }
             }
@@ -252,19 +252,19 @@ function MarkdownFile({ path, content }) {
 
                 // diff
                 if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
-                    if (added.includes(i)) {
+                    if (added.includes(i + 1)) {
                         elements.push(<div className='diff added no-select'>+</div>);
                         types.push('added');
                     }
-                    else if (removed.includes(i)) {tokens
+                    else if (removed.includes(i + 1)) {tokens
                         elements.push(<div className='diff removed no-select'>-</div>);
                         types.push('added');
                     }
-                    else if (modified.includes(i)) {
+                    else if (modified.includes(i + 1)) {
                         elements.push(<div className='diff modified no-select'> </div>);
                         types.push('modified');
                     }
-                    else if (highlighted.includes(i)) {
+                    else if (highlighted.includes(i + 1)) {
                         elements.push(<div className='diff highlighted no-select'> </div>);
                         types.push('highlighted');
                     }

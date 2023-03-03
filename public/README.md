@@ -12,7 +12,16 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-7} removed:{} modified:{} hidden:{} line-numbers:{}
+```cpp added:{1-7} removed:{} modified:{} hidden:{1-9} line-numbers:{}
+
+struct Transform {
+
+}
+
+struct TransformSystem {
+  int allTransformComponents;
+}
+
 #pragma once
 #include <iostream> 
 #include <string>

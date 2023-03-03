@@ -156,7 +156,8 @@ header {
 }
 
 .language-cpp .keyword,
-.language-cpp .boolean
+.language-cpp .boolean,
+.language-cpp .semicolon
 {
 	color: rgb(206, 136, 70);
 }
@@ -195,7 +196,6 @@ header {
     color: rgb(104, 151, 187);
 }
 
-.language-cpp .constant,
 .language-cpp .member-variable
 {
     color: rgb(152, 118, 170);
