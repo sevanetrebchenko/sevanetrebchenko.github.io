@@ -233,53 +233,65 @@ function MarkdownFile({ path, content }) {
                 }
             }
 
-            let lines = [];
+            let containers = [];
 
             for (let i = 0; i < tokens.length; ++i) {
                 let elements = [];
-
-                let types = ['code-block'];
+                const current = i + 1;
 
                 // line numbers
                 if (useLineNumbers) {
-                    // right-justify line number text
-                    let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
-                    elements.push(<div className='line-number no-select'>{content}</div>);
+                    elements.push(<div className='padding'></div>);
 
-                    elements.push(<div className='padding no-select'></div>); // padding
-                    elements.push(<div className='separator no-select' />);    // separator
+                    // right-justify line number text
+                    const lineNumber = current.toString().padStart(tokens.length.toString().length, ' ');
+                    elements.push(<div className='line-number'>{lineNumber}</div>);
+
+                    elements.push(<div className='padding'></div>);
+                    elements.push(<div className='separator'></div>);
                 }
 
-                // diff
-                if (added.length > 0 || removed.length > 0 || modified.length > 0 || highlighted.length > 0) {
-                    if (added.includes(i + 1)) {
-                        elements.push(<div className='diff added no-select'>+</div>);
-                        types.push('added');
+                // diff elements
+                let override = '';
+
+                if (added.length > 0 || removed.length > 0) {
+                    let symbol = ' '; // empty
+
+                    // apply padding to make diff symbol more visible
+                    if (added.includes(current)) {
+                        symbol = '+';
+                        override = 'added';
                     }
-                    else if (removed.includes(i + 1)) {tokens
-                        elements.push(<div className='diff removed no-select'>-</div>);
-                        types.push('added');
+                    else if (removed.includes(current)) {
+                        symbol = '-';
+                        override = 'removed';
                     }
-                    else if (modified.includes(i + 1)) {
-                        elements.push(<div className='diff modified no-select'> </div>);
-                        types.push('modified');
+                    else if (modified.includes(current)) {
+                        override = 'modified';
                     }
-                    else if (highlighted.includes(i + 1)) {
-                        elements.push(<div className='diff highlighted no-select'> </div>);
-                        types.push('highlighted');
+                    else if (highlighted.includes(current)) {
+                        override = 'highlighted';
                     }
-                    else {
-                        // empty 'diff' element for padding purposes
-                        elements.push(<div className='diff no-select'> </div>);
-                    }
+
+                    const className = ('diff' + ' ' + override).trim();
+                    elements.push(<div className={className}>{symbol}</div>);
                 }
                 else {
-                    elements.push(<div className='padding no-select'></div>); // padding
+                    // modified / highlighted lines contain no diff symbol
+                    if (modified.includes(current)) {
+                        override = 'modified';
+                    }
+                    else if (highlighted.includes(current)) {
+                        override = 'highlighted';
+                    }
+
+                    const className = ('padding' + ' ' + override).trim();
+                    elements.push(<div className={className}></div>);
                 }
 
-                // code block
+                // code
                 elements.push(
-                    <div className={types.join(' ')}>
+                    <div className={('line-block' + ' ' + override).trim()}>
                         {
                             tokens[i].map((token, index) => (
                                 <span className={token.types.join(' ')} key={index}>
@@ -290,7 +302,10 @@ function MarkdownFile({ path, content }) {
                     </div>
                 );
 
-                lines.push(
+                const className = ('padding' + ' ' + override).trim();
+                elements.push(<div className={className}></div>);
+
+                containers.push(
                     <div className='line-container'>
                         {
                             elements.map((element, index) => (
@@ -303,16 +318,568 @@ function MarkdownFile({ path, content }) {
                 );
             }
 
-            let types = ['code-container', className];
+            // // code container
+            // let code = [];
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let block = [];
+
+            //     block.push(
+            //         tokens[i].map((token, index) => (
+            //             <span className={token.types.join(' ')} key={index}>
+            //                 {token.content}
+            //             </span>
+            //         ))
+            //     );
+
+            //     let types = ['line-block'];
+            //     const current = i + 1;
+
+            //     if (added.includes(current)) {
+            //         types.push('added');
+            //     }
+            //     else if (removed.includes(current)) {
+            //         types.push('removed');
+            //     }
+            //     else if (modified.includes(current)) {
+            //         types.push('modified');
+            //     }
+            //     else if (highlighted.includes(current)) {
+            //         types.push('highlighted');
+            //     }
+
+            //     code.push(
+            //         <div className={types.join(' ')}>
+            //             {
+            //                 block.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+            // containers.push(
+            //     <div className='line-container'>
+            //         {
+            //             code.map((element, index) => (
+            //                 <React.Fragment key={index}>
+            //                     {element}
+            //                 </React.Fragment>
+            //             ))
+            //         }
+            //     </div>
+            // );
+
+            // // container for diff elements
+            // let diff = [];
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let types = [];
+            //     const current = i + 1;
+
+            //     if (added.length > 0 || removed.length > 0) {
+            //         let symbol = '';
+            //         types.push('diff-block');
+
+            //         // added / removed elements should get padding to account for the diff symbol
+            //         if (added.includes(current)) {
+            //             symbol = '+';
+            //             types.push('added');
+            //         }
+            //         else if (removed.includes(current)) {
+            //             symbol = '-';
+            //             types.push('removed');
+            //         }
+            //         else if (modified.includes(current)) {
+            //             types.push('modified');
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             types.push('highlighted');
+            //         }
+
+            //         // pad empty space so that all diff elements (including those that don't have diff symbols) are the same width
+            //         diff.push(<div className={types.join(' ')}>{symbol.padStart(1, ' ')}</div>);
+            //     }
+            //     else {
+            //         types.push('padding');
+
+            //         if (modified.includes(current)) {
+            //             types.push('modified');
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             types.push('highlighted');
+            //         }
+
+            //         diff.push(<div className={types.join(' ')}></div>);
+            //     }
+            // }
+
+            // containers.push(
+            //     <div className='diff-container'>
+            //         {
+            //             diff.map((element, index) => (
+            //                 <React.Fragment key={index}>
+            //                     {element}
+            //                 </React.Fragment>
+            //             ))
+            //         }
+            //     </div>
+            // );
+
+
+            // // metadata container (line numbers, diff)
+            // let meta = [];
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let block = [];
+            //     const current = i + 1;
+
+            //     block.push(<div className='padding'></div>);
+
+            //     // line numbers
+            //     if (useLineNumbers) {
+            //         // right-justify line number text
+            //         let content = (current).toString().padStart(tokens.length.toString().length, ' ');
+            //         block.push(<div className='line-number'>{content}</div>);
+
+            //         block.push(<div className='padding'></div>);
+            //         block.push(<div className='separator'></div>);
+            //     }
+
+            //     // diff
+            //     let types = [];
+
+            //     if (added.length > 0 || removed.length > 0) {
+            //         let symbol = '';
+            //         types.push('diff');
+
+            //         // added / removed elements should get padding to account for the diff symbol
+            //         if (added.includes(current)) {
+            //             symbol = '+';
+            //             types.push('added');
+            //         }
+            //         else if (removed.includes(current)) {
+            //             symbol = '-';
+            //             types.push('removed');
+            //         }
+            //         else if (modified.includes(current)) {
+            //             types.push('modified');
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             types.push('highlighted');
+            //         }
+
+            //         // pad empty space so that all diff elements (including those that don't have diff symbols) are the same width
+            //         block.push(<div className={types.join(' ')}>{symbol.padStart(1, ' ')}</div>);
+            //     }
+            //     else {
+            //         types.push('padding');
+
+            //         if (modified.includes(current)) {
+            //             types.push('modified');
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             types.push('highlighted');
+            //         }
+
+            //         block.push(<div className={types.join(' ')}></div>);
+            //     }
+
+            //     meta.push(
+            //         <div className='meta-block'>
+            //             {
+            //                 block.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+            // containers.push(
+            //     <div className='meta-container'>
+            //         {
+            //             meta.map((element, index) => (
+            //                 <React.Fragment key={index}>
+            //                     {element}
+            //                 </React.Fragment>
+            //             ))
+            //         }
+            //     </div>
+            // );
+
+            // // code container
+            // let code = [];
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     code.push(
+            //         <div className='line-block'>
+            //             {
+            //                 tokens[i].map((token, index) => (
+            //                     <span className={token.types.join(' ')} key={index}>
+            //                         {token.content}
+            //                     </span>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+            // containers.push(
+            //     <div className='line-container'>
+            //         {
+            //             code.map((element, index) => (
+            //                 <React.Fragment key={index}>
+            //                     {element}
+            //                 </React.Fragment>
+            //             ))
+            //         }
+            //     </div>
+            // );
+
+            // 
+
+
+
+
+
+
+            // // meta container
+            // let meta = [];
+
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let block = [];
+
+            //     if (i == 0) {
+            //         // apply top-left border-radius manually to first element
+            //         block.push(<div className='padding no-select' style={{borderTopLeftRadius: '10px'}}></div>);
+            //     }
+            //     else if (i == tokens.length - 1) {
+            //         // apply bottom-left border-radius manually to last element
+            //         block.push(<div className='padding no-select' style={{borderBottomLeftRadius: '10px'}}></div>);
+            //     }
+            //     else {
+            //         block.push(<div className='padding no-select'></div>);
+            //     }
+
+            //     if (useLineNumbers) {
+            //         // right-justify line number text
+            //         let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
+            //         block.push(<div className='line-number no-select'>{content}</div>);
+
+            //         block.push(<div className='padding no-select'></div>);   // padding
+            //         block.push(<div className='separator no-select'></div>); // separator
+            //     }
+
+            //     meta.push(
+            //         <div className='meta-block'>
+            //             {
+            //                 block.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     )
+            // }
+
+            // containers.push(
+            //     <div className='meta-container'>
+            //         {
+            //             meta.map((element, index) => (
+            //                 <React.Fragment key={index}>
+            //                     {element}
+            //                 </React.Fragment>
+            //             ))
+            //         }
+            //     </div>
+            // )
+
+
+
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let elements = []; // elements for this line
+
+            //     // line numbers
+            //     if (useLineNumbers) {
+            //         // right-justify line number text
+            //         let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
+            //         elements.push(<div className='line-number no-select'>{content}</div>);
+
+            //         elements.push(<div className='padding no-select'></div>);   // padding
+            //         elements.push(<div className='separator no-select'></div>); // separator
+            //     }
+
+            //     // diff 
+            //     let type = '';
+
+            //     const current = i + 1;
+            //     if (added.length > 0 || removed.length > 0) {
+            //         let symbol = '';
+
+            //         // added / removed elements should get padding to account for the diff symbol
+            //         if (added.includes(current)) {
+            //             symbol = '+';
+            //             type = 'added';
+            //         }
+            //         else if (removed.includes(current)) {
+            //             symbol = '-';
+            //             type = 'removed';
+            //         }
+            //         else if (modified.includes(current)) {
+            //             type = 'modified';
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             type = 'highlighted';
+            //         }
+
+            //         const types = ['diff', 'no-select'];
+            //         if (type.length > 0) {
+            //             types.push(type);
+            //         }
+
+            //         // pad empty space so that all diff elements (including those that don't have diff symbols) are the same width
+            //         elements.push(<div className={types.join(' ')}>{symbol.padStart(1, ' ')}</div>);
+            //     }
+            //     else {
+            //         if (modified.includes(current)) {
+            //             type = 'modified';
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             type = 'highlighted';
+            //         }
+
+            //         const types = ['padding', 'no-select'];
+            //         if (type.length > 0) {
+            //             types.push(type);
+            //         }
+
+            //         elements.push(<div className={types.join(' ')}></div>);
+            //     }
+
+            //     // code
+            //     elements.push(
+            //         <div className={'code-block' + ' ' + type}>
+            //             {
+            //                 tokens[i].map((token, index) => (
+            //                     <span className={token.types.join(' ')} key={index}>
+            //                         {token.content}
+            //                     </span>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+
+            //     // padding
+            //     const types = ['padding', 'no-select'];
+            //     if (type.length > 0) {
+            //         types.push(type);
+            //     }
+            //     elements.push(<div className={types.join(' ')}></div>);
+
+            //     let className = 'line-container';
+            //     if (i == 0) {
+            //         className += '-top';
+            //     }
+
+            //     containers.push(
+            //         <div className={className}>
+            //             {
+            //                 elements.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // let containers = [];
+
+            // if (useLineNumbers) {
+            //     let meta = [];
+            //     for (let i = 0; i < tokens.length; ++i) {
+            //         let block = [];
+
+            //         // right-justify line number text
+            //         let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
+            //         block.push(<div className='line-number no-select'>{content}</div>);
+
+            //         block.push(<div className='padding no-select'></div>);   // padding
+            //         block.push(<div className='separator no-select'></div>); // separator
+
+            //         meta.push(
+            //             <div className='meta-block'>
+            //                 {
+            //                     block.map((element, index) => (
+            //                         <React.Fragment key={index}>
+            //                             {element}
+            //                         </React.Fragment>
+            //                     ))
+            //                 }
+            //             </div>
+            //         )
+            //     }
+            //     containers.push(
+            //         <div className='meta-container'>
+            //             {
+            //                 meta.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+
+
+            // // container for code block
+            // let code = [];
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let line = [];
+            //     let types = [];
+
+            //     // diff
+            //     const current = i + 1;
+            //     if (added.length > 0 || removed.length > 0) {
+            //         // added / removed elements should get padding to account for the diff symbol
+            //         if (added.includes(current)) {
+            //             line.push(<div className='diff added no-select'>+</div>);
+            //             types.push('added');
+            //         }
+            //         else if (removed.includes(current)) {
+            //             line.push(<div className='diff removed no-select'>-</div>);
+            //             types.push('removed');
+            //         }
+            //         else if (modified.includes(current)) {
+            //             line.push(<div className='diff modified no-select'> </div>);
+            //             types.push('modified');
+            //         }
+            //         else if (highlighted.includes(current)) {
+            //             line.push(<div className='diff highlighted no-select'> </div>);
+            //             types.push('highlighted');
+            //         }
+            //         else {
+            //             // empty 'diff' element for padding purposes
+            //             line.push(<div className='diff no-select'> </div>);
+            //         }
+            //     }
+            //     else {
+            //         // if diff consists of only modified / highlighted elements, do not append diff symbol (these tags do not have diff symbols like added / removed elements do)
+            //         line.push(<div className='padding no-select'></div>);
+
+            //         if (modified.includes(current)) {
+            //             types.push('modified');
+            //         }
+            //         else if (hidden.includes(current)) {
+            //             types.push('hidden');
+            //         }
+            //     }
+
+            //     // code block
+            //     line.push(
+            //         <div className='code-block'>
+            //             {
+            //                 tokens[i].map((token, index) => (
+            //                     <span className={token.types.join(' ')} key={index}>
+            //                         {token.content}
+            //                     </span>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+
+            //     code.push(
+            //         <div className={'line-block ' + types.join(' ')}>
+            //             {
+            //                 line.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
+
+
+            // let lines = [];
+
+
+
+
+
+            // for (let i = 0; i < tokens.length; ++i) {
+            //     let elements = [];
+
+
+            //     // line numbers
+            //     if (useLineNumbers) {
+            //         // right-justify line number text
+            //         let content = (i + 1).toString().padStart(tokens.length.toString().length, ' ');
+            //         elements.push(<div className='line-number no-select'>{content}</div>);
+
+            //         elements.push(<div className='padding no-select'></div>); // padding
+            //         elements.push(<div className='separator no-select' />);   // separator
+            //     }
+
+
+
+            //     // code block
+            //     elements.push(
+            //         <div className={types.join(' ')}>
+            //             {
+            //                 tokens[i].map((token, index) => (
+            //                     <span className={token.types.join(' ')} key={index}>
+            //                         {token.content}
+            //                     </span>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+
+            //     lines.push(
+            //         <div className='line-container'>
+            //             {
+            //                 elements.map((element, index) => (
+            //                     <React.Fragment key={index}>
+            //                         {element}
+            //                     </React.Fragment>
+            //                 ))
+            //             }
+            //         </div>
+            //     );
+            // }
+
             return (
-                <div className={types.join(' ')}>
-                    {
-                        lines.map((element, index) => (
-                            <React.Fragment key={index}>
-                                {element}
-                            </React.Fragment>
-                        ))
-                    }
+                <div className='root'>
+                    <div className={'code-container ' + className}>
+                        {
+                            containers.map((element, index) => (
+                                <React.Fragment key={index}>
+                                    {element}
+                                </React.Fragment>
+                            ))
+                        }
+                    </div>
                 </div>
             );
         }

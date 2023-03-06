@@ -83,8 +83,6 @@ header {
 }
 
 .code-container {
-    background-color: rgb(43, 43, 43);
-
     color: rgb(169, 183, 198);
     font-family: 'JetBrains Mono';
     font-style: normal;
@@ -93,8 +91,18 @@ header {
     font-size: 16px;
     line-height: 1.5em;
 
-    padding: 1em;
+    background-color: rgb(43, 43, 43);
+
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+
+    overflow-x: scroll;
+
     border-radius: 10px;
+
+    padding-top: 1em;
+    padding-bottom: 1em;
 
     -moz-tab-size: 4;
 	-o-tab-size: 4;
@@ -106,32 +114,47 @@ header {
 	hyphens: none;
 }
 
-.line-container {
+.line-number {
     margin: 0em;
-    padding: 0em;
 
     display: flex;
     flex-direction: row;
+
+
+}
+
+.line-container {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+.line-block {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 0;
 }
 
 .code-block {
     display: flex;
-    flex-wrap: wrap;
     flex-grow: 1;
 }
 
-.line-number,
 .separator {
     color: rgb(93, 96, 99);
-}
-
-.separator {
     border-width: 1px;
-    border-style: none solid none none;
+    border-right-style: solid;
 }
 
 .padding {
-    padding: 0em 0.5em 0em 0.5em
+    padding-left: 0.5em;
+    padding-right: 0.5em;
 }
 
 .no-select {
@@ -148,6 +171,19 @@ header {
 .added {
     background-color: rgb(41, 68, 54);
 }
+
+.removed {
+    background-color: rgb(88, 49, 49);
+}
+
+.modified {
+    background-color: rgb(47, 62, 69);
+}
+
+.highlighted {
+    background-color: rgb(76, 76, 46);
+}
+
 
 /* SECTION: Language syntax hightlighting ------------------------------------------------------ */
 

@@ -12,7 +12,7 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{1-7} removed:{} modified:{} hidden:{1-9} line-numbers:{}
+```cpp added:{18-19} removed:{} modified:{14-16} highlighted:{20-23} hidden:{1-9} line-numbers:{enable}
 
 struct Transform {
 
@@ -34,7 +34,6 @@ struct TransformSystem {
 
   #if defined(TEST_DEFINE_2)
 
-    // test code hahah hehe
     // more test code
   #else 
 
@@ -48,7 +47,6 @@ struct TransformSystem {
 
   #if defined(TEST_DEFINE_1)
 
-    // test code hahah hehe
     // more test code
   #else 
 
@@ -86,6 +84,8 @@ int main() {
   my_object.my_property = 42;
   my_object.my_property = 'd';
   my_object.call_function();
+
+  std::move(myObject);
 
   const CONSTANT = 123123u;
 
