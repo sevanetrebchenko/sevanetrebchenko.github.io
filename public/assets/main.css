@@ -82,20 +82,19 @@ header {
     background-size: 75% auto;
 }
 
-.code-container {
+div[class*="language-"] {
+    background-color: rgb(43, 43, 43);
     color: rgb(169, 183, 198);
+
     font-family: 'JetBrains Mono';
     font-style: normal;
     font-weight: 300;
-
     font-size: 16px;
+
     line-height: 1.5em;
 
-    background-color: rgb(43, 43, 43);
-
     display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+    flex-direction: row;
 
     overflow-x: scroll;
 
@@ -114,40 +113,39 @@ header {
 	hyphens: none;
 }
 
-.line-number {
-    margin: 0em;
-
+.meta-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 
+    color: rgb(93, 96, 99);
 
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
-.line-container {
+.meta-block {
     display: flex;
     flex-direction: row;
-    flex-grow: 1;
-
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
 }
 
-.line-block {
+.code-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-grow: 1;
-    min-height: 0;
 }
 
 .code-block {
     display: flex;
-    flex-grow: 1;
+    flex-direction: row;
+}
+
+.line-number {
+    padding: 0em;
+    margin: 0em;
 }
 
 .separator {
-    color: rgb(93, 96, 99);
     border-width: 1px;
     border-right-style: solid;
 }
@@ -155,12 +153,6 @@ header {
 .padding {
     padding-left: 0.5em;
     padding-right: 0.5em;
-}
-
-.no-select {
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
 /* diff */
