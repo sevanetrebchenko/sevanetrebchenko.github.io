@@ -5,16 +5,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { join } from 'path-browserify'
 
 // import components
-import Directory from './src/components/directory.js'
-import Post from './src/components/post.js'
+import Directory from './components/directory.js'
+import Post from './components/post.js'
 
 // entry point
 function Application() {
-    const [structure, setStructure] = useState('');
+    const [directory, setDirectory] = useState('');
 
     // load public-facing directory structure (content)
     useEffect(() => {
-        const file = 'structure.json'
+        const file = 'posts.json'
         const request = new Request(file, {
             method: "GET",
             mode: "same-origin",
@@ -37,21 +37,24 @@ function Application() {
                         throw new Error('fetch() response was not ok');
                     }
 
-                    // output from 'serialize-directory-structure.js' is a json object
                     return response.json();
                 })
                 .then(text => {
-                    setStructure(text);
+                    setDirectory(text);
                 });
         };
 
         getFile();
     }, []);
 
-    if (!structure) {
+    if (!directory) {
         console.log('loading...');
         return;
     }
+
+    console.log(directory);
+
+    return (<React.Fragment></React.Fragment>);
 
     return (
         <Router>

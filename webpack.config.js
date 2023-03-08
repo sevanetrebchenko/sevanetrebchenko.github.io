@@ -1,64 +1,71 @@
 
-
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-module.exports = {
-  entry: './index.js',
+module.exports = (env) => {
+  const isProduction = env === 'production';
 
-  output: {
-    filename: 'index.js',
-    path: path.resolve(__dirname + '/dist'),
-    chunkFilename: '[name].js'
-  },
-
-  mode: 'development',
-
-  target: 'web',
-  devServer: {
-    port: '3000',
-
-    // serve content rooted at the 'public' directory
-    static: {
-      directory: 'public'
+  return {
+    entry: {
+      main: './src/index.js'
     },
-    open: true,
-    hot: true,
-    liveReload: true,
-  },
-  resolve: {
-    extensions: ['.js', '.jsx', '.json'],
-  },
-  module: {
-    rules: [
-      {
-        // .js/.jsx files
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-        }
+    output: {
+      filename: 'bundle.js',
+      path: path.resolve(__dirname + '/build'),
+    },
+    devtool: isProduction ? 'source-map' : 'inline-source-map',
+    target: 'web',
+    devServer: {
+      port: '3000',
+      static: {
+        directory: 'build'
       },
-      {
-        // .css files
-        test: /\.css$/,
-        exclude: /node_modules/,
-        use: [
-          'style-loader',
-          'css-loader',
-        ],
-      },
-    ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'public', 'index.html')
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: 'public/structure.json', to: './structure.json' },
+      open: true,
+      hot: true,
+      liveReload: true,
+    },
+    resolve: {
+      extensions: ['.js', '.jsx', '.json'],
+    },
+    module: {
+      rules: [
+        {
+          // .js/.jsx files
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+          }
+        },
+        {
+          // .css files
+          test: /\.css$/,
+          exclude: /node_modules/,
+          use: [
+            'style-loader',
+            'css-loader',
+          ],
+        },
       ],
-    }),
-  ]
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        // use index.html in the public directory as the base template for the generated html page
+        template: path.join(__dirname, 'content', 'index.html')
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: './content/posts.json',
+            to: './posts.json'
+          },
+          {
+            from: './content/posts',
+            to: './posts'
+          }
+        ],
+      }),
+    ]
+  }
 };
