@@ -19,7 +19,7 @@ module.exports = (env) => {
     devServer: {
       port: '3000',
       static: {
-        directory: 'build'
+        directory: 'public'
       },
       open: true,
       hot: true,
@@ -52,16 +52,16 @@ module.exports = (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         // use index.html in the public directory as the base template for the generated html page
-        template: path.join(__dirname, 'content', 'index.html')
+        template: path.join(__dirname, 'public', 'index.html')
       }),
       new CopyWebpackPlugin({
         patterns: [
           {
-            from: './content/posts.json',
+            from: './public/posts.json',
             to: './posts.json'
           },
           {
-            from: './content/posts',
+            from: './public/posts',
             to: './posts'
           }
         ],

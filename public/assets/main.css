@@ -1,3 +1,69 @@
+
+.root {
+    display: flex;
+    flex-direction: row;
+}
+
+.sidebar {
+    flex-grow: 2;
+}
+
+.content {
+    flex-grow: 3;
+}
+
+.card-container {
+    display: flex;
+    flex-direction: column;
+
+    flex-grow: 3;
+}
+
+.social {
+    display: flex;
+    flex-direction: column;
+}
+
+.widget-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+
+    margin: 1em;
+
+    border-radius: 10px;
+    border: 1px solid;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+
+
+
+
 body {
     color: black;
     font-family: monospace;
@@ -155,7 +221,6 @@ div[class*="language-"] {
     padding-right: 0.5em;
 }
 
-/* diff */
 .diff {
     padding: 0em 1em 0em 1em;
 }
@@ -175,9 +240,6 @@ div[class*="language-"] {
 .highlighted {
     background-color: rgb(76, 76, 46);
 }
-
-
-/* SECTION: Language syntax hightlighting ------------------------------------------------------ */
 
 .language-cpp .comment {
     color: rgb(128, 128, 128);
@@ -233,3 +295,5 @@ div[class*="language-"] {
 {
     color: 	rgb(104, 106, 78);
 }
+
+*/

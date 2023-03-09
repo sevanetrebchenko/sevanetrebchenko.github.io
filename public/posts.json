@@ -1,0 +1,24 @@
+{
+    "posts": [
+        {
+            "title": "Sample Post",
+            "summary": "This is a sample post",
+            "date": {
+                "published": 10,
+                "revised": 11
+            },
+            "image": "",
+            "filepath": "posts/README.md" 
+        },
+        {
+            "title": "Sample Post 2",
+            "summary": "This is a sample post 2",
+            "date": {
+                "published": 10,
+                "revised": 11
+            },
+            "image": "",
+            "filepath": "posts/README.md" 
+        }
+    ]
+}

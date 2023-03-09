@@ -13,6 +13,8 @@ import rangeParser from 'parse-numeric-range'
 import processLanguageCpp from '../languages/cpp'
 
 export default function Post({ parent }) {
+    return;
+
     const { name } = useParams();
     const [content, setContent] = useState('');
 

@@ -1,13 +1,18 @@
-import React from 'react'
 
-export default function Card({description}) {
-    const title = description.title;
-    const date = description.date;
-    const tags = description.tags;
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+
+export default function Card({ data }) {
+    const navigateTo = useNavigate();
+    const handleClick = (event) => {
+        event.preventDefault();
+        navigateTo(data.filepath.toString())
+    };
 
     return (
-        <div>
-            
+        <div className='card' onClick={handleClick}>
+            <h1>{data.title}</h1>
+            <p>{data.summary}</p>
         </div>
-    )
+    );
 }

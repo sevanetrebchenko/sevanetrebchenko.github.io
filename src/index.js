@@ -1,36 +1,35 @@
+
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { join } from 'path-browserify'
 
-// import components
-import Directory from './components/directory.js'
+// Import components.
 import Post from './components/post.js'
+import Landing from './components/landing.js'
 
-// entry point
+// Entry point.
 function Application() {
-    const [directory, setDirectory] = useState('');
+    const [content, setContent] = useState('');
 
-    // load public-facing directory structure (content)
+    // Load post list.
     useEffect(() => {
-        const file = 'posts.json'
-        const request = new Request(file, {
+        const request = new Request('posts.json', {
             method: "GET",
             mode: "same-origin",
             cache: "reload",
             credentials: "same-origin",
             headers: {
-                'Accept': "text/plain",
-                'Content-Type': "text/plain",
+                'Accept': "application/json",
+                'Content-Type': "application/json",
             }
         });
-
-        const getFile = () => {
+        const loadContent = function () {
             fetch(request)
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
+                            // TODO: 404 page.
                             return "File not found.";
                         }
 
@@ -40,65 +39,39 @@ function Application() {
                     return response.json();
                 })
                 .then(text => {
-                    setDirectory(text);
+                    setContent(text);
                 });
         };
-
-        getFile();
+        loadContent();
     }, []);
 
-    if (!directory) {
-        console.log('loading...');
+    if (!content) {
+        console.log('Loading website content...');
         return;
     }
 
-    console.log(directory);
+    let routes = [];
+    routes.push(<Route exact path='/' element={<Landing content={content}/>} />);
 
-    return (<React.Fragment></React.Fragment>);
+    // Set up routes to website post pages.
+    for (let post of content.posts) {
+        routes.push(<Route path={post.filepath} element={<Post data={post} />} />);
+    }
 
     return (
         <Router>
             <Routes>
                 {
-                    generateRoutes(structure)
+                    routes.map((route, index) => (
+                        <React.Fragment key={index}>
+                            {route}
+                        </React.Fragment>
+                    ))
                 }
             </Routes>
         </Router>
-    )
+    );
 }
-
-// generate a Route component for each directory holding website content
-function generateRoutes(structure) {
-    const generateDirectoryList = (root) => {
-        let directories = [];
-
-        // push top-level directory
-        directories.push(root)
-
-        for (let i = 0; i < root['elements'].length; i++) {
-            const element = root['elements'][i];
-
-            if (element['type'] == 'directory') {
-                directories = directories.concat(generateDirectoryList(element));
-            }
-        }
-
-        return directories;
-    };
-
-    const directories = generateDirectoryList(structure['root']);
-
-    // 'element' is a json object describing the directory structure at the given element
-    return directories.map(function(element, index) {
-        return (
-            <React.Fragment key={index}>
-                <Route path={join(element['path'], ':name')} element={<Post parent={element['path']} />} />
-                <Route path={element['path']} element={<Directory structure={element} />} />
-            </React.Fragment>
-        );
-    });
-}
-
 
 // main
-createRoot(document.getElementById('root')).render(<Application />)
+createRoot(document.getElementsByClassName('root')[0]).render(<Application />)
