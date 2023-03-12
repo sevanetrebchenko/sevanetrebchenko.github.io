@@ -1,0 +1,43 @@
+@media(min-width: 0px) {
+
+    .navbar {
+        display: flex;
+        flex-direction: column;
+
+        row-gap: 20px;
+    }
+
+    .navbar .item {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .navbar a {
+        display: flex;
+        flex-direction: row;
+
+        gap: 40px;
+
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .navbar a:hover,
+    .navbar a:hover i {
+        cursor: pointer;
+        color: lavender;
+        transition: 0.2s;
+    }
+
+    .navbar a:hover {
+        cursor: pointer;
+        color: gray;
+    }
+
+    .navbar .item p {
+        margin-top: auto;
+        margin-bottom: auto;
+        text-align: center;
+    }
+
+}

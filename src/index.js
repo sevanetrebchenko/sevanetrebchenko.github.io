@@ -6,7 +6,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Import components.
 import Post from './components/post.js'
-import Landing from './components/landing.js'
+import Landing from './pages/landing.js'
+import Archive from './pages/archive.js'
 
 // Entry point.
 function Application() {
@@ -51,12 +52,30 @@ function Application() {
     }
 
     let routes = [];
-    routes.push(<Route exact path='/' element={<Landing content={content}/>} />);
 
     // Set up routes to website post pages.
     for (let post of content.posts) {
         routes.push(<Route path={post.filepath} element={<Post data={post} />} />);
     }
+
+    let archives = new Map();
+    for (let post of content.posts) {
+        const year = post.date.published.split('-')[2];
+        archives.set(year, new Set());
+    }
+
+    // Generate list of posts for each year.
+    for (let post of content.posts) {
+        const year = post.date.published.split('-')[2];
+        archives.get(year).add(post);
+    }
+
+    // Set up routes to archive pages.
+    archives.forEach((archive, year) => {
+        routes.push(<Route path={`archive/${year}`} element={<Archive posts={Array.from(archive)}/>} />)
+    });
+
+    routes.push(<Route exact path='/' element={<Landing content={content} archives={archives}/>} />);
 
     return (
         <Router>
