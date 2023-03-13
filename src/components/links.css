@@ -1,0 +1,10 @@
+@media(min-width: 0px) {
+    .links {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .links i {
+        color: gray;
+    }
+}

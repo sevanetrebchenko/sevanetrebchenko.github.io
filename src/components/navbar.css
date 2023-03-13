@@ -3,13 +3,20 @@
     .navbar {
         display: flex;
         flex-direction: column;
-
         row-gap: 20px;
     }
 
-    .navbar .item {
+    .navbar .entry {
         display: flex;
         flex-direction: row;
+    }
+
+    .navbar .icon {
+
+    }
+
+    .navbar .entry .selected {
+        
     }
 
     .navbar a {

@@ -4,18 +4,21 @@ import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-// Import components.
-import Post from './components/post.js'
+import { getDateObject } from './utility.js'
+
+// Pages.
 import Landing from './pages/landing.js'
-import Archive from './pages/archive.js'
 
-// Entry point.
-function Application() {
+// Stylesheets.
+import './index.css'
+
+function loadContent() {
     const [content, setContent] = useState('');
+    const filepath = 'content.json';
 
-    // Load post list.
+    // Load blog configuration.
     useEffect(() => {
-        const request = new Request('posts.json', {
+        const request = new Request(filepath, {
             method: "GET",
             mode: "same-origin",
             cache: "reload",
@@ -25,57 +28,111 @@ function Application() {
                 'Content-Type': "application/json",
             }
         });
-        const loadContent = function () {
-            fetch(request)
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            // TODO: 404 page.
-                            return "File not found.";
-                        }
 
-                        throw new Error('fetch() response was not ok');
+        fetch(request)
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        // TODO: 404 page.
+                        return "File not found.";
                     }
 
-                    return response.json();
-                })
-                .then(text => {
-                    setContent(text);
-                });
-        };
-        loadContent();
+                    throw new Error('fetch() response was not ok');
+                }
+
+                return response.json();
+            })
+            .then(text => {
+                setContent(text);
+            });
     }, []);
 
-    if (!content) {
-        console.log('Loading website content...');
+    return content;
+}
+
+// Entry point.
+function Application() {
+    const raw = loadContent();
+    if (!raw) {
+        console.debug('Loading website content...');
         return;
     }
 
-    let routes = [];
+    let content = [];
+    content.posts = [];
 
-    // Set up routes to website post pages.
-    for (let post of content.posts) {
-        routes.push(<Route path={post.filepath} element={<Post data={post} />} />);
+    for (const post of raw.blog) {
+        let copy = {...post};
+
+        // Replace date string with object.
+        copy.date = getDateObject(post.date);
+        content.posts.push(copy);
     }
 
-    let archives = new Map();
-    for (let post of content.posts) {
-        const year = post.date.published.split('-')[2];
-        archives.set(year, new Set());
-    }
+    for (let post of raw.projects) {
+        let copy = {...post};
 
-    // Generate list of posts for each year.
-    for (let post of content.posts) {
-        const year = post.date.published.split('-')[2];
-        archives.get(year).add(post);
+        // Replace date string with object.
+        copy.date = getDateObject(post.date);
+        content.posts.push(copy);
     }
+    
+    // Sort posts by date published.
+    content.posts.sort((first, second) => {
+        // Comparator: 
+        // if a > b:  1, else
+        // if a < b: -1, else
+        // 0
+        if (first.date.year == second.date.year) {
+            if (first.date.month == second.date.month) {
+                if (first.date.day == second.date.day) {
+                    return 0; // Equal.
+                }
 
-    // Set up routes to archive pages.
-    archives.forEach((archive, year) => {
-        routes.push(<Route path={`archive/${year}`} element={<Archive posts={Array.from(archive)}/>} />)
+                return first.date.day > second.date.day ? -1 : 1;
+            }
+            
+            return first.date.month > second.date.month ? -1 : 1;
+        }
+
+        return first.date.year > second.date.year ? -1 : 1;
     });
 
-    routes.push(<Route exact path='/' element={<Landing content={content} archives={archives}/>} />);
+    // Generate archive.
+    let archives = new Map(); // Mapping of year to an array of posts published in that year.
+
+    for (let i = 0; i < content.posts.length; ++i) {
+        const post = content.posts[i];
+
+        if (!archives.has(post.date.year)) {
+            archives.set(post.date.year, []);
+        }
+
+        archives.get(post.date.year).push(i); // Save index of post, referenced later by content.posts[i].
+    }
+
+    content.archives = archives;
+
+    // Generate tags list.
+    let tags = new Set();
+    for (const post of content.posts) {
+        for (const tag of post.tags) {
+            tags.add(tag);
+        }
+    }
+
+    content.tags = Array.from(tags).sort();
+
+    let routes = [];
+
+    // Set up routes for main site pages.
+    routes.push(<Route exact path={'/'} element={<Landing content={content}/>}/>);
+    // routes.push(<Route exact path={'archives'} element={<Archives />}/>);
+    // routes.push(<Route exact path={'search'} element={<Search />}/>);
+
+    // Set up routes to website post pages.
+    for (const post of content.posts) {
+    }
 
     return (
         <Router>

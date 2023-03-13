@@ -6,7 +6,7 @@
         gap: 20px;
     }
 
-    .archives .archive a {
+    .archives a {
         display: flex;
         flex-direction: row;
 
@@ -22,7 +22,11 @@
                     0px 0px 1px rgba(0, 0, 0, 0.04);
     }
 
-    .archives .archive .year {
+    .archives a:hover {
+        color: beige;
+    }
+
+    .archives a .year {
         flex-grow: 1;
     }
 }

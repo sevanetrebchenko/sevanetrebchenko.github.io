@@ -1,27 +1,27 @@
 @media(min-width: 0px) {
-    .header {
+    .profile {
         display: flex;
         flex-direction: column;
 
         gap: 20px;
     }
 
-    .header img {
+    .profile img {
         max-width: 100px;
         border-radius: 50%;
     }
 
-    .header .description {
+    .profile .about {
         margin: 0em;
         padding: 0em;
     }
 
-    .header .description h1 {
+    .profile .about h1 {
         font-size: 16px;
         font-weight: 600;
     }
 
-    .header .description h2 {
+    .profile .about h2 {
         font-size: 14px;
         font-weight: 300;
     }

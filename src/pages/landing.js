@@ -1,55 +1,38 @@
 
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 
-import Social from '../components/socials.js'
-import Card from '../components/card.js'
-import Archive from '../components/archive.js'
-import { Link, useNavigate } from 'react-router-dom'
-
-// Import components.
-import Header from '../components/header.js'
-import Socials from '../components/socials.js'
+// Components.
+import Profile from '../components/profile.js'
+import Links from '../components/links.js'
 import Navbar from '../components/navbar.js'
-import Tags from '../components/tags.js'
+import Postcard from '../components/postcard.js'
 
-export default function Landing({ content }) {
-    const navigateTo = useNavigate();
+// Stylesheets.
+import './landing.css';
 
-    // Social menu
-
-    // Archives.
-    let archives = new Map(); // Mapping from year to a list of posts published in that year.
-    for (let post of content.posts) {
-        const year = post.date.published.split('-')[2];
-
-        // Add post to the correct archive.
-        if (!archives.has(year)) {
-            archives.set(year, new Set());
-        }
-        archives.get(year).add(post);
-    }
+// Landing page for blog.
+export default function Landing(params) {
+    const { content } = params;
 
     return (
         <React.Fragment>
-
-            <div className='left-sidebar'>
-                <Header></Header>
-                <Socials></Socials>
+            <div className='header'>
+                <Profile></Profile>
+                <Links></Links>
                 <Navbar></Navbar>
             </div>
 
-
-            <div className='main-content'>
-                {
-                    Array.from(content.posts).map((post, index) => (
-                        <Card post={post} key={index}></Card>
-                    ))
-                }
+            <div className='content'>
+                <section className='postcard-list'>
+                    {
+                        content.posts.map((post, index) => (
+                            <Postcard post={post} key={index} />
+                        ))
+                    }
+                </section>
             </div>
 
-            <div className='right-sidebar'>
-                <Archive posts={content.posts}></Archive>
-                <Tags posts={content.posts}></Tags>
+            <div className='sidebar'>
             </div>
 
         </React.Fragment>

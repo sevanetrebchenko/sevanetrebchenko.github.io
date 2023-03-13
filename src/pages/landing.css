@@ -1,0 +1,36 @@
+
+@media(min-width: 0px) {
+
+    .header {
+        display: flex;
+        flex-direction: column;
+
+        row-gap: 40px;
+
+        max-width: 15%;
+        width: 100%;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+
+        max-width: 1536px;
+        row-gap: 40px;
+
+        margin-left: auto;
+        margin-right: auto;
+
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-top: 35px;
+        padding-bottom: 35px;
+    
+    }
+
+    .sidebar {
+        max-width: 25%;
+        width: 100%;
+    }
+}
