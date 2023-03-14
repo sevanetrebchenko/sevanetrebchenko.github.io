@@ -1,4 +1,6 @@
 .root {
     display: flex;
     flex-direction: row;
+
+    font-family: 'Red Hat Text', 'sans-serif';
 }

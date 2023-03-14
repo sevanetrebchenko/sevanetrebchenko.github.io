@@ -51,8 +51,13 @@
     }
 
     .postcard .postcard-description .postcard-title {
-        font-size: 20px;
+        font-size: 25px;
         font-weight: 600;
+    }
+
+    .postcard .postcard-description .postcard-abstract {
+        font-size: 18px;
+        color: #747474;
     }
 
     .postcard .postcard-publish-date {

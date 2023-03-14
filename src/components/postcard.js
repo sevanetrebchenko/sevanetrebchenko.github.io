@@ -77,18 +77,6 @@ export default function Postcard(params) {
         );
     }
 
-    header.push(
-        <div className='postcard-description' onClick={handleClick}>
-            {
-                description.map((element, index) => (
-                    <React.Fragment key={index}>
-                        {element}
-                    </React.Fragment>
-                ))
-            }
-        </div>
-    );
-
     elements.push(
         <div className='postcard-header'>
             {

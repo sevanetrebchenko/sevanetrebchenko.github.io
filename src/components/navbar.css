@@ -1,50 +1,40 @@
 @media(min-width: 0px) {
-
     .navbar {
         display: flex;
         flex-direction: column;
         row-gap: 20px;
     }
 
-    .navbar .entry {
-        display: flex;
-        flex-direction: row;
-    }
-
-    .navbar .icon {
-
-    }
-
-    .navbar .entry .selected {
-        
-    }
-
-    .navbar a {
+    .navbar .navbar-element {
         display: flex;
         flex-direction: row;
 
-        gap: 40px;
+        column-gap: 40px;
 
         text-decoration: none;
-        color: inherit;
-    }
+        color: gray;
 
-    .navbar a:hover,
-    .navbar a:hover i {
-        cursor: pointer;
-        color: lavender;
         transition: 0.2s;
     }
 
-    .navbar a:hover {
+    .navbar .navbar-element:hover {
         cursor: pointer;
         color: gray;
+        transition: 0.2s;
     }
 
-    .navbar .item p {
+    .navbar .navbar-element-current {
+        color: lavender;
+    }
+
+    .navbar .navbar-element-icon  {
+        font-size: 25px;
+    }
+
+    .navbar .navbar-element-name {
+        font-size: 18px;
+
         margin-top: auto;
         margin-bottom: auto;
-        text-align: center;
     }
-
 }

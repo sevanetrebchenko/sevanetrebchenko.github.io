@@ -11,21 +11,38 @@
         border-radius: 50%;
     }
 
-    .profile .about {
-        margin: 0em;
-        padding: 0em;
+    .profile .profile-meta {
+        display: flex;
+        flex-direction: column;
     }
 
-    .profile .about h1 {
-        font-size: 16px;
-        font-weight: 600;
+    .profile-name {
+        font-size: 20px;
+        font-weight: 500;
     }
 
-    .profile .about h2 {
+    .profile-description {
         font-size: 14px;
-        font-weight: 300;
+        font-weight: 400;
     }
 
+    .profile .profile-socials {
+        display: flex;
+        flex-direction: row;
+        /* justify-content: center; */
+
+        column-gap: 20px;
+    }
+
+    .profile .profile-socials a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .profile .profile-socials i {
+        font-size: 25px;
+        color: gray;
+    }
 }
 
 @media(min-width: 768px) {

@@ -1,16 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 
 // Components.
 import Profile from '../components/profile.js'
-import Links from '../components/links.js'
 import Navbar from '../components/navbar.js'
 import Postcard from '../components/postcard.js'
 
 // Stylesheets.
 import './landing.css';
 
-// Landing page for blog.
+// Landing page.
 export default function Landing(params) {
     const { content } = params;
 
@@ -18,18 +17,17 @@ export default function Landing(params) {
         <React.Fragment>
             <div className='header'>
                 <Profile></Profile>
-                <Links></Links>
                 <Navbar></Navbar>
             </div>
 
             <div className='content'>
-                <section className='postcard-list'>
+                <div className='postcard-list'>
                     {
                         content.posts.map((post, index) => (
                             <Postcard post={post} key={index} />
                         ))
                     }
-                </section>
+                </div>
             </div>
 
             <div className='sidebar'>

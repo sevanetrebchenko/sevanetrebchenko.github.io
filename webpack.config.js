@@ -61,8 +61,8 @@ module.exports = (env) => {
             to: './content.json'
           },
           {
-            from: './content',
-            to: './content'
+            from: './public',
+            to: './public'
           }
         ],
       }),
