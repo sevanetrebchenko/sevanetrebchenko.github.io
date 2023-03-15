@@ -116,12 +116,30 @@ function Application() {
     // Generate tags list.
     let tags = new Set();
     for (const post of content.posts) {
+        if (!post.tags) {
+            continue;
+        }
+
         for (const tag of post.tags) {
             tags.add(tag);
         }
     }
 
     content.tags = Array.from(tags).sort();
+
+    // Generate categories list.
+    let categories = new Set();
+    for (const post of content.posts) {
+        if (!post.categories) {
+            continue;
+        }
+
+        for (const category of post.categories) {
+            categories.add(category);
+        }
+    }
+
+    content.categories = Array.from(categories).sort();
 
     let routes = [];
 

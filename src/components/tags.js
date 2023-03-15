@@ -7,17 +7,25 @@ import './tags.css'
 
 export default function Tags(params) {
     const { tags } = params;
+    if (!tags) {
+        return;
+    }
 
     return (
-        <div className='tags'>
-            <h1>Tags</h1>
-            <div className='tag-container'>
+        <div className='tags-container'>
+            <div className='tags-container-header'>
+                <i className='fa-solid fa-tag fa-fw tags-container-icon' />
+                <span className='tags-container-title'>Tags</span>
+            </div>
+            <div className='tags-list'>
                 {
-                    Array.from(tags).map((tag, index) => (
-                        <Link to={`tag/${tag}`} className='tag' key={index}>
-                            <span>{tag}</span>
-                        </Link>
-                    ))
+                    tags.map((tag, index) => {
+                        return (
+                            <Link to={`tags/${tag.replace(' ', '-').toLowerCase()}`} className='tag' key={index}>
+                                <span className='tag-name'>{tag}</span>
+                            </Link>
+                        );
+                    })
                 }
             </div>
         </div>

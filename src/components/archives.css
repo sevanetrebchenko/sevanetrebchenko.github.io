@@ -1,17 +1,16 @@
 
 @media(min-width: 0px) {
-
-    .tags-container {
+    .archives-container {
         display: flex;
         flex-direction: column;
     }
 
-    .tags-container-header {
+    .archives-container-header {
         display: flex;
         flex-direction: column;
     }
 
-    .tags-container-title {
+    .archives-container-title {
         text-transform: uppercase;
         font-weight: 700;
 
@@ -19,15 +18,17 @@
         margin-bottom: 10px;
     }
 
-    .tags-list {
+    .archives-list {
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
 
         gap: 10px;
     }
 
-    .tag {
+    .archive {
+        display: flex;
+        flex-direction: row;
+
         padding: 18px 25px;
         border-radius: 10px;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.04), 
@@ -38,6 +39,8 @@
         text-decoration: none;
     }
 
-    .tag-name {
+    .archive-year {
+        display: flex;
+        flex-grow: 1;
     }
 }
