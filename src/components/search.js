@@ -1,29 +1,41 @@
 
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // Stylesheets.
 import './search.css'
 
 export default function Search(params) {
-    const [input, setInput] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const navigateTo = useNavigate();
+    
+    const { onChange } = params;
 
     const handleChange = (event) => {
         event.preventDefault();
-        console.log(event.target.value);
-        setInput(event.target.value);
+        const query = event.target.value;
 
-        return false;
+        setSearchInput(query);
+
+        // External 'onChange' event for live reloading site contents based on the search query.
+        if (onChange) {
+            onChange(query);
+        }
     }
 
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        console.log(`/search/?s=${searchInput.replace(/\s+/, '-')}`);
+    };
+
     return (
-        <form className='search-bar' action='/search/'>
+        <form className='search-bar' method="get" autoComplete="off" onSubmit={handleSubmit}>
             <div className='search-bar-header'>
-                <span className='search-bar-title'>Search</span>
-                <input type='text' className='search-bar-input' required placeholder='Type something...' onChange={handleChange} value={input}></input>
+                <label className='search-bar-title'>Search</label>
+                <input name='' type='text' className='search-bar-input' required placeholder='Type something...' onChange={handleChange} value={searchInput}></input>
             </div>
 
             <i className='fa-solid fa-magnifying-glass fa-fw search-button-icon' />
         </form>
     );
-
 }

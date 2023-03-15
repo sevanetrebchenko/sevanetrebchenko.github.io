@@ -16,6 +16,22 @@ import './landing.css';
 // Landing page.
 export default function Landing(params) {
     const { content } = params;
+    let [posts, setPosts] = useState([...content.posts]);
+
+    const onSearchInput = (query) => {
+        let filtered = [...content.posts];
+        query = query.trim();
+
+        if (query) {
+            // Filter posts based on search query.
+            filtered = filtered.filter((post) => {
+                const regex = new RegExp(query, 'i');
+                return regex.test(post.title) || regex.test(post.abstract);
+            });
+        }
+
+        setPosts(filtered);
+    }
 
     return (
         <React.Fragment>
@@ -26,14 +42,14 @@ export default function Landing(params) {
             <div className='content'>
                 <div className='postcard-list'>
                     {
-                        content.posts.map((post, index) => (
+                        posts.map((post, index) => (
                             <Postcard post={post} key={index} />
                         ))
                     }
                 </div>
             </div>
             <div className='sidebar'>
-                <Search content={content}></Search>
+                <Search onChange={onSearchInput}></Search>
                 <Archives archives={content.archives}></Archives>
                 <Categories categories={content.categories}></Categories>
                 <Tags tags={content.tags}></Tags>

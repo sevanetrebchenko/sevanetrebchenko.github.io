@@ -145,6 +145,7 @@ function Application() {
 
     // Set up routes for main site pages.
     routes.push(<Route exact path={'/'} element={<Landing content={content}/>}/>);
+    // routes.push(<Route path={'/search/'} element={<Landing content={content}/>}/>);
     // routes.push(<Route exact path={'/archives'} element={<Landing content={content}/>}/>);
     // routes.push(<Route exact path={'search'} element={<Search />}/>);
 
