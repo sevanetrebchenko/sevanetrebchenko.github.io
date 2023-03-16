@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import './search.css'
 
 export default function Search(params) {
+    const { onChange } = params;
+
     const [searchInput, setSearchInput] = useState('');
     const navigateTo = useNavigate();
-    
-    const { onChange } = params;
 
     const handleChange = (event) => {
         event.preventDefault();
@@ -25,7 +25,11 @@ export default function Search(params) {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log(`/search/?s=${searchInput.replace(/\s+/, '-')}`);
+
+        setSearchInput(searchInput.trim());
+        if (searchInput) {
+            navigateTo(`/search/?s=${searchInput.replace(/\s+/, '-')}`);
+        }
     };
 
     return (
@@ -35,7 +39,9 @@ export default function Search(params) {
                 <input name='' type='text' className='search-bar-input' required placeholder='Type something...' onChange={handleChange} value={searchInput}></input>
             </div>
 
-            <i className='fa-solid fa-magnifying-glass fa-fw search-button-icon' />
+            <button className='search-button' onClick={handleSubmit}>
+                <i className='fa-solid fa-magnifying-glass fa-fw search-button-icon' />
+            </button>
         </form>
     );
 }

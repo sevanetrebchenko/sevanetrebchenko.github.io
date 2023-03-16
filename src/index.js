@@ -11,6 +11,7 @@ import Landing from './pages/landing.js'
 
 // Stylesheets.
 import './index.css'
+import Search from './pages/search.js'
 
 function loadContent() {
     const [content, setContent] = useState('');
@@ -145,7 +146,7 @@ function Application() {
 
     // Set up routes for main site pages.
     routes.push(<Route exact path={'/'} element={<Landing content={content}/>}/>);
-    // routes.push(<Route path={'/search/'} element={<Landing content={content}/>}/>);
+    routes.push(<Route path={'/search/*'} element={<Search/>}/>);
     // routes.push(<Route exact path={'/archives'} element={<Landing content={content}/>}/>);
     // routes.push(<Route exact path={'search'} element={<Search />}/>);
 
