@@ -20,17 +20,25 @@
         background-color: white;
     }
 
-    .postcard img {
+    .postcard-image {
         height: 250px;
         width: 100%;
         object-fit: cover;
         object-position: 50% 20%;
+
+        transition: 0.2s;
+    }
+
+    .postcard-image:hover {
+        transform: scale(1.05);
+        transition: 0.2s;
+
+        overflow: hidden;
     }
 
     .postcard .postcard-header {
         display: flex;
         flex-direction: column;
-
 
         gap: 16px;
         padding: 20px;

@@ -51,7 +51,9 @@
         outline: none;
     }
 
-    .search-button {
+    .search-button,
+    .clear-button 
+    {
         display: flex;
         justify-content: center;
 
@@ -62,7 +64,9 @@
         padding-right: 25px;
     }
 
-    .search-button:hover {
+    .search-button:hover,
+    .clear-button:hover 
+    {
         cursor: pointer;
     }
 

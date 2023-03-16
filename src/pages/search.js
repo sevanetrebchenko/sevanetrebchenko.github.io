@@ -1,33 +1,29 @@
 
 import React from 'react'
 
+// Components.
+import Profile from '../components/profile.js'
+import Navbar from '../components/navbar.js'
+import Finder from '../components/finder.js'
+
+// Stylesheets.
+import './search.css'
+
 export default function Search(params) {
+    const { content } = params;
+
     const url = new URL(window.location.href);
     const search = new URLSearchParams(url.search).get('s');
 
-    console.log(search);
-
     return (
         <React.Fragment>
-            {/* <div className='header'>
+            <div className='search header'>
                 <Profile></Profile>
                 <Navbar></Navbar>
             </div>
-            <div className='content'>
-                <div className='postcard-list'>
-                    {
-                        posts.map((post, index) => (
-                            <Postcard post={post} key={index} />
-                        ))
-                    }
-                </div>
+            <div className='search content'>
+                <Finder></Finder>
             </div>
-            <div className='sidebar'>
-                <Search onChange={onSearchInput}></Search>
-                <Archives archives={content.archives}></Archives>
-                <Categories categories={content.categories}></Categories>
-                <Tags tags={content.tags}></Tags>
-            </div> */}
         </React.Fragment>
     );
 }

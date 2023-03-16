@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import Profile from '../components/profile.js'
 import Navbar from '../components/navbar.js'
 import Postcard from '../components/postcard.js'
-import Search from '../components/search.js'
+import Finder from '../components/finder.js'
 import Archives from '../components/archives.js'
 import Tags from '../components/tags.js'
 import Categories from '../components/categories.js'
@@ -49,7 +49,7 @@ export default function Landing(params) {
                 </div>
             </div>
             <div className='sidebar'>
-                <Search onChange={onSearchInput}></Search>
+                <Finder onChange={onSearchInput}></Finder>
                 <Archives archives={content.archives}></Archives>
                 <Categories categories={content.categories}></Categories>
                 <Tags tags={content.tags}></Tags>

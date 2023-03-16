@@ -33,6 +33,11 @@ export default function Navbar(params) {
                 <i className='fa-solid fa-box-archive fa-fw navbar-element-icon' />
                 <span className='navbar-element-name'>Archives</span>
             </NavbarElement>
+
+            <NavbarElement destination={'/search'}>
+                <i className='fa-solid fa-magnifying-glass fa-fw navbar-element-icon' />
+                <span className='navbar-element-name'>Search</span>
+            </NavbarElement>
         </div>
     );
 }

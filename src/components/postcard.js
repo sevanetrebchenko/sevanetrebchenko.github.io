@@ -19,7 +19,7 @@ export default function Postcard(params) {
     // Background image is optional.
     if (post.image) {
         // TODO: alt text
-        elements.push(<img src={post.image} alt='' onClick={handleClick} />);
+        elements.push(<img className='postcard-image' src={post.image} alt='' onClick={handleClick} />);
     }
 
     let header = [];
