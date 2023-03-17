@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import './finder.css'
 
 export default function Finder(props) {
-    const { onChange } = props;
+    const { onChange, searchText } = props;
 
     const navigateTo = useNavigate();
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(searchText || '');
 
     const onSubmit = function (e) {
         e.preventDefault();

@@ -15,6 +15,8 @@ export default function Search(params) {
     const url = new URL(window.location.href);
     const search = new URLSearchParams(url.search).get('s');
 
+
+
     return (
         <React.Fragment>
             <div className='search header'>
@@ -22,7 +24,7 @@ export default function Search(params) {
                 <Navbar></Navbar>
             </div>
             <div className='search content'>
-                <Finder></Finder>
+                <Finder searchText={search}></Finder>
             </div>
         </React.Fragment>
     );

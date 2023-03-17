@@ -13,7 +13,7 @@ export default function Profile() {
                 <span className='profile-name'>Seva Netrebchenko</span>
                 <span className='profile-description'>Software engineer by profession, game developer and graphics enthusiast at heart</span>
             </div>
-            <div className='profile-socials'>
+            {/* <div className='profile-socials'>
                 <Link to={'mailto:seva.netrebchenko@gmail.com'}>
                     <i className='fas fa-envelope fa-fw'></i>
                 </Link>
@@ -29,7 +29,7 @@ export default function Profile() {
                 <Link to={'https://twitter.com/netrebchenko/'}>
                     <i className='fab fa-twitter fa-fw'></i>
                 </Link>
-            </div>
+            </div> */}
         </div>
     );
 }

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 // Components.
 import Profile from '../components/profile.js'
 import Navbar from '../components/navbar.js'
-import Postcard from '../components/postcard.js'
+import Paginator from '../components/paginator.js'
 import Finder from '../components/finder.js'
 import Archives from '../components/archives.js'
 import Tags from '../components/tags.js'
@@ -40,13 +40,7 @@ export default function Landing(params) {
                 <Navbar></Navbar>
             </div>
             <div className='content'>
-                <div className='postcard-list'>
-                    {
-                        posts.map((post, index) => (
-                            <Postcard post={post} key={index} />
-                        ))
-                    }
-                </div>
+                <Paginator posts={content.posts} postsPerPage={1}></Paginator>
             </div>
             <div className='sidebar'>
                 <Finder onChange={onSearchInput}></Finder>

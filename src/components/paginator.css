@@ -1,0 +1,48 @@
+@media(min-width: 0px) {
+
+    .pages {
+        display: flex;
+        flex-direction: row;
+
+        justify-content: center;
+
+        column-gap: 20px;
+    }
+
+    .page-list {
+        display: flex;
+        flex-direction: row;
+
+        column-gap: 15px;
+    }
+
+    .previous-page {
+        font-size: 12px;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    .previous-page:hover {
+        cursor: pointer;
+    }
+
+    .next-page {
+        font-size: 12px;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    .next-page:hover {
+        cursor: pointer;
+    }
+
+    .page {
+        font-size: 16px;
+    }
+
+    .current {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+}
