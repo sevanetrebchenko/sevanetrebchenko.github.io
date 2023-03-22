@@ -1,42 +1,42 @@
 
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-
-// Stylesheets.
 import './navbar.css'
 
-function NavbarElement(params) {
-    const { destination, children } = params;
+function NavbarElement(props) {
+    const { destination, children } = props;
     const location = useLocation();
 
+    let classNames = ['navbar-element'];
+
+    if (location.pathname === '/') {
+        // All navbar elements should be displayed as highlighted on the landing page.
+        classNames.push('navbar-element-landing');
+    }
+    else if (location.pathname == destination) {
+        classNames.push('navbar-element-current');
+    }
+
     return (
-        <Link to={destination} className={(location.pathname === destination) ? 'navbar-element navbar-element-current' : 'navbar-element'}>
+        <Link to={destination} className={classNames.join(' ')}>
             {children}
         </Link>
     );
 }
 
-export default function Navbar(params) {
+export default function Navbar(props) {
     return (
         <div className='navbar'>
-            <NavbarElement destination={'/'}>
-                <i className='fa-solid fa-house fa-fw navbar-element-icon' />
-                <span className='navbar-element-name'>Home</span>
+            <NavbarElement destination={'/projects'}>
+                <span className='navbar-element-name'>// projects</span>
+            </NavbarElement>
+
+            <NavbarElement destination={'/blog'}>
+                <span className='navbar-element-name'>// blogs</span>
             </NavbarElement>
 
             <NavbarElement destination={'/about'}>
-                <i className='fa-solid fa-user fa-fw navbar-element-icon' />
-                <span className='navbar-element-name'>About</span>
-            </NavbarElement>
-
-            <NavbarElement destination={'/archives'}>
-                <i className='fa-solid fa-box-archive fa-fw navbar-element-icon' />
-                <span className='navbar-element-name'>Archives</span>
-            </NavbarElement>
-
-            <NavbarElement destination={'/search'}>
-                <i className='fa-solid fa-magnifying-glass fa-fw navbar-element-icon' />
-                <span className='navbar-element-name'>Search</span>
+                <span className='navbar-element-name'>// about</span>
             </NavbarElement>
         </div>
     );

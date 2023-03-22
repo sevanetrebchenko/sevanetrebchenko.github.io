@@ -44,17 +44,7 @@ export default function Landing(params) {
     return (
         <React.Fragment>
             <div className='main-container' style={style}>
-                <div className='navbar-container'>
-                    <Link to='/projects'>
-                        <span className='navbar-element'>// projects</span>
-                    </Link>
-                    <Link to='/blog'>
-                        <span className='navbar-element'>// blog</span>
-                    </Link>
-                    <Link to='/about'>
-                        <span className='navbar-element'>// about</span>
-                    </Link>
-                </div>
+                <Navbar></Navbar>
                 <div className='title-container'>
                     <span className='title'>seva netrebchenko</span>
                     <span className='description'>software engineer by profession, graphics enthusiast at heart</span>

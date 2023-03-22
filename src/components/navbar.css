@@ -1,11 +1,14 @@
 @media(min-width: 0px) {
     .navbar {
         display: flex;
-        flex-direction: column;
-        row-gap: 20px;
+        flex-direction: row;
+        justify-content: center;
+        column-gap: 60px;
+
+        padding: 40px;
     }
 
-    .navbar .navbar-element {
+    .navbar-element {
         display: flex;
         flex-direction: row;
 
@@ -17,24 +20,23 @@
         transition: 0.2s;
     }
 
-    .navbar .navbar-element:hover {
+    .navbar-element:hover {
         cursor: pointer;
         color: gray;
         transition: 0.2s;
     }
 
-    .navbar .navbar-element-current {
-        color: lavender;
+    .navbar-element-current,
+    .navbar-element-landing
+    {
+        color: white;
     }
 
-    .navbar .navbar-element-icon  {
+    .navbar-element-icon  {
         font-size: 25px;
     }
 
-    .navbar .navbar-element-name {
+    .navbar-element-name {
         font-size: 18px;
-
-        margin-top: auto;
-        margin-bottom: auto;
     }
 }
