@@ -18,7 +18,7 @@ export default function Search(params) {
 
 
     return (
-        <React.Fragment>
+        <div className='search-page'>
             <div className='search header'>
                 <Profile></Profile>
                 <Navbar></Navbar>
@@ -26,6 +26,6 @@ export default function Search(params) {
             <div className='search content'>
                 <Finder searchText={search}></Finder>
             </div>
-        </React.Fragment>
+        </div>
     );
 }

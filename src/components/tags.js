@@ -14,17 +14,18 @@ export default function Tags(params) {
     return (
         <div className='tags-container'>
             <div className='tags-container-header'>
-                <i className='fa-solid fa-tag fa-fw tags-container-icon' />
                 <span className='tags-container-title'>Tags</span>
             </div>
             <div className='tags-list'>
                 {
-                    tags.map((tag, index) => {
+                    Array.from(tags, ([name, count]) => {
+                        const location = 'tags' + '/' + name.replace(' ', '-').toLowerCase();
+
                         return (
-                            <Link to={`tags/${tag.replace(' ', '-').toLowerCase()}`} className='tag' key={index}>
-                                <span className='tag-name'>{tag}</span>
+                            <Link to={location} className='tag' key={name}>
+                                <span className='tag-name'>{name}</span>
                             </Link>
-                        );
+                        )
                     })
                 }
             </div>

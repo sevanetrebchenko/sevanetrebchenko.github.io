@@ -14,17 +14,19 @@ export default function Categories(params) {
     return (
         <div className='categories-container'>
             <div className='categories-container-header'>
-                <i className='fa-solid fa-hashtag fa-fw categories-container-icon' />
                 <span className='categories-container-title'>Categories</span>
             </div>
             <div className='categories-list'>
                 {
-                    categories.map((category, index) => {
+                    Array.from(categories, ([name, count]) => {
+                        const location = 'category' + '/' + name.replace(' ', '-').toLowerCase();
+
                         return (
-                            <Link to={`categories/${category.replace(' ', '-').toLowerCase()}`} className='category' key={index}>
-                                <span className='category-name'>{category}</span>
+                            <Link to={location} className='category' key={name}>
+                                <span className='category-name'>{name}</span>
+                                <span className='category-count'>{'(' + count + ')'}</span>
                             </Link>
-                        );
+                        )
                     })
                 }
             </div>

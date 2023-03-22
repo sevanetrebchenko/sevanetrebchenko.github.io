@@ -101,7 +101,6 @@ function Application() {
 
     // Generate archive.
     let archives = new Map(); // Mapping of year to an array of posts published in that year.
-
     for (let i = 0; i < content.posts.length; ++i) {
         const post = content.posts[i];
 
@@ -114,33 +113,27 @@ function Application() {
 
     content.archives = archives;
 
-    // Generate tags list.
-    let tags = new Set();
-    for (const post of content.posts) {
-        if (!post.tags) {
-            continue;
-        }
-
-        for (const tag of post.tags) {
-            tags.add(tag);
-        }
-    }
-
-    content.tags = Array.from(tags).sort();
-
-    // Generate categories list.
-    let categories = new Set();
+    // Generate category list.
+    let categories = new Map();
     for (const post of content.posts) {
         if (!post.categories) {
             continue;
         }
 
         for (const category of post.categories) {
-            categories.add(category);
+            if (!categories.has(category)) {
+                categories.set(category, 0);
+            }
+
+            categories.set(category, categories.get(category) + 1);
         }
     }
 
-    content.categories = Array.from(categories).sort();
+    console.log(categories);
+
+    content.categories = Array.from(categories).sort(function(a, b) {
+        return a[0].localeCompare(b[0]);
+    });
 
     let routes = [];
 
