@@ -4,8 +4,16 @@
         flex-direction: row;
         justify-content: center;
         column-gap: 60px;
-
         padding: 40px;
+
+
+        z-index: 60;
+        background: 0 0;
+        vertical-align: middle;
+        left: 0;
+        right: 0;
+
+        /* background-color: rgba(0.0, 0.0, 0.0, 0.2); */
     }
 
     .navbar-element {

@@ -9,31 +9,6 @@
         height: 100vh;
     }
 
-    .navbar-container {
-        display: flex;
-        flex-direction: row;
-
-        padding: 40px;
-
-        justify-content: center;
-
-        column-gap: 50px;
-    }
-
-    .navbar-container a {
-        text-decoration: none;
-    }
-
-    .navbar-element {
-        font-family: 'Roboto Mono';
-        font-size: 18px;
-        font-weight: 500;
-
-        color: white;
-
-        text-transform: lowercase;
-    }
-
     .content-container {
         display: flex;
         flex-direction: column;
