@@ -63,6 +63,28 @@ function FeaturedProjectEntry(props) {
     );
 }
 
+function ProjectEntry(props) {
+    const { project } = props;
+
+    return (
+        <li className='project' style={{ backgroundImage: 'url(\'images/render.png\')' }}>
+            <div className='project-header'>
+                <span className='project-title'>{project.title}</span>
+                <i className='fa-solid fa-arrow-up-right-from-square fa-fw'></i>
+            </div>
+            <div className='project-outline' style={{overflow: 'hidden', textOverflow: 'ellipsis', maxHeight: '100px'}}>
+                <span className='project-description'>{project.description}</span>
+            </div>
+            <div className='project-tools'>
+                {
+                    project.tools.map((name, index) => (
+                        <span className='project-tool' key={index}>{name}</span>
+                    ))
+                }
+            </div>
+        </li>
+    )
+}
 
 
 export default function Projects(props) {
@@ -93,97 +115,33 @@ export default function Projects(props) {
                     </div>
                 </section>
 
-                <div className='projects-list-header'>
+                <div className='featured-projects-list-header'>
                     <span className='separator'></span>
-                    <span className='projects-list-title'>Projects List</span>
+                    <span className='featured-projects-list-header'>Featured Projects</span>
                     <span className='separator'></span>
                 </div>
 
-                <div className='featured-project-list'>
+                <div className='featured-projects-list'>
                     <FeaturedProjectEntry project={project} justification={'left'}></FeaturedProjectEntry>
                     <FeaturedProjectEntry project={project} justification={'right'}></FeaturedProjectEntry>
-                    {/* <section className='featured-project'>
-                        <div className='featured-project-image'>
-                            <img src='images/render.png'></img>
-                        </div>
-                        <div className='featured-project-outline'>
-                            <span className='featured-project-header'>Featured Project</span>
-                            <div className='featured-project-title-container'>
-                                <span className='featured-project-title'>Software Raytracer</span>
-                                <Link to={'https://github.com/sevanetrebchenko/'} className='featured-project-link'>
-                                    <i className='fa-solid fa-arrow-up-right-from-square fa-fw'></i>
-                                </Link>
-                            </div>
-
-                            <span className='featured-project-description'>An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources.</span>
-                            <div className='featured-project-tools'>
-                                <span className='featured-project-tool'>C++</span>
-                                <span className='featured-project-tool'>Git</span>
-                            </div>
-                            <div className='featured-project-links'>
-                                <div className='read-more'>
-                                    <span className='read'>Read more</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className='featured-project'>
-                        <div className='featured-project-image'>
-                            <img src='images/render.png'></img>
-                        </div>
-                        <div className='featured-project-outline'>
-                            <span className='featured-project-header'>Featured Project</span>
-                            <span className='featured-project-title'>Software Raytracer</span>
-                            <span className='featured-project-description'>An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources.</span>
-                            <div className='featured-project-tools'>
-                                <span className='featured-project-tool'>C++</span>
-                                <span className='featured-project-tool'>Git</span>
-                            </div>
-                            <div className='featured-project-links'>
-                                <Link to={'https://github.com/sevanetrebchenko/'}>
-                                    <i className='fab fa-github fa-fw'></i>
-                                </Link>
-                                <Link to={'https://www.linkedin.com/in/sevanetrebchenko/'}>
-                                    <i className='fab fa-linkedin fa-fw'></i>
-                                </Link>
-                            </div>
-                        </div>
-                    </section> */}
                 </div>
+
+
+                <div className='projects-grid-header'>
+                    <span className='separator'></span>
+                    <span className='projects-grid-title'>Other Noteworthy Projects</span>
+                    <span className='separator'></span>
+                </div>
+
+                <ul className='projects-grid'>
+                    <ProjectEntry project={project}></ProjectEntry>
+                    <ProjectEntry project={project}></ProjectEntry>
+                    <ProjectEntry project={project}></ProjectEntry>
+                    <ProjectEntry project={project}></ProjectEntry>
+                    <ProjectEntry project={project}></ProjectEntry>
+                </ul>
 
             </div>
-
-            {/* <div className='projects' style={style}>
-                <div className='projects-header'>
-                    <Navbar></Navbar>
-                </div>
-
-                <div className='page-title'>
-                    <div className='projects-title-container'>
-                        <span className='projects-title'>projects</span>
-                    </div>
-                </div>
-            </div> */}
-
         </React.Fragment>
     )
-
-
-
-    return (
-        <React.Fragment>
-            <div className='projects-container' style={style}>
-                <Navbar></Navbar>
-                <div className='title-container'>
-                    <span className='title'>projects</span>
-                </div>
-                <div className='fadeout'>
-                </div>
-            </div>
-            <div className='projects-list'>
-                <span>asdf</span>
-            </div>
-        </React.Fragment>
-    );
 }

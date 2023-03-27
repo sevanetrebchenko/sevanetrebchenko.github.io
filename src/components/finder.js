@@ -65,7 +65,6 @@ export default function Finder(props) {
     return (
         <form className='search-bar' method="get" autoComplete="off" onSubmit={onSubmit}>
             <div className='search-bar-header'>
-                <label className='search-bar-title'>Search</label>
                 <input type='text' className='search-bar-input' required placeholder='Type something...' onInput={onInput} value={search}></input>
             </div>
 
