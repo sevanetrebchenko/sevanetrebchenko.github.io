@@ -1,4 +1,5 @@
 @media(min-width: 0px) {
+
     .projects-header {
         position: absolute;
         top: 0;
@@ -19,6 +20,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+
+        padding-bottom: 40px;
     }
 
     .projects-cover {
@@ -111,7 +114,7 @@
         padding: 40px;
     }
 
-    .featured-project-list-title {
+    .featured-projects-list-title {
         justify-content: center;
         align-items: center;
         align-self: center;
@@ -137,34 +140,39 @@
 
     .featured-project {
         display: grid;
-        grid-template-columns: repeat(10, 1fr);
+        grid-template-columns: repeat(12, 1fr);
         gap: 10px;
 
         align-items: center;
 
         max-width: 1000px;
 
-        position: relative;
-
         padding: 20px;
     }
 
     .featured-project-cover {
-        position: relative;
-    }
-
-    .featured-project-cover img {
-        height: 100%;
         width: 100%;
+        height: 100%;
         object-fit: cover;
-
         border-radius: 10px;
+
+        grid-row-start: 1;
+        grid-row-end: 1;
     }
 
-    .featured-project-outline {
-        position: absolute;
+    .featured-project-content {
         display: flex;
         flex-direction: column;
+        padding: 20px;
+
+        grid-row-start: 1;
+        grid-row-end: 1;
+
+        border-radius: 5px;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(112, 112, 112, 0.5);
     }
 
     .featured-project-banner {
@@ -175,154 +183,123 @@
     .featured-project-header {
         display: flex;
         flex-direction: row;
+
         margin-bottom: 10px;
     }
 
     .featured-project-title {
         color: white;
-        font-size: 30px;
+        font-size: 28px;
     }
 
-    .featured-project-header a {
+    .featured-project-link {
         padding: 10px;
         color: gray;
     }
 
     .featured-project-description {
-        color: white;
-        padding: 25px;
-
-        border-radius: 5px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08),
-            0px 0px 2px rgba(0, 0, 0, 0.12),
-            0px 0px 1px rgba(0, 0, 0, 0.08);
-
-        margin-bottom: 10px;
-
-        -webkit-backdrop-filter: blur(8px);
-        backdrop-filter: blur(8px);
-        box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.08);
-    }
-
-    .featured-project-tools {
         display: flex;
-        flex-direction: row;
-
-        margin-bottom: 10px;
-        column-gap: 15px;
-    }
-
-    .featured-project-tool {
-        color: gray;
-        font-size: 14px;
-        font-family: 'Roboto Mono';
+        color: rgb(212, 212, 212);
     }
 
     .featured-project-more {
-        border: 1px solid white;
-        border-radius: 5px;
-
-        transition: 0.2s;
-        width: fit-content;
-
         display: flex;
         flex-direction: row;
+        justify-content: center;
+        align-items: baseline;
+        column-gap: 10px;
+
+        border: 1px solid gray;
+        border-radius: 5px;
+
+        margin-top: 20px;
+        padding: 10px;
+
+        transition: 0.2s;
     }
 
-    .featured-project-more a {
-        text-decoration: none;
-        padding: 5px 10px;
-
-        color: white;
-        font-family: 'Roboto Mono';
-        font-size: 14px;
+    .featured-project-learn,
+    .featured-project-arrow {
+        color: gray;
     }
 
     .featured-project-more:hover {
         cursor: pointer;
-        background-color: #8a8a8a;
+        border-color: white;
+        background-color:rgba(105, 105, 105, 0.9);
+    }
+
+    .featured-project-more:hover .featured-project-learn,
+    .featured-project-more:hover .featured-project-arrow {
+        color: white;
     }
 
     /* Styling for right-justified featured project components */
 
-    .featured-project-description.featured-project-justify-right {
-        text-align: right;
-    }
-
     .featured-project-cover.justify-right {
         grid-column-start: 1;
-        grid-column-end: 8;
+        grid-column-end: 10;
     }
 
-    .featured-project-outline.justify-right {
-        grid-column-start: 7;
+    .featured-project-content.justify-right {
+        grid-column-start: 9;
         grid-column-end: -1;
-        justify-content: right;
     }
 
-    .featured-project-outline.justify-right .featured-project-banner {
+    .featured-project-content.justify-right .featured-project-banner {
         text-align: right;
     }
 
-    .featured-project-outline.justify-right .featured-project-header {
+    .featured-project-banner.featured-project-justify-right {
+        text-align: right;
+    }
+
+    .featured-project-content.justify-right .featured-project-banner {
+        text-align: right;
+    }
+
+    .featured-project-content.justify-right .featured-project-header {
         justify-content: right;
 
         position: relative;
         left: 10px;
     }
 
-    .featured-project-outline.justify-right .featured-project-description {
+    .featured-project-content.justify-right .featured-project-description {
         text-align: right;
     }
 
-    .featured-project-outline.justify-right .featured-project-tools {
-        justify-content: right;
-    }
-
-    .featured-project-outline.justify-right .featured-project-more {
-        margin-left: auto;
-        margin-right: 0;
-    }
-
     /* Styling for left-justified featured project components. */
-
-    .featured-project-description.featured-project-justify-left {
-        text-align: left;
-    }
 
     .featured-project-cover.justify-left {
         grid-column-start: 4;
         grid-column-end: -1;
     }
 
-    .featured-project-outline.justify-left {
+    .featured-project-content.justify-left {
         grid-column-start: 1;
         grid-column-end: 5;
-        justify-content: left;
     }
 
-    .featured-project-outline.justify-left .featured-project-banner {
+    .featured-project-content.justify-left .featured-project-banner {
         text-align: left;
     }
 
-    .featured-project-outline.justify-left .featured-project-header {
-        justify-content: left;
-    }
-
-    .featured-project-outline.justify-left .featured-project-description {
+    .featured-project-banner.featured-project-justify-left {
         text-align: left;
     }
 
-    .featured-project-outline.justify-left .featured-project-tools {
+    .featured-project-content.justify-left .featured-project-banner {
+        text-align: left;
+    }
+
+    .featured-project-content.justify-left .featured-project-header {
         justify-content: left;
     }
 
-    .featured-project-outline.justify-left .featured-project-more {
-        margin-right: auto;
-        margin-left: 0;
+    .featured-project-content.justify-left .featured-project-description {
+        text-align: left;
     }
-
-
 
     .projects-grid {
         display: grid;
@@ -335,13 +312,16 @@
 
         margin: 0;
         padding: 0;
+
+        margin-bottom: 20px;
     }
 
     .project {
         display: flex;
         flex-direction: column;
 
-        row-gap: 10px;
+        row-gap: 20px;
+
         padding: 25px;
 
         border-radius: 5px;
@@ -349,16 +329,15 @@
             0px 0px 2px rgba(0, 0, 0, 0.12),
             0px 0px 1px rgba(0, 0, 0, 0.08);
 
-        /* Background image */
-        background-position: center center;
-        background-size: 0%;
-
-        background-color: white;
+        background-color: #1e1d22;
+        border: solid 1px #27262c;
 
         overflow: hidden;
         text-overflow: ellipsis;
         min-height: 200px;
     }
+
+    .project:hover {}
 
     .project-header {
         display: flex;
@@ -367,24 +346,24 @@
         align-items: center;
     }
 
-    .project-header i {
-        color: gray;
-        font-size: 16px;
-    }
-
     .project-title {
         color: white;
         font-size: 25px;
     }
 
-    .project-description {
-        color: white;
-        display: none;
+    .project-icon {
+        color: orange;
+        font-size: 32px;
     }
 
-    .project:hover .project-description {
-        text-overflow: ellipsis;
-        display: block;
+    .project-link {
+        color: orange;
+        font-size: 16px;
+    }
+
+    .project-description {
+        color: #8a8a8a;
+        font-size: 14px;
     }
 
     .project-tools {
@@ -406,7 +385,7 @@
         color: white;
 
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
 
@@ -415,6 +394,12 @@
         column-gap: 20px;
 
         padding: 40px;
+    }
+
+    .projects-grid-header a {
+        color: orange;
+        /* text-decoration: none; */
+        font-size: 18px;
     }
 
     .project-grid-title {

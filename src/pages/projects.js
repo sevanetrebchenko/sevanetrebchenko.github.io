@@ -18,14 +18,12 @@ function FeaturedProjectEntry(props) {
     const { project, justification } = props;
 
     let header = [];
-    header.push(<span className='featured-project-title'>{project.title}</span>);
+    header.push();
 
     // Link element is optional.
     if (project.link) {
         header.push(
-            <Link to={project.link}>
-                <i className='fa-solid fa-arrow-up-right-from-square fa-fw'></i>
-            </Link>
+
         );
     }
 
@@ -33,30 +31,19 @@ function FeaturedProjectEntry(props) {
 
     return (
         <div className='featured-project'>
-            <div className={'featured-project-cover' + ' ' + justficationClassName}>
-                <img src={project.cover} alt=''></img>
-            </div>
-            <div className={'featured-project-outline' + ' ' + justficationClassName}>
+            <img src={project.cover} alt='' className={'featured-project-cover' + ' ' + justficationClassName}></img>
+            <div className={'featured-project-content' + ' ' + justficationClassName}>
                 <span className='featured-project-banner'>Featured Project</span>
                 <div className='featured-project-header'>
-                    {
-                        header.map((element, index) => (
-                            <React.Fragment key={index}>{element}</React.Fragment>
-                        ))
-                    }
+                    <span className='featured-project-title'>{project.title}</span>
+                    <Link to={project.link}>
+                        <i className='fa-solid fa-arrow-up-right-from-square fa-fw featured-project-link'></i>
+                    </Link>
                 </div>
                 <span className='featured-project-description'>{project.description}</span>
-                <div className='featured-project-tools'>
-                    {
-                        project.tools.map((name, index) => (
-                            <span className='featured-project-tool' key={index}>{name}</span>
-                        ))
-                    }
-                </div>
                 <div className='featured-project-more'>
-                    <Link to={'/'}>
-                        <span>Read More</span>
-                    </Link>
+                    <span className='featured-project-learn'>Learn More</span>
+                    <i className='fa-solid fa-angles-right fa-fw featured-project-arrow'></i>
                 </div>
             </div>
         </div>
@@ -67,12 +54,14 @@ function ProjectEntry(props) {
     const { project } = props;
 
     return (
-        <li className='project' style={{ backgroundImage: 'url(\'images/render.png\')' }}>
+        <li className='project'>
             <div className='project-header'>
+                {/* <i className='fa-regular fa-folder fa-fw project-icon'></i> */}
                 <span className='project-title'>{project.title}</span>
-                <i className='fa-solid fa-arrow-up-right-from-square fa-fw'></i>
+                <i className='fa-solid fa-arrow-up-right-from-square fa-fw project-link'></i>
             </div>
-            <div className='project-outline' style={{overflow: 'hidden', textOverflow: 'ellipsis', maxHeight: '100px'}}>
+
+            <div className='project-outline'>
                 <span className='project-description'>{project.description}</span>
             </div>
             <div className='project-tools'>
@@ -92,11 +81,13 @@ export default function Projects(props) {
 
     const project = {
         title: "Software Raytracer",
-        description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources",
+        description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources.",
         cover: "images/render.png",
         tools: ["C++", "Git", "CMake"],
         link: "https://github.com/sevanetrebchenko/"
     };
+
+    let categories = ['Vulkan', 'Raytracing', 'Engine Development']
 
     return (
         <React.Fragment>
@@ -115,11 +106,11 @@ export default function Projects(props) {
                     </div>
                 </section>
 
-                <div className='featured-projects-list-header'>
+                {/* <div className='featured-projects-list-header'>
                     <span className='separator'></span>
-                    <span className='featured-projects-list-header'>Featured Projects</span>
+                    <span className='featured-projects-list-title'>Featured Projects</span>
                     <span className='separator'></span>
-                </div>
+                </div> */}
 
                 <div className='featured-projects-list'>
                     <FeaturedProjectEntry project={project} justification={'left'}></FeaturedProjectEntry>
@@ -128,9 +119,10 @@ export default function Projects(props) {
 
 
                 <div className='projects-grid-header'>
-                    <span className='separator'></span>
                     <span className='projects-grid-title'>Other Noteworthy Projects</span>
-                    <span className='separator'></span>
+                    <Link to={''}>
+                        <span className='projects-grid-description'>view the archive</span>
+                    </Link>
                 </div>
 
                 <ul className='projects-grid'>
