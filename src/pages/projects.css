@@ -139,57 +139,65 @@
     }
 
     .featured-project {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 10px;
+        position: relative;
 
         align-items: center;
+        width: 1000px;
+        height: 550px;
 
-        max-width: 1000px;
+        border-radius: 10px;
+        overflow: hidden;
 
-        padding: 20px;
+        user-select: none;
+    }
+
+    .featured-project-covers {
+        display: flex;
+        flex-direction: row;
+        transition: 0.3s;
     }
 
     .featured-project-cover {
+        display: block;
         width: 100%;
-        height: 100%;
         object-fit: cover;
-        border-radius: 10px;
-
-        grid-row-start: 1;
-        grid-row-end: 1;
     }
 
     .featured-project-content {
+        position: absolute;
+        bottom: 0;
+        box-sizing: border-box;
+
+        width: 100%;
+
         display: flex;
         flex-direction: column;
-        padding: 20px;
 
-        grid-row-start: 1;
-        grid-row-end: 1;
+        padding: 40px;
 
-        border-radius: 5px;
-        -webkit-backdrop-filter: blur(8px);
-        backdrop-filter: blur(8px);
-        box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.09);
-        border: 1px solid rgba(112, 112, 112, 0.5);
+        /* -webkit-backdrop-filter: blur(8px); */
+        /* backdrop-filter: blur(4px); */
+        /* box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.1); */
     }
 
     .featured-project-banner {
         color: gray;
         font-family: 'Roboto Mono';
+
+        display: flex;
+        flex-direction: row;
     }
 
     .featured-project-header {
         display: flex;
         flex-direction: row;
-
-        margin-bottom: 10px;
     }
 
     .featured-project-title {
         color: white;
         font-size: 28px;
+
+        /* margin-bottom: 10px; */
     }
 
     .featured-project-link {
@@ -198,12 +206,12 @@
     }
 
     .featured-project-description {
-        display: flex;
+        display: none;
         color: rgb(212, 212, 212);
     }
 
     .featured-project-more {
-        display: flex;
+        display: none;
         flex-direction: row;
         justify-content: center;
         align-items: baseline;
@@ -223,26 +231,96 @@
         color: gray;
     }
 
-    .featured-project-more:hover {
-        cursor: pointer;
-        border-color: white;
-        background-color:rgba(105, 105, 105, 0.9);
+    .featured-project-showcase {
+        position: absolute;
+        top: 0;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
     }
 
-    .featured-project-more:hover .featured-project-learn,
-    .featured-project-more:hover .featured-project-arrow {
+    .featured-project-showcase-arrows {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .featured-project-showcase-previous,
+    .featured-project-showcase-next {
         color: white;
+        font-size: 16px;
+        transition: 0.2s;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        width: 20px;
+        height: 20px;
+
+        padding: 20px;
+        border-radius: 50%;
+    }
+
+    .featured-project-showcase-previous:hover,
+    .featured-project-showcase-next:hover {
+        background-color: rgb(138, 138, 138, 0.5);
+        cursor: pointer;
+    }
+
+    .featured-project-showcase-navigation {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        column-gap: 30px;
+
+        box-sizing: border-box;
+
+        width: 100%;
+        padding: 20px;
+
+        position: absolute;
+        bottom: 0;
+    }
+
+    .featured-project-showcase-button {
+        z-index: 100; /* Needs to show up above other overlapping elements */
+        width: 12px;
+        height: 12px;
+
+        border: 1px solid white;
+        border-radius: 50%;
+
+        transition: 0.2s;
+
+        color: white;
+    }
+
+    .featured-project-showcase-previous:hover,
+    .featured-project-showcase-next:hover
+    {
+        cursor: pointer;
+    }
+
+    .featured-project-showcase-button-current {
+        background-color: white;
     }
 
     /* Styling for right-justified featured project components */
 
     .featured-project-cover.justify-right {
         grid-column-start: 1;
-        grid-column-end: 10;
+        grid-column-end: 16;
     }
 
     .featured-project-content.justify-right {
-        grid-column-start: 9;
+        grid-column-start: 14;
         grid-column-end: -1;
     }
 
@@ -269,16 +347,20 @@
         text-align: right;
     }
 
+    .featured-project-content.justify-right .featured-project-title {
+        text-align: right;
+    }
+
     /* Styling for left-justified featured project components. */
 
     .featured-project-cover.justify-left {
-        grid-column-start: 4;
+        grid-column-start: 7;
         grid-column-end: -1;
     }
 
     .featured-project-content.justify-left {
         grid-column-start: 1;
-        grid-column-end: 5;
+        grid-column-end: 8;
     }
 
     .featured-project-content.justify-left .featured-project-banner {

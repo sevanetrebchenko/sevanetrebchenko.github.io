@@ -3,6 +3,7 @@ import React from 'react'
 import Navbar from '../components/navbar.js'
 import { Link } from 'react-router-dom'
 import Finder from '../components/finder.js'
+import { useState, useRef } from 'react'
 
 import './projects.css'
 
@@ -16,37 +17,108 @@ import './projects.css'
 // }
 function FeaturedProjectEntry(props) {
     const { project, justification } = props;
+    const [currentCoverImageIndex, setCurrentCoverImageIndex] = useState(0);
+    const [translation, setTranslation] = useState(0);
+    const showcase = [];
 
-    let header = [];
-    header.push();
+    // Construct showcase elements.
+    for (let i = 0; i < project.covers.length; ++i) {
+        let classNames = ['featured-project-showcase-button'];
 
-    // Link element is optional.
-    if (project.link) {
-        header.push(
+        if (currentCoverImageIndex == i) {
+            classNames.push('featured-project-showcase-button-current')
+        }
 
-        );
+        // const onClick = function (e) {
+        //     e.preventDefault();
+        //     setCurrentCoverImageIndex(i);
+        // }
+
+        showcase.push(<div className={classNames.join(' ')}></div>);
     }
 
-    const justficationClassName = 'justify-' + justification;
+    // Negative modulo function.
+    const mod = (n, m) => (n % m + m) % m;
+    const coverContainer = useRef(null);
+
+    let style = {
+        transform: `translateX(${translation}px)`
+    };
 
     return (
         <div className='featured-project'>
-            <img src={project.cover} alt='' className={'featured-project-cover' + ' ' + justficationClassName}></img>
-            <div className={'featured-project-content' + ' ' + justficationClassName}>
-                <span className='featured-project-banner'>Featured Project</span>
-                <div className='featured-project-header'>
-                    <span className='featured-project-title'>{project.title}</span>
-                    <Link to={project.link}>
-                        <i className='fa-solid fa-arrow-up-right-from-square fa-fw featured-project-link'></i>
-                    </Link>
+            <div className='featured-project-covers' ref={coverContainer} style={style}>
+                {
+                    project.covers.map((cover, index) => (
+                        <img src={cover} key={index} className='featured-project-cover'></img>
+                    ))
+                }
+            </div>
+
+            <div className='featured-project-showcase'>
+                <div className='featured-project-showcase-arrows'>
+                    <i className='fa-solid fa-angle-left fa-fw featured-project-showcase-previous' onClick={(e) => {
+                        e.preventDefault();
+
+                        // Get the width of the featured project container.
+                        const width = coverContainer.current.clientWidth;
+                        const current = currentCoverImageIndex;
+                        const previous = Math.max(current - 1, 0);
+
+                        const translate = translation + (current - previous) * width;
+                        setTranslation(translate);
+
+                        style = {
+                            transform: `translateX(${translate}px)`
+                        };
+
+                        setCurrentCoverImageIndex(previous);
+                    }}></i>
+                    <i className='fa-solid fa-angle-right fa-fw featured-project-showcase-next' onClick={function (e) {
+                        e.preventDefault();
+
+                        // Get the width of the featured project container.
+                        const width = coverContainer.current.clientWidth;
+                        const current = currentCoverImageIndex;
+                        const next = Math.min(current + 1, project.covers.length - 1);
+
+                        const translate = translation - (next - current) * width;
+                        setTranslation(translate);
+
+                        style = {
+                            transform: `translateX(${translate}px)`
+                        };
+
+                        setCurrentCoverImageIndex(next);
+                    }}></i>
                 </div>
+            </div>
+
+
+
+            <div className='featured-project-showcase-navigation'>
+                {
+                    showcase.map((element, index) => (
+                        <React.Fragment key={index}>{element}</React.Fragment>
+                    ))
+                }
+            </div>
+
+            <div className='featured-project-content'>
+                <div className='featured-project-header'>
+                    <span className='featured-project-banner'>Featured Project</span>
+                    {/* <Link to={project.link}>
+                        <i className='fa-solid fa-arrow-up-right-from-square fa-fw featured-project-link'></i>
+                    </Link> */}
+                </div>
+                <span className='featured-project-title'>{project.title}</span>
                 <span className='featured-project-description'>{project.description}</span>
                 <div className='featured-project-more'>
                     <span className='featured-project-learn'>Learn More</span>
                     <i className='fa-solid fa-angles-right fa-fw featured-project-arrow'></i>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 
@@ -82,7 +154,7 @@ export default function Projects(props) {
     const project = {
         title: "Software Raytracer",
         description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources.",
-        cover: "images/render.png",
+        covers: ["images/render.png", "images/depth_of_field.png", "images/reflection.jpg", "images/mountains.jpg", "images/reflection.jpg",],
         tools: ["C++", "Git", "CMake"],
         link: "https://github.com/sevanetrebchenko/"
     };
