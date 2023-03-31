@@ -154,13 +154,17 @@
     .featured-project-covers {
         display: flex;
         flex-direction: row;
+
+        width: 100%;
+
         transition: 0.3s;
     }
 
     .featured-project-cover {
-        display: block;
+        height: 100%;
         width: 100%;
         object-fit: cover;
+        flex-shrink: 0;
     }
 
     .featured-project-content {
@@ -168,10 +172,10 @@
         bottom: 0;
         box-sizing: border-box;
 
-        width: 100%;
 
         display: flex;
         flex-direction: column;
+        max-width: 400px;
 
         padding: 40px;
 
@@ -191,6 +195,14 @@
     .featured-project-header {
         display: flex;
         flex-direction: row;
+
+        align-items: center;
+
+        column-gap: 15px;
+    }
+
+    .featured-project i {
+        color: white;
     }
 
     .featured-project-title {
@@ -198,6 +210,21 @@
         font-size: 28px;
 
         /* margin-bottom: 10px; */
+    }
+
+    .featured-project-info {
+        width: 28px;
+        height: 28px;
+
+        fill: none;
+        stroke: gray;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .featured-project-info:hover {
+        stroke: orange;
     }
 
     .featured-project-link {
@@ -226,6 +253,45 @@
         transition: 0.2s;
     }
 
+
+    .featured-project-overlay {
+        position: absolute;
+        top: 0;
+
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        background-color: rgb(39, 38, 44, 0.5);
+
+        padding: 40px;
+
+        row-gap: 10px;
+    }
+
+    .featured-project-overlay-header {
+        color: white;
+        font-size: 24px;
+    }
+
+    .featured-project-overlay-description {
+        color: gray;
+    }
+
+    .featured-project-overlay-tools {
+        display: flex;
+        flex-direction: row;
+
+        column-gap: 20px;
+    }
+
+    .featured-project-overlay-tool {
+        color: gray;
+        font-family: 'Roboto Mono';
+    }
+
+
+
     .featured-project-learn,
     .featured-project-arrow {
         color: gray;
@@ -246,8 +312,10 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        padding-left: 10px;
-        padding-right: 10px;
+        /* padding-left: 10px;
+        padding-right: 10px; */
+
+        z-index: 999;
     }
 
     .featured-project-showcase-previous,
@@ -261,10 +329,10 @@
         justify-content: center;
 
         width: 20px;
-        height: 20px;
+        height: 100%;
 
         padding: 20px;
-        border-radius: 50%;
+        /* border-radius: 50%; */
     }
 
     .featured-project-showcase-previous:hover,

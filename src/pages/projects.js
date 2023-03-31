@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import Finder from '../components/finder.js'
 import { useState, useRef } from 'react'
 
+import Info from '../../public/icons/info.svg'
 import './projects.css'
 
 // Featured project entry data:
@@ -40,6 +41,8 @@ function FeaturedProjectEntry(props) {
     // Negative modulo function.
     const mod = (n, m) => (n % m + m) % m;
     const coverContainer = useRef(null);
+
+    const description = useRef(null);
 
     let style = {
         transform: `translateX(${translation}px)`
@@ -104,18 +107,31 @@ function FeaturedProjectEntry(props) {
                 }
             </div>
 
+
+
             <div className='featured-project-content'>
+                <span className='featured-project-banner'>Featured Project</span>
                 <div className='featured-project-header'>
-                    <span className='featured-project-banner'>Featured Project</span>
-                    {/* <Link to={project.link}>
-                        <i className='fa-solid fa-arrow-up-right-from-square fa-fw featured-project-link'></i>
-                    </Link> */}
+                    <span className='featured-project-title'>{project.title}</span>
+                    <Info className='featured-project-info' onClick={function(e) {
+                        e.preventDefault();
+                        description.current.style.display = 'flex';
+                    }}></Info>
                 </div>
-                <span className='featured-project-title'>{project.title}</span>
-                <span className='featured-project-description'>{project.description}</span>
-                <div className='featured-project-more'>
-                    <span className='featured-project-learn'>Learn More</span>
-                    <i className='fa-solid fa-angles-right fa-fw featured-project-arrow'></i>
+                <span className='featured-project-description' ref={description}>{project.description}</span>
+            </div>
+
+            <div className='featured-project-overlay'>
+                <span className='featured-project-overlay-header'>At a glance</span>
+                <span className='featured-project-overlay-description'>{project.description}</span>
+
+                <span className='featured-project-overlay-header'>Tools:</span>
+                <div className='featured-project-overlay-tools'>
+                    {
+                        project.tools.map((name, index) => (
+                            <span className='featured-project-overlay-tool' key={index}>{name}</span>
+                        ))
+                    }
                 </div>
             </div>
         </div >
