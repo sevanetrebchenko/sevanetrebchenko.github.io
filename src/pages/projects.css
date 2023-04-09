@@ -3,22 +3,18 @@
     .projects-header {
         position: absolute;
         top: 0;
-
-        z-index: 100;
-
-        /* Center */
         left: 0;
         right: 0;
 
-        margin-left: auto;
-        margin-right: auto;
+        z-index: 100;
     }
 
-    .projects-content {
+    .projects-container {
         background-color: #1a191d;
 
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
 
         padding-bottom: 40px;
@@ -32,6 +28,9 @@
         display: flex;
         justify-content: center;
         align-items: center;
+
+        width: 100%;
+        height: 100%;
     }
 
     .projects-title-container {
@@ -39,12 +38,11 @@
 
         display: flex;
         flex-direction: column;
+        flex-grow: 1;
 
-        /* Center in the middle of the page */
         justify-content: center;
         align-items: center;
 
-        width: 100vw;
         height: 100vh;
     }
 
@@ -622,12 +620,6 @@
         align-items: center;
         align-self: center;
         text-align: center;
-    }
-
-
-
-    .noscroll {
-        overflow: hidden;
     }
 
 }

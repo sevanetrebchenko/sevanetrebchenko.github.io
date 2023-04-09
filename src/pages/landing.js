@@ -43,8 +43,8 @@ export default function Landing(params) {
 
     return (
         <React.Fragment>
-            <div className='main-container' style={style}>
                 <Navbar></Navbar>
+            <div className='main-container' style={style}>
                 <div className='title-container'>
                     <span className='title'>seva netrebchenko</span>
                     <span className='description'>software engineer by profession, graphics enthusiast at heart</span>

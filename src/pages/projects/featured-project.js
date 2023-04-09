@@ -139,7 +139,7 @@ export default function FeaturedProject(props) {
                 <div className='featured-project-header'>
                     <span className='featured-project-title'>{project.title}</span>
                     <div className='featured-project-info'>
-                        <i class='fa-solid fa-question fa-fw' onClick={(e) => {
+                        <i className='fa-solid fa-question fa-fw' onClick={(e) => {
                             setOverlayVisible(true);
                         }}></i>
                     </div>

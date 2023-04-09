@@ -3,6 +3,7 @@ import React, { forwardRef, useEffect } from 'react';
 
 import { animationTimeInSeconds } from './featured-project-defines';
 import './featured-project-overlay.css'
+import '../body.css'
 
 const FeaturedProjectOverlay = forwardRef((props, overlayRef) => {
     const { project, setVisible } = props;
@@ -37,12 +38,23 @@ const FeaturedProjectOverlay = forwardRef((props, overlayRef) => {
         }
 
         // Disable scrolling of main page while overlay is visible.
-        document.body.className = 'noscroll';
+        let className = document.body.className.trim();
+        let classNames = [];
+        if (className !== '') {
+            classNames = [...document.body.className.split(/\s+/g)];
+        }
+        document.body.className = [...classNames.join(' '), 'no-scroll'];
 
-        // Bind event listener.
         document.addEventListener('mousedown', onClickOutside);
+
         return () => {
-            document.body.removeAttribute('class');
+            if (classNames.length == 0) {
+                document.body.removeAttribute('class');
+            }
+            else {
+                document.body.className = classNames.join(' '); // Remove 'no-scroll'.
+            }
+
             document.removeEventListener("mousedown", onClickOutside);
         };
     }, [overlayRef]);
