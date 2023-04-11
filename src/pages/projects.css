@@ -20,6 +20,10 @@
         padding-bottom: 40px;
     }
 
+    .projects-container.no-scroll {
+        padding-right: 10px;
+    }
+
     .projects-cover {
         /* Background image */
         background-position: center center;
@@ -422,6 +426,7 @@
 
         width: 100%;
         height: 100%;
+
         z-index: 9999;
 
         display: flex;
@@ -438,10 +443,15 @@
         padding: 40px;
 
         width: 1500px;
-
         z-index: 1000;
+
         opacity: 1;
     }
+    
+    .featured-project-overlay-open {
+        opacity: 1;
+    }
+
 
     @keyframes animation-fade-in {
         0% {
@@ -463,18 +473,15 @@
         }
     }
 
-    .featured-project-overlay-fadein {
+    .featured-project-overlay-opening {
         animation: animation-fade-in ease 0.2s;
         animation-fill-mode: forwards; 
     }
 
-    .featured-project-overlay-fadeout {
+    .featured-project-overlay-closing {
         animation: animation-fade-out ease 0.2s;
         animation-fill-mode: forwards; 
     }
-
-
-
 
     .featured-project-overlay-images {
         display: flex;

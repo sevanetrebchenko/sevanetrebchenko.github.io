@@ -1,63 +1,51 @@
 
-import React, { forwardRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 import { animationTimeInSeconds } from './featured-project-defines';
 import './featured-project-overlay.css'
 import '../body.css'
+import { addClassName, disableScrolling, enableScrolling, hasClassName, removeClassName, toMilliseconds } from '../../util/util';
 
-const FeaturedProjectOverlay = forwardRef((props, overlayRef) => {
+
+export default function FeaturedProjectOverlay(props) {
     const { project, setVisible } = props;
+    const overlayRef = useRef(null);
 
-    // Close out of project overlay if user clicks outside of the overlay window.
     useEffect(() => {
-        function onClickOutside(event) {
-            const overlay = overlayRef.current;
-            if (!overlay) {
-                return;
-            }
+        // Mounting.
+        const overlay = overlayRef.current;
 
-            // TODO: is this good usability?
+        function onClickOutside(e) {
             // Do not allow closing the featured project overlay while it is fading in.
-            const classNames = overlay.className.split(/\s+/g);
-            if (classNames.includes('featured-project-overlay-fadein')) {
+            if (hasClassName(overlay, 'featured-project-overlay-opening')) {
                 return;
             }
 
-            if (!overlay.contains(event.target)) {
-                // Append fade out animation.
-                overlay.className = [...overlay.className.split(/\s+/g), 'featured-project-overlay-fadeout'].join(' ');
+            if (!overlay.contains(e.target)) {
+                addClassName(overlay, 'featured-project-overlay-closing');
 
-                const timeout = setTimeout(() => {
+                setTimeout(() => {
                     setVisible(false);
-                }, animationTimeInSeconds * 1000); // setTimeout requires milliseconds.
-
-                return () => {
-                    clearTimeout(timeout);
-                };
+                }, toMilliseconds(animationTimeInSeconds));
             }
         }
 
-        // Disable scrolling of main page while overlay is visible.
-        let className = document.body.className.trim();
-        let classNames = [];
-        if (className !== '') {
-            classNames = [...document.body.className.split(/\s+/g)];
-        }
-        document.body.className = [...classNames.join(' '), 'no-scroll'];
+        disableScrolling();
+        addClassName(overlay, 'featured-project-overlay-opening');
 
-        document.addEventListener('mousedown', onClickOutside);
+        // Register event listener.
+        document.body.addEventListener('mousedown', onClickOutside);
+
+        setTimeout(() => {
+            removeClassName(overlay, 'featured-project-overlay-opening');
+        }, toMilliseconds(animationTimeInSeconds));
 
         return () => {
-            if (classNames.length == 0) {
-                document.body.removeAttribute('class');
-            }
-            else {
-                document.body.className = classNames.join(' '); // Remove 'no-scroll'.
-            }
-
-            document.removeEventListener("mousedown", onClickOutside);
+            // Unmounting.
+            document.body.removeEventListener('mousedown', onClickOutside);
+            enableScrolling();
         };
-    }, [overlayRef]);
+    }, []);
 
     return (
         <div className='featured-project-overlay-container'>
@@ -98,6 +86,75 @@ const FeaturedProjectOverlay = forwardRef((props, overlayRef) => {
             </div>
         </div>
     );
-});
+}
 
-export default FeaturedProjectOverlay;
+
+
+
+
+
+
+
+
+
+
+
+
+// const FeaturedProjectOverlay = forwardRef((props, overlayRef) => {
+//     const { project, setVisible } = props;
+
+//     // Close out of project overlay if user clicks outside of the overlay window.
+//     useEffect(() => {
+//         function onClickOutside(event) {
+//             const overlay = overlayRef.current;
+//             if (!overlay) {
+//                 return;
+//             }
+
+//             // TODO: is this good usability?
+//             // Do not allow closing the featured project overlay while it is fading in.
+//             const classNames = overlay.className.split(/\s+/g);
+//             if (classNames.includes('featured-project-overlay-fadein')) {
+//                 return;
+//             }
+
+//             if (!overlay.contains(event.target)) {
+//                 // Append fade out animation.
+//                 overlay.className = [...overlay.className.split(/\s+/g), 'featured-project-overlay-fadeout'].join(' ');
+
+//                 const timeout = setTimeout(() => {
+//                     setVisible(false);
+//                 }, animationTimeInSeconds * 1000); // setTimeout requires milliseconds.
+
+//                 return () => {
+//                     clearTimeout(timeout);
+//                 };
+//             }
+//         }
+
+//         // Disable scrolling of main page while overlay is visible.
+//         let className = document.body.className.trim();
+//         let classNames = [];
+//         if (className !== '') {
+//             classNames = [...document.body.className.split(/\s+/g)];
+//         }
+//         document.body.className = [...classNames.join(' '), 'no-scroll'];
+
+//         document.addEventListener('mousedown', onClickOutside);
+
+//         return () => {
+//             if (classNames.length == 0) {
+//                 document.body.removeAttribute('class');
+//             }
+//             else {
+//                 document.body.className = classNames.join(' '); // Remove 'no-scroll'.
+//             }
+
+//             document.removeEventListener("mousedown", onClickOutside);
+//         };
+//     }, [overlayRef]);
+
+    
+// });
+
+// export default FeaturedProjectOverlay;

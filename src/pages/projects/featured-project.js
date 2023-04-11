@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 
+import { hasClassName, addClassName, removeClassName, toMilliseconds } from '../../util/util';
 import FeaturedProjectOverlay from './featured-project-overlay';
 import { animationTimeInSeconds } from './featured-project-defines';
 import './featured-project.css';
@@ -87,28 +88,6 @@ export default function FeaturedProject(props) {
     }
 
     const [isOverlayVisible, setOverlayVisible] = useState(false);
-    const overlayRef = useRef(null);
-
-    // Fade in the project overlay when mounted.
-    useEffect(() => {
-        if (isOverlayVisible) {
-            const overlay = overlayRef.current;
-            if (!overlay) {
-                return;
-            }
-
-            const classNames = overlay.className.split(/\s+/g);
-            overlay.className = [...classNames, 'featured-project-overlay-fadein'].join(' '); // Append fade in animation.
-
-            const timeout = setTimeout(() => {
-                overlay.className = classNames.join(' '); // Remove fadein className once animation is finished.
-            }, animationTimeInSeconds * 1000); // setTimeout requires milliseconds.
-
-            return () => {
-                clearTimeout(timeout);
-            }
-        }
-    }, [isOverlayVisible]);
 
     return (
         <div className='featured-project'>
@@ -146,7 +125,7 @@ export default function FeaturedProject(props) {
                 </div>
             </div>
 
-            {isOverlayVisible && <FeaturedProjectOverlay project={project} setVisible={setOverlayVisible} ref={overlayRef}></FeaturedProjectOverlay>}
+            {isOverlayVisible && <FeaturedProjectOverlay project={project} setVisible={setOverlayVisible}></FeaturedProjectOverlay>}
         </div>
     );
 }

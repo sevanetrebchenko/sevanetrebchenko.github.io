@@ -39,17 +39,18 @@ export default function Landing(params) {
         backgroundImage: 'url(\'images/render.png\')',
         backgroundPosition: 'center center',
         backgroundSize: 'cover',
+        backgroundOrigin: 'border-box',
     };
 
     return (
         <React.Fragment>
             <Navbar></Navbar>
-            <div className='main-container' style={style}>
+            <main className='main-container' style={style}>
                 <div className='title-container'>
                     <span className='title'>seva netrebchenko</span>
                     <span className='description'>software engineer by profession, graphics enthusiast at heart</span>
                 </div>
-            </div>
+            </main>
         </React.Fragment>
 
 

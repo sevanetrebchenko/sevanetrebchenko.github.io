@@ -5,7 +5,9 @@ import { Link } from 'react-router-dom'
 import Finder from '../components/finder.js'
 import { useState, useRef, useEffect } from 'react'
 
+
 import './projects.css'
+import './body.css'
 
 import FeaturedProject from './projects/featured-project.js'
 
@@ -60,7 +62,7 @@ export default function Projects(props) {
                 <Navbar></Navbar>
             </header>
 
-            <div className='projects-container'>
+            <main className='projects-container'>
                 <section className='projects-cover' style={{ backgroundImage: 'url(\'images/render.png\')' }}>
                     <div className='projects-title-container'>
                         <span className='projects-title'>projects</span>
@@ -71,7 +73,7 @@ export default function Projects(props) {
                     </div>
                 </section>
 
-                {/* <div className='featured-projects-list'>
+                <div className='featured-projects-list'>
                     {
                         projects.map((project, index) => (
                             <FeaturedProject project={project} index={index} key={index}></FeaturedProject>
@@ -92,9 +94,9 @@ export default function Projects(props) {
                     <ProjectEntry project={project}></ProjectEntry>
                     <ProjectEntry project={project}></ProjectEntry>
                     <ProjectEntry project={project}></ProjectEntry>
-                </ul> */}
+                </ul>
 
-            </div>
+            </main>
         </React.Fragment>
     )
 }

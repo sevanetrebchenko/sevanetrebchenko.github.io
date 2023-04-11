@@ -1,7 +1,8 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+import { hasClassName, addClassName, removeClassName, enableScrolling, disableScrolling } from '../util/util.js';
 import './navbar.css';
 
 function NavbarElement(props) {
@@ -25,81 +26,16 @@ function NavbarElement(props) {
     );
 }
 
-// Returns whether a className is present in the classNames of a given element.
-function hasClassName(element, className) {
-    className = className.trim();
-    const classNameString = element.className.trim();
-    const classNames = classNameString.split(/\s+/g);
-
-    return classNames.includes(className);
-}
-
-// Appends a className to the given element (provided the element isn't already tagged with that className). 
-function addClassName(element, className) {
-    className = className.trim();
-    if (className === '') {
-        return;
-    }
-
-    const classNameString = element.className.trim();
-    let classNames = [];
-
-    if (classNameString !== '') {
-        classNames = classNameString.split(/\s+/g);
-    }
-
-    if (!classNames.includes(className)) {
-        classNames.push(className);
-    }
-
-    element.className = classNames.join(' ');
-}
-
-// Removes a className from the given element (provided the element is tagged with that className).
-function removeClassName(element, className) {
-    className = className.trim();
-    if (className === '') {
-        return;
-    }
-
-    const classNameString = element.className.trim();
-    if (classNameString === '') {
-        return;
-    }
-
-    // Remove all instances of 'className' from the 'classNames' list.
-    let classNames = classNameString.split(/\s+/g);
-    while (true) {
-        const index = classNames.indexOf(className);
-
-        if (index > -1) {
-            classNames.splice(index, 1);
-        }
-        else {
-            break;
-        }
-    }
-
-    if (classNames.length === 0) {
-        // Empty className, remove entire 'class' HTML attribute to keep DOM clean.
-        element.removeAttribute('class');
-    }
-    else {
-        element.className = classNames.join(' ');
-    }
-}
-
 export default function Navbar(props) {
-    const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const openDropdownButtonRef = useRef(null);
     const overlayRef = useRef(null);
 
+    const openDropdownAnimationTimeInSeconds = 0.3; // Time (in seconds) for the navbar to open / close.
     const openDropdownButtonAnimationTimeInSeconds = 0.18; // Time (in seconds) for the open dropdown button (bars) to fade out.
 
     const openDropdown = function (event) {
         event.preventDefault();
-        setDropdownOpen(true);
 
         // Append 'navbar-dropdown-open' CSS style to all relevant components.
 
@@ -119,12 +55,11 @@ export default function Navbar(props) {
         addClassName(overlay, 'navbar-dropdown-open');
 
         // Disable scrolling on the main page while the dropdown is open.
-        addClassName(document.body, 'no-scroll');
+        disableScrolling();
     }
 
     const closeDropdown = function (event) {
         event.preventDefault();
-        setDropdownOpen(false);
 
         let dropdown = dropdownRef.current;
         let overlay = overlayRef.current;
@@ -139,17 +74,15 @@ export default function Navbar(props) {
         // Fade out overlay.
         removeClassName(overlay, 'navbar-dropdown-open');
 
-        // Re-enable scrolling on main page content.
-        removeClassName(document.body, 'no-scroll');
-
         // Delay fade-in for dropdown open button slightly.
-        const timeout = setTimeout(() => {
+        setTimeout(() => {
             removeClassName(openDropdownButtonRef.current, 'navbar-dropdown-open'); // Guaranteed to exist.
         }, openDropdownButtonAnimationTimeInSeconds * 1000);
 
-        return () => {
-            clearTimeout(timeout);
-        }
+        // Re-enable scrolling on main page content.
+        setTimeout(() => {
+            enableScrolling();
+        }, openDropdownAnimationTimeInSeconds * 1000);
     }
 
     useEffect(() => {
