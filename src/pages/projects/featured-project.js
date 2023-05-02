@@ -1,9 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 
-import { hasClassName, addClassName, removeClassName, toMilliseconds } from '../../util/util';
-import FeaturedProjectOverlay from './featured-project-overlay';
-import { animationTimeInSeconds } from './featured-project-defines';
+import { hasClassName, addClassName, removeClassName, toMilliseconds, disableScrolling, enableScrolling } from '../../util/util';
 import './featured-project.css';
 
 export default function FeaturedProject(props) {
@@ -87,7 +85,60 @@ export default function FeaturedProject(props) {
         setImageIndex(nextImageIndex);
     }
 
-    const [isOverlayVisible, setOverlayVisible] = useState(false);
+    const openOverlay = function () {
+        const overlayContainer = overlayContainerRef.current;
+        const overlay = overlayRef.current;
+
+        removeClassName(overlayContainer, 'hidden');
+        overlay.offsetHeight; // Force browser repaint.
+        addClassName(overlayContainer, 'featured-project-overlay-open');
+        addClassName(overlay, 'featured-project-overlay-open');
+
+        disableScrolling();
+    }
+
+    const closeOverlay = function () {
+        const overlayContainer = overlayContainerRef.current;
+        const overlay = overlayRef.current;
+
+        removeClassName(overlay, 'featured-project-overlay-open');
+        removeClassName(overlayContainer, 'featured-project-overlay-open');
+
+        setTimeout(() => {
+            addClassName(overlayContainer, 'hidden');
+        }, toMilliseconds(0.2));
+
+        enableScrolling();
+    }
+
+    useEffect(() => {
+        // Mounting.
+        const overlayContainer = overlayContainerRef.current;
+        const overlay = overlayRef.current;
+
+        function onClickOutside(e) {
+            // Do not attempt to close a closed overlay.
+            if (hasClassName(overlayContainer, 'hidden')) {
+                return;
+            }
+
+            if (!overlay.contains(e.target)) {
+                closeOverlay();
+            }
+        }
+
+        addClassName(overlayContainer, 'hidden'); // Container holding overlay starts off as hidden.
+        document.addEventListener('mousedown', onClickOutside);
+
+        return () => {
+            // Unmounting.
+            document.removeEventListener('mousedown', onClickOutside);
+            enableScrolling();
+        };
+    }, []); // Run only when mounting / unmounting.
+
+    const overlayContainerRef = useRef(null);
+    const overlayRef = useRef(null);
 
     return (
         <div className='featured-project'>
@@ -118,14 +169,44 @@ export default function FeaturedProject(props) {
                 <div className='featured-project-header'>
                     <span className='featured-project-title'>{project.title}</span>
                     <div className='featured-project-info'>
-                        <i className='fa-solid fa-question fa-fw' onClick={(e) => {
-                            setOverlayVisible(true);
-                        }}></i>
+                        <i className='fa-solid fa-question fa-fw' onClick={openOverlay}></i>
                     </div>
                 </div>
             </div>
 
-            {isOverlayVisible && <FeaturedProjectOverlay project={project} setVisible={setOverlayVisible}></FeaturedProjectOverlay>}
+            <div className='featured-project-overlay-container' ref={overlayContainerRef}>
+                <div className='featured-project-overlay' ref={overlayRef}>
+                    <div className='featured-project-overlay-images'>
+                        {
+                            project.images.map((image, index) => (
+                                <React.Fragment>
+                                    <img src={image} key={index} className='featured-project-image'></img>
+                                    <div className='featured-project-overlay-image-header'>
+                                        <span className='featured-project-overlay-image-title'>{'title'}</span>
+                                        <span className='featured-project-overlay-image-caption'>{'this is a caption for this image'}</span>
+                                    </div>
+                                </React.Fragment>
+                            ))
+                        }
+                        <div className='featured-project-overlay-image-navigation'>
+                            <i className='fa-solid fa-angle-left fa-fw featured-project-overlay-image-previous'></i>
+                            <i className='fa-solid fa-angle-right fa-fw featured-project-overlay-image-next'></i>
+                        </div>
+                    </div>
+                    <div className='featured-project-overlay-content'>
+                        <i className='fa-solid fa-xmark fa-fw featured-project-overlay-close' onClick={closeOverlay}></i>
+                        <span className='featured-project-overlay-section-title'>Featured Project</span>
+                        <span className='featured-project-overlay-title'>{project.title}</span>
+                        <span className='featured-project-overlay-time'>July 2022 - Present (8 months)</span>
+                        <span className='featured-project-overlay-section-title'>About</span>
+                        <span className='featured-project-overlay-description'>{project.description}</span>
+                        <div className='featured-project-overlay-cta'>
+                            <span className='featured-project-overlay-cta-text'>Read More</span>
+                            <i className='fa-solid fa-angle-right fa-fw featured-project-overlay-cta-icon'></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

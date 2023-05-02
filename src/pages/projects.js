@@ -42,7 +42,7 @@ export default function Projects(props) {
 
     const project = {
         title: "Software Raytracer",
-        description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources.",
+        description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources. This project was written over the course of 8 months using C++ as the main development language, Git for source control, and CMake as the main project build system.\nAn offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources. This project was written over the course of 8 months using C++ as the main development language, Git for source control, and CMake as the main project build system.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.",
         images: ["images/render.png", "images/depth_of_field.png", "images/reflection.jpg", "images/mountains.jpg", "images/reflection.jpg",],
         tools: ["C++", "Git", "CMake"],
         link: "https://github.com/sevanetrebchenko/"
@@ -58,11 +58,11 @@ export default function Projects(props) {
 
     return (
         <React.Fragment>
-            <header className='projects-header'>
+            <header>
                 <Navbar></Navbar>
             </header>
 
-            <main className='projects-container'>
+            <main className='projects'>
                 <section className='projects-cover' style={{ backgroundImage: 'url(\'images/render.png\')' }}>
                     <div className='projects-title-container'>
                         <span className='projects-title'>projects</span>
@@ -73,7 +73,7 @@ export default function Projects(props) {
                     </div>
                 </section>
 
-                <div className='featured-projects-list'>
+                <div className='featured-projects'>
                     {
                         projects.map((project, index) => (
                             <FeaturedProject project={project} index={index} key={index}></FeaturedProject>

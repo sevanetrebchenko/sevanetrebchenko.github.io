@@ -9,7 +9,7 @@
         z-index: 100;
     }
 
-    .projects-container {
+    .projects {
         background-color: #1a191d;
 
         display: flex;
@@ -184,8 +184,8 @@
         color: gray;
         font-family: 'Roboto Mono';
 
-        display: flex;
-        flex-direction: row;
+        text-transform: uppercase;
+        /* color: cadetblue; */
     }
 
     .featured-project-header {
@@ -197,20 +197,18 @@
         column-gap: 15px;
     }
 
-    .featured-project i {
-        color: white;
-    }
-
     .featured-project-title {
         display: flex;
 
         color: white;
-        font-size: 28px;
+        font-size: 32px;
+
+        /* font-weight: 300; */
 
         /* margin-bottom: 10px; */
     }
 
-    .featured-project-info-container {
+    .featured-project-info-content {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -433,80 +431,190 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
+
+        background-color: rgb(0, 0, 0, 0.0);
+        transition: background-color 0.2s ease-in-out;
+    }
+    .featured-project-overlay-container.featured-project-overlay-open {
+        background-color: rgb(0, 0, 0, 0.5);
     }
 
     .featured-project-overlay {
-        display: flex;
-        flex-direction: row;
-
-        background-color: rgb(39, 38, 44, 0.5);
-        padding: 40px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        background-color: rgb(39, 38, 44, 0.7);
 
         width: 1500px;
         z-index: 1000;
 
+        overflow: hidden;
+
+        border-radius: 10px;
+
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .featured-project-overlay.featured-project-overlay-open {
         opacity: 1;
-    }
-    
-    .featured-project-overlay-open {
-        opacity: 1;
-    }
-
-
-    @keyframes animation-fade-in {
-        0% {
-            opacity: 0;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
-
-    @keyframes animation-fade-out {
-        0% {
-            opacity: 1;
-        }
-
-        100% {
-            opacity: 0;
-        }
-    }
-
-    .featured-project-overlay-opening {
-        animation: animation-fade-in ease 0.2s;
-        animation-fill-mode: forwards; 
-    }
-
-    .featured-project-overlay-closing {
-        animation: animation-fade-out ease 0.2s;
-        animation-fill-mode: forwards; 
     }
 
     .featured-project-overlay-images {
+        position: relative;
+
         display: flex;
         flex-direction: row;
-        width: 100%;
-        transition: 0.3s;
-    }
 
-    .featured-project-overlay-image {
+        grid-column-start: 1;
+        grid-column-end: 6;
+
+        grid-row-start: 1;
+        grid-row-end: 1;
+
+        width: 100%;
         height: 100%;
-        width: 100%;
-        object-fit: cover;
-        flex-shrink: 0;
+
+        overflow: hidden;
     }
 
-    .featured-project-overlay-description {
+    .featured-project-overlay-content {
+        position: relative;
+
+        margin: 30px;
+
         display: flex;
+        flex-direction: column;
+
+        grid-column-start: 6;
+        grid-column-end: -1;
+
+        grid-row-start: 1;
+        grid-row-end: 1;
+
+        max-height: 500px;
+        flex-basis: 100%;
+    }
+    .featured-project-overlay-section {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .featured-project-overlay-section-title {
+        color: gray;
+        font-family: 'Roboto Mono';
+        font-size: 16px;
+
+        color: cadetblue;
+        text-transform: uppercase;
+    }
+    .featured-project-overlay-title {
+        color: gainsboro;
+        font-family: 'Roboto Slab';
+        font-size: 36px;
+    }
+    .featured-project-overlay-time {
+        color: gray;
+        font-size: 16px;
+        font-family: 'Roboto Slab';
+        letter-spacing: 0.4px;
+
+        margin-bottom: 25px;
+    }
+    .featured-project-overlay-description {
+        padding-right: 15px;
+        color: gainsboro;
+        font-family: 'Roboto Slab';
+        font-size: 16px;
+        font-weight: 300;
+
+        margin-top: 5px;
+        margin-bottom: 15px;
+
+        letter-spacing: 0.3px;
+        overflow-y: auto;
+
+        flex: 1;
+    }
+
+    .featured-project-overlay-close {
+        position: absolute;
+
+        top: -10px;
+        right: -10px;
+        padding: 10px;
+
+        color: gray;
+        font-size: 22px;
+
+        transition: color 0.1s ease-in-out;
+    }
+    .featured-project-overlay-close:hover {
+        cursor: pointer;
+        color: gainsboro;
+    }
+
+    .featured-project-overlay-cta {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+
+        column-gap: 10px;
+
+        align-items: baseline;
+    }
+    .featured-project-overlay-cta:hover {
+        cursor: pointer;
+    }
+
+    .featured-project-overlay-cta-text {
+        color: gray;
+        font-family: 'Roboto Slab';
+        text-transform: uppercase;
+
+        transition: color 0.1s ease-in-out;
+    }
+    .featured-project-overlay-cta-icon {
+        color: gray;
+        transition: color 0.1s ease-in-out;
+    }
+    .featured-project-overlay-cta:hover .featured-project-overlay-cta-text,
+    .featured-project-overlay-cta:hover .featured-project-overlay-cta-icon {
+        color: gainsboro;
+    }
+
+    .featured-project-overlay-image-navigation {
+        position: absolute;
 
 
-        height: 50px;
-        overflow-y: scroll;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
 
+        width: 100%;
+        height: 100%;
+        
+    }
+
+    .featured-project-overlay-image-header {
+        position: absolute;
+
+        display: flex;
+        flex-direction: column;
+
+        bottom: 0;
+        right: 0;
+
+        padding: 20px;
+        row-gap: 10px;
+    }
+    .featured-project-overlay-image-title {
+        font-size: 20px;
         color: white;
     }
-
+    .featured-project-overlay-image-caption {
+        color: white;
+    }
 
 
 
