@@ -1,0 +1,176 @@
+
+@project-height: 550px;
+@project-width: 1000px;
+
+.featured-project {
+    width: @project-width;
+    height: @project-height;
+
+    border-radius: 10px;
+    overflow: hidden;
+
+    .content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        .image-showcase {
+            .images {
+                max-height: @project-height;
+
+                display: flex;
+                flex-direction: row;
+
+                transition: 0.3s;
+
+                img {
+                    width: 100%;
+                    object-fit: cover;
+                }
+            }
+        }
+
+        .image-navigation {
+            position: absolute;
+
+            .arrows {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+
+                // Center arrow relative to the featured project entry.
+                height: @project-height;
+                width: @project-width;
+
+                .arrow {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+
+                    height: 100%;
+
+                    padding-left: 15px;
+                    padding-right: 15px;
+
+                    background-color: rgba(0, 0, 0, 0);
+                    transition: background-color 0.2s ease-in-out;
+
+                    // Make it appear above featured project banner
+                    z-index: 5;
+
+                    i {
+                        color: white;
+                        font-size: 18px;
+
+                        transition: color 0.2s ease-in-out;
+                    }
+
+                    &:hover {
+                        cursor: pointer;
+                        background-color: rgba(180, 180, 180, 0.2);
+                    }
+                }
+            }
+
+            .buttons {
+                position: absolute;
+                bottom: 0;
+
+                padding-top: 30px;
+                padding-bottom: 30px;
+
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+
+                width: @project-width;
+
+                column-gap: 35px;
+
+                .button {
+                    z-index: 5;
+
+                    width: 12px;
+                    height: 12px;
+            
+                    border: 1px solid white;
+                    border-radius: 50%;
+            
+                    transition: 0.2s;
+            
+                    color: white;
+                }
+
+                .button-current {
+                    background-color: white;
+                }
+            }
+        }
+
+        .banner {
+            position: absolute;
+            bottom: 0;
+
+            padding: 60px;
+
+            .title {
+                font-family: 'Roboto Mono';
+                color: gray;
+
+                text-transform: uppercase;
+            }
+
+            .header {
+                display: flex;
+                flex-direction: row;
+
+                align-items: center;
+                
+                column-gap: 15px;
+
+                .title {
+                    color: white;
+                    font-family: 'Roboto Slab';
+                    text-transform: none;
+                    font-size: 32px;
+                }
+
+                .info {
+                    display: flex;
+                    flex-direction: row;
+
+                    // Center
+                    justify-content: center;
+                    align-items: center;
+
+                    // Border
+                    border-radius: 50%;
+                    border: 2px solid gray;
+
+                    width: 21px;
+                    height: 21px;
+
+                    transition: border-color 0.2s ease-in-out;
+
+                    i {
+                        font-size: 14px;
+                        color: gray;
+
+                        transition: color 0.2s ease-in-out;
+                    }
+
+                    // Change color of border + icon simultaneously
+                    &:hover, &:hover i {
+                        border-color: cadetblue;
+                        color: cadetblue;
+                    }
+                }
+            }
+        }
+    }
+
+    .overlay {
+
+    }
+}

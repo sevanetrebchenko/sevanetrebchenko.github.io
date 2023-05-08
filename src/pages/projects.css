@@ -153,7 +153,7 @@
         user-select: none;
     }
 
-    .featured-project-images {
+    .featured-project-image-showcase-images {
         display: flex;
         flex-direction: row;
 
@@ -161,15 +161,14 @@
 
         transition: 0.3s;
     }
-
-    .featured-project-image {
+    .featured-project-image-showcase-image {
         height: 100%;
         width: 100%;
         object-fit: cover;
         flex-shrink: 0;
     }
 
-    .featured-project-content {
+    .featured-project-container {
         position: absolute;
         bottom: 0;
         box-sizing: border-box;
@@ -528,7 +527,7 @@
         font-weight: 300;
 
         margin-top: 5px;
-        margin-bottom: 15px;
+        margin-bottom: 30px;
 
         letter-spacing: 0.3px;
         overflow-y: auto;

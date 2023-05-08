@@ -6,7 +6,7 @@ import Finder from '../components/finder.js'
 import { useState, useRef, useEffect } from 'react'
 
 
-import './projects.css'
+import './projects.less';
 import './body.css'
 
 import FeaturedProject from './projects/featured-project.js'
@@ -43,7 +43,33 @@ export default function Projects(props) {
     const project = {
         title: "Software Raytracer",
         description: "An offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources. This project was written over the course of 8 months using C++ as the main development language, Git for source control, and CMake as the main project build system.\nAn offline, CPU-based raytracer developed for CS500 during my senior year at the DigiPen Institute of Technology. Features metallic materials with configurable roughness parameters, refractive materials (glass), and emissive light sources. This project was written over the course of 8 months using C++ as the main development language, Git for source control, and CMake as the main project build system.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.\nThis is a test for overflowing content in the main featured project overlay.",
-        images: ["images/render.png", "images/depth_of_field.png", "images/reflection.jpg", "images/mountains.jpg", "images/reflection.jpg",],
+        images: [
+            {
+                src: "images/render.png",
+                title: 'title',
+                description: 'caption'
+            },
+            {
+                src: "images/depth_of_field.png",
+                title: 'title',
+                description: 'caption'
+            },
+            {
+                src: "images/reflection.jpg",
+                title: 'title',
+                description: 'caption'
+            },
+            {
+                src: "images/mountains.jpg",
+                title: 'title',
+                description: 'caption'
+            },
+            {
+                src: "images/reflection.jpg",
+                title: 'title',
+                description: 'caption'
+            },
+        ],
         tools: ["C++", "Git", "CMake"],
         link: "https://github.com/sevanetrebchenko/"
     };

@@ -47,6 +47,16 @@ module.exports = (env) => {
             'css-loader',
           ],
         },
+        // .less files
+        {
+          test: /\.less$/,
+          exclude: /node_modules/,
+          use: [
+            'style-loader',
+            'css-loader',
+            'less-loader'
+          ],
+        },
         {
           test: /\.svg/,
           exclude: /node_modules/,
