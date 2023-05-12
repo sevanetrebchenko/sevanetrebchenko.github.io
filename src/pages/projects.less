@@ -4,11 +4,11 @@
 @overlay-height: 1500px;
 @overlay-width: 600px;
 
-.transition {
-    transition: transform 0.3s ease-in-out;
-}
+
 
 .image-container-parent > {
+    height: inherit;
+    max-height: inherit;
 
 
 .image-container > {
@@ -40,6 +40,10 @@
                 object-fit: cover;
             }
         }
+
+        &.transitioning {
+            transition: transform 0.3s ease-in-out;
+        }
     }
     
     .image-navigation > {
@@ -61,10 +65,11 @@
                 flex-direction: column;
                 justify-content: center;
     
-                height: inherit;
-    
                 padding-left: 15px;
                 padding-right: 15px;
+
+                margin: 20px;
+                border-radius: 10px;
     
                 background-color: rgba(0, 0, 0, 0);
                 transition: background-color 0.2s ease-in-out;
@@ -256,6 +261,7 @@
 
         .overlay > {
             width: 90%;
+            max-width: 1600px;
             height: 600px;
 
             display: grid;

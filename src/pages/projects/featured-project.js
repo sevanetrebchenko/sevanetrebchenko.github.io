@@ -3,9 +3,7 @@ import React, { useRef, useState, useEffect, createRef } from 'react';
 
 import { hasClassName, addClassName, removeClassName, toMilliseconds, disableScrolling, enableScrolling } from '../../util/util';
 
-function roundTo(number) {
-    return Math.round(number * 10) / 10;
-}
+import './featured-project-overlay.less'
 
 // Returns a reference to the state so that it can be used in a stale context.
 function useStateRef(initialValue) {
@@ -20,83 +18,106 @@ function useStateRef(initialValue) {
     return [stateRef, setState];
 }
 
-
 function ImageShowcase(props) {
     const { images, showCaptions = false } = props;
 
-    const [currentImageIndexRef, setImageIndex] = useStateRef(0);
-    const [currentTranslationRef, setTranslation] = useStateRef(0);
+    const [imageIndexRef, setImageIndex] = useStateRef(0);
+    const [translationRef, setTranslation] = useStateRef(0);
     const [imageCaptionRefs, setImageCaptionRefs] = useState([]); // Array of references to image captions
 
     const imageContainerRef = useRef(null);
     let imageContainerStyle = {
-        transform: `translateX(${currentTranslationRef.current}px)`,
+        transform: `translateX(${translationRef.current}px)`,
     };
 
-    const changeCaption = function (targetCaptionIndex) {
+    const deactivateCaptions = function() {
         if (!showCaptions) {
             return;
         }
 
-        // Apply fade-out transition for all captions.
         for (let imageCaptionRef of imageCaptionRefs) {
             removeClassName(imageCaptionRef.current, 'active');
         }
+    }
 
-        // Apply fade-in transition to desired caption.
+    const activateCaption = function(captionIndex) {
+        if (!showCaptions) {
+            return;
+        }
+
+        // Fade-in caption at a slight delay after image transition.
         setTimeout(() => {
-            addClassName(imageCaptionRefs[targetCaptionIndex].current, 'active');
+            addClassName(imageCaptionRefs[captionIndex].current, 'active');
         }, toMilliseconds(0.4));
     }
 
     const toPreviousImage = function (e) {
         e.preventDefault();
 
-        // Apply translation to image carousel
-        const imageWidth = imageContainerRef.current.getBoundingClientRect().width;
-        const previousImageIndex = Math.max(currentImageIndexRef.current - 1, 0);
+        const imageContainer = imageContainerRef.current;
+        const currentImageIndex = imageIndexRef.current;
+        const currentTranslation = translationRef.current;
 
-        const translation = currentTranslationRef.current + (currentImageIndexRef.current - previousImageIndex) * imageWidth;
-        setTranslation(translation);
+        // Do not transition the image carousel if it is currently running the transition animation.
+        if (hasClassName(imageContainer, 'transitioning')) {
+            return;
+        }
 
-        addClassName(imageContainerRef.current, 'transition');
+        // Apply translation to image container.
+        const imageWidth = imageContainer.getBoundingClientRect().width;
+        const desiredImageIndex = Math.max(currentImageIndex - 1, 0);
+        const translation = currentTranslation + (currentImageIndex - desiredImageIndex) * imageWidth;
+
+        addClassName(imageContainer, 'transitioning');
+        setTimeout(() => {
+            removeClassName(imageContainerRef.current, 'transitioning');
+        }, toMilliseconds(0.3))
 
         imageContainerStyle = {
             transform: `translateX(${translation}px)`
         };
 
-        // Apply transition animations to captions
-        changeCaption(currentImageIndexRef.current);
-        setImageIndex(previousImageIndex);
+        setImageIndex(desiredImageIndex);
+        setTranslation(translation);
 
-        setTimeout(() => {
-            removeClassName(imageContainerRef.current, 'transition');
-        }, toMilliseconds(0.3))
+        // Apply transition animations to captions
+        deactivateCaptions();
+        activateCaption(desiredImageIndex);
     }
 
     const toNextImage = function (e) {
         e.preventDefault();
 
+        const imageContainer = imageContainerRef.current;
+        const currentImageIndex = imageIndexRef.current;
+        const currentTranslation = translationRef.current;
+
+        if (hasClassName(imageContainer, 'transitioning')) {
+            return;
+        }
+
         // Apply translation to image carousel
-        const imageWidth = imageContainerRef.current.getBoundingClientRect().width;
-        const nextImageIndex = Math.min(currentImageIndexRef.current + 1, images.length - 1);
+        const imageWidth = imageContainer.getBoundingClientRect().width;
+        const desiredImageIndex = Math.min(currentImageIndex + 1, images.length - 1);
+        const translation = currentTranslation - (desiredImageIndex - currentImageIndex) * imageWidth;
 
-        const translation = currentTranslationRef.current - (nextImageIndex - currentImageIndexRef.current) * imageWidth;
-        setTranslation(translation);
 
-        addClassName(imageContainerRef.current, 'transition');
+        addClassName(imageContainer, 'transitioning');
+        setTimeout(() => {
+            removeClassName(imageContainerRef.current, 'transitioning');
+        }, toMilliseconds(0.3));
 
         imageContainerStyle = {
             transform: `translateX(${translation}px)`
         };
 
-        // Apply transition animations to captions
-        changeCaption(nextImageIndex);
-        setImageIndex(nextImageIndex);
+        setImageIndex(desiredImageIndex);
+        setTranslation(translation);
 
-        setTimeout(() => {
-            removeClassName(imageContainerRef.current, 'transition');
-        }, toMilliseconds(0.3))
+
+        // Apply transition animations to captions
+        deactivateCaptions();
+        activateCaption(desiredImageIndex);
     }
 
     // Fill image caption ref array
@@ -108,12 +129,12 @@ function ImageShowcase(props) {
 
         function onWindowResize(e) {
             console.log('resizing');
-            console.log(currentImageIndexRef.current);
+            console.log(imageIndexRef.current);
 
             // Resizing the screen invalidates the translation because the image container size changes
             // Recalculate translation based on new image container size
             const imageWidth = imageContainerRef.current.getBoundingClientRect().width;
-            const translation = 0 - currentImageIndexRef.current * imageWidth;
+            const translation = 0 - imageIndexRef.current * imageWidth;
             setTranslation(translation);
 
             imageContainerStyle = {
@@ -173,125 +194,6 @@ function ImageShowcase(props) {
             </div>
         </div>
 
-    );
-}
-
-
-function FeaturedProjectImageShowcase(props) {
-    const { images, showCaptions } = props;
-
-    const [currentImageIndex, setImageIndex] = useState(0);
-    const [currentTranslation, setTranslation] = useState(0);
-
-    const imageContainerRef = useRef(null);
-    let imageContainerStyle = {
-        transform: `translateX(${currentTranslation}px)`,
-    };
-
-    const navigateToPreviousImage = function (e) {
-        e.preventDefault();
-
-        const imageWidth = imageContainerRef.current.clientWidth;
-        const previousImageIndex = Math.max(currentImageIndex - 1, 0);
-
-        const translation = currentTranslation + (currentImageIndex - previousImageIndex) * imageWidth;
-        setTranslation(translation);
-
-        imageContainerStyle = {
-            transform: `translateX(${translation}px)`
-        };
-
-        setImageIndex(previousImageIndex);
-    }
-
-    const navigateToNextImage = function (e) {
-        e.preventDefault();
-
-        const imageWidth = imageContainerRef.current.clientWidth;
-        const nextImageIndex = Math.min(currentImageIndex + 1, images.length - 1);
-
-        const translation = currentTranslation - (nextImageIndex - currentImageIndex) * imageWidth;
-        setTranslation(translation);
-
-        imageContainerStyle = {
-            transform: `translateX(${translation}px)`
-        };
-
-        setImageIndex(nextImageIndex);
-    }
-
-    // Construct navigation buttons for image carousel.
-    let imageContainerNavigationButtons = [];
-    for (let i = 0; i < images.length; ++i) {
-        let classNames = ['button'];
-
-        if (i == currentImageIndex) {
-            classNames.push('button-current');
-        }
-
-        const navigateToImage = function (e) {
-            e.preventDefault();
-
-            const imageWidth = imageContainerRef.current.clientWidth;
-            const desiredImageIndex = i;
-
-            if (currentImageIndex == desiredImageIndex) {
-                return;
-            }
-
-            let translation = currentTranslation;
-            if (currentImageIndex > desiredImageIndex) {
-                translation = currentTranslation + (currentImageIndex - desiredImageIndex) * imageWidth;
-            }
-            else {
-                translation = currentTranslation - (desiredImageIndex - currentImageIndex) * imageWidth;
-            }
-
-            setTranslation(translation);
-            imageContainerStyle = {
-                transform: `translateX(${translation}px)`
-            };
-
-            setImageIndex(desiredImageIndex);
-        }
-
-        imageContainerNavigationButtons.push(<span className={classNames.join(' ')} onClick={navigateToImage}></span>);
-    }
-
-    return (
-        <React.Fragment>
-            <div className='image-showcase' ref={imageContainerRef} style={imageContainerStyle}>
-                <div className='images'>
-                    {
-                        images.map((image, index) => (
-                            <img src={image.src} key={index}></img>
-                        ))
-                    }
-                </div>
-            </div>
-            <div className='image-navigation'>
-                <div className='arrows'>
-                    <div className='arrow' onClick={navigateToPreviousImage}>
-                        <i className='fa-solid fa-angle-left fa-fw'></i>
-                    </div>
-                    <div className='arrow' onClick={navigateToNextImage}>
-                        <i className='fa-solid fa-angle-right fa-fw'></i>
-                    </div>
-                </div>
-
-                <div className='buttons'>
-                    {
-                        imageContainerNavigationButtons.map((element, index) => (
-                            <React.Fragment key={index}>{element}</React.Fragment>
-                        ))
-                    }
-                </div>
-            </div>
-
-            <div className='image-captions'>
-
-            </div>
-        </React.Fragment>
     );
 }
 
@@ -367,20 +269,20 @@ export default function FeaturedProject(props) {
                     </div>
                 </div>
             </div>
-            <div className='overlay-container' ref={overlayContainerRef}>
-                <div className='overlay' ref={overlayRef}>
+            <div className='featured-project-overlay-container' ref={overlayContainerRef}>
+                <div className='featured-project-overlay' ref={overlayRef}>
                     <ImageShowcase images={project.images} showCaptions={true}></ImageShowcase>
-                    <div className='content'>
-                        <i className='fa-solid fa-xmark fa-fw featured-project-overlay-close' onClick={closeOverlay}></i>
+                    <div className='featured-project-overlay-content'>
+                        <i className='fa-solid fa-xmark fa-fw featured-project-overlay-close-button' onClick={closeOverlay}></i>
 
-                        <span className='featured-project-overlay-section-title'>Featured Project</span>
-                        <span className='featured-project-overlay-title'>{project.title}</span>
-                        <span className='featured-project-overlay-time'>July 2022 - Present (8 months)</span>
+                        <span className='featured-project-overlay-section'>Featured Project</span>
+                        <span className='featured-project-overlay-project-title'>{project.title}</span>
+                        <span className='featured-project-overlay-duration'>July 2022 - Present (8 months)</span>
 
-                        <span className='featured-project-overlay-section-title'>About</span>
-                        <span className='featured-project-overlay-description'>{project.description}</span>
+                        <span className='featured-project-overlay-section'>About</span>
+                        <span className='featured-project-overlay-project-description'>{project.description}</span>
 
-                        <div className='cta'>
+                        <div className='featured-project-overlay-cta'>
                             <span>Read More</span>
                             <i className='fa-solid fa-angle-right fa-fw'></i>
                         </div>
