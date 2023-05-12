@@ -17,7 +17,7 @@
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
 
-    &.open {
+    &.active {
         opacity: 1;
     }
 
@@ -40,14 +40,12 @@
 
     border-radius: 10px;
 
-    .image-container-parent {
-        display: inline; // Allow grid-row / grid-column rules to work
+    .featured-project-image-container {
+        grid-column-start: 1;
+        grid-column-end: 6;
 
         grid-row-start: 1;
         grid-row-end: 1;
-
-        grid-column-start: 1;
-        grid-column-end: 6;
     }
 }
 

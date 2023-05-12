@@ -2,61 +2,65 @@
 import React, { useRef, useState, useEffect, createRef } from 'react';
 
 import { hasClassName, addClassName, removeClassName, toMilliseconds, disableScrolling, enableScrolling } from '../../util/util';
+import useStateRef from '../../util/use-state-ref';
 
+import './featured-project-image-showcase.less'
 import './featured-project-overlay.less'
-
-// Returns a reference to the state so that it can be used in a stale context.
-function useStateRef(initialValue) {
-    const [state, _setState] = useState(initialValue);
-    const stateRef = useRef(state);
-
-    const setState = (value) => {
-        stateRef.current = value;
-        _setState(value);
-    };
-
-    return [stateRef, setState];
-}
 
 function ImageShowcase(props) {
     const { images, showCaptions = false } = props;
 
     const [imageIndexRef, setImageIndex] = useStateRef(0);
     const [translationRef, setTranslation] = useStateRef(0);
-    const [imageCaptionRefs, setImageCaptionRefs] = useState([]); // Array of references to image captions
+
+    // Populate image caption data.
+    // Image caption stores ref to element and timeout.
+    const [imageCaptionRefs, setImageCaptionRefs] = useState(Array(images.length).fill().map((_, i) => (
+        {
+            ref: createRef(),
+            timeout: null
+        }
+    )));
 
     const imageContainerRef = useRef(null);
     let imageContainerStyle = {
         transform: `translateX(${translationRef.current}px)`,
     };
 
-    const deactivateCaptions = function() {
+    const deactivateImageCaptions = function () {
         if (!showCaptions) {
             return;
         }
 
-        for (let imageCaptionRef of imageCaptionRefs) {
-            removeClassName(imageCaptionRef.current, 'active');
+        for (const imageCaption of imageCaptionRefs) {
+            removeClassName(imageCaption.ref.current, 'active');
+            clearTimeout(imageCaption.timeout);
         }
     }
 
-    const activateCaption = function(captionIndex) {
+    const activateImageCaption = function (captionIndex) {
         if (!showCaptions) {
             return;
         }
 
+        const imageCaption = imageCaptionRefs[captionIndex];
+
         // Fade-in caption at a slight delay after image transition.
-        setTimeout(() => {
-            addClassName(imageCaptionRefs[captionIndex].current, 'active');
-        }, toMilliseconds(0.4));
+        imageCaption.timeout = setTimeout(() => {
+            addClassName(imageCaption.ref.current, 'active');
+        }, toMilliseconds(0.15));
     }
 
     const toPreviousImage = function (e) {
-        e.preventDefault();
-
         const imageContainer = imageContainerRef.current;
         const currentImageIndex = imageIndexRef.current;
         const currentTranslation = translationRef.current;
+
+        if (currentImageIndex == 0) {
+            return;
+        }
+
+        deactivateImageCaptions(); // Deactivate / clear any captions currently in-flight. 
 
         // Do not transition the image carousel if it is currently running the transition animation.
         if (hasClassName(imageContainer, 'transitioning')) {
@@ -71,7 +75,10 @@ function ImageShowcase(props) {
         addClassName(imageContainer, 'transitioning');
         setTimeout(() => {
             removeClassName(imageContainerRef.current, 'transitioning');
-        }, toMilliseconds(0.3))
+
+            // Activate caption only after the image has been transition to.
+            activateImageCaption(desiredImageIndex);
+        }, toMilliseconds(0.3));
 
         imageContainerStyle = {
             transform: `translateX(${translation}px)`
@@ -79,19 +86,20 @@ function ImageShowcase(props) {
 
         setImageIndex(desiredImageIndex);
         setTranslation(translation);
-
-        // Apply transition animations to captions
-        deactivateCaptions();
-        activateCaption(desiredImageIndex);
     }
 
     const toNextImage = function (e) {
-        e.preventDefault();
-
         const imageContainer = imageContainerRef.current;
         const currentImageIndex = imageIndexRef.current;
         const currentTranslation = translationRef.current;
 
+        if (currentImageIndex == (images.length - 1)) {
+            return;
+        }
+
+        deactivateImageCaptions(); // Deactivate / clear any captions currently in-flight. 
+
+        // Do not transition the image carousel if it is currently running the transition animation.
         if (hasClassName(imageContainer, 'transitioning')) {
             return;
         }
@@ -101,10 +109,12 @@ function ImageShowcase(props) {
         const desiredImageIndex = Math.min(currentImageIndex + 1, images.length - 1);
         const translation = currentTranslation - (desiredImageIndex - currentImageIndex) * imageWidth;
 
-
         addClassName(imageContainer, 'transitioning');
         setTimeout(() => {
             removeClassName(imageContainerRef.current, 'transitioning');
+
+            // Activate caption only after the image has been transition to.
+            activateImageCaption(desiredImageIndex);
         }, toMilliseconds(0.3));
 
         imageContainerStyle = {
@@ -113,24 +123,10 @@ function ImageShowcase(props) {
 
         setImageIndex(desiredImageIndex);
         setTranslation(translation);
-
-
-        // Apply transition animations to captions
-        deactivateCaptions();
-        activateCaption(desiredImageIndex);
     }
 
-    // Fill image caption ref array
     useEffect(() => {
-        // Assuming number of images does not change
-        setImageCaptionRefs(() => (
-            Array(images.length).fill().map((_, i) => imageCaptionRefs[i] || createRef())
-        ));
-
         function onWindowResize(e) {
-            console.log('resizing');
-            console.log(imageIndexRef.current);
-
             // Resizing the screen invalidates the translation because the image container size changes
             // Recalculate translation based on new image container size
             const imageWidth = imageContainerRef.current.getBoundingClientRect().width;
@@ -151,56 +147,52 @@ function ImageShowcase(props) {
     }, []);
 
     return (
-        <div className='image-container-parent'>
-            <div className='image-container'>
-                <div className='image-showcase' ref={imageContainerRef} style={imageContainerStyle}>
-                    <div className='images'>
-                        {
-                            images.map((image, index) => (
-                                <img src={image.src} key={index}></img>
-                            ))
-                        }
-                    </div>
+        <div className='featured-project-image-container'>
+            <div className='featured-project-image-showcase' ref={imageContainerRef} style={imageContainerStyle}>
+                <div className='featured-project-images'>
+                    {
+                        images.map((image, index) => (
+                            <img src={image.src} key={index}></img>
+                        ))
+                    }
                 </div>
-                <div className='image-navigation'>
-                    <div className='arrows'>
-                        <div className='arrow' onClick={toPreviousImage}>
-                            <i className='fa-solid fa-angle-left fa-fw'></i>
-                        </div>
-                        <div className='arrow' onClick={toNextImage}>
-                            <i className='fa-solid fa-angle-right fa-fw'></i>
-                        </div>
-                    </div>
-                </div>
-                {
-                    showCaptions && <div className='image-captions'>
-                        {
-                            images.map((image, index) => {
-                                let classNames = ['caption'];
-                                if (index == 0) {
-                                    classNames.push('active');
-                                }
-
-                                return (
-                                    <div className={classNames.join(' ')} key={index} ref={imageCaptionRefs[index]}>
-                                        <span className='title'>{image.title}</span>
-                                        <span className='description'>{image.description}</span>
-                                    </div>
-                                );
-                            })
-                        }
-                    </div>
-                }
             </div>
-        </div>
+            <div className='featured-project-image-navigation'>
+                <div className='navigation-arrows'>
+                    <div className='navigation-arrow' onClick={toPreviousImage}>
+                        <i className='fa-solid fa-angle-left fa-fw'></i>
+                    </div>
+                    <div className='navigation-arrow' onClick={toNextImage}>
+                        <i className='fa-solid fa-angle-right fa-fw'></i>
+                    </div>
+                </div>
+            </div>
+            {
+                showCaptions && <div className='featured-project-image-captions'>
+                    {
+                        images.map((image, index) => {
+                            let classNames = ['featured-project-image-caption'];
+                            if (index == 0) {
+                                classNames.push('active');
+                            }
 
+                            return (
+                                <div className={classNames.join(' ')} key={index} ref={imageCaptionRefs[index].ref}>
+                                    <span className='featured-project-image-caption-title'>{image.title}</span>
+                                    <span className='featured-project-image-caption-description'>{image.description}</span>
+                                </div>
+                            );
+                        })
+                    }
+                </div>
+            }
+        </div>
     );
 }
 
 export default function FeaturedProject(props) {
     const { project } = props;
 
-    const [isOverlayVisible, setOverlayVisible] = useState(false);
     const overlayContainerRef = useRef(null);
     const overlayRef = useRef(null);
 
@@ -210,8 +202,8 @@ export default function FeaturedProject(props) {
 
         removeClassName(overlayContainer, 'hidden');
         overlay.offsetHeight; // Force browser repaint.
-        addClassName(overlayContainer, 'open');
-        addClassName(overlay, 'open');
+        addClassName(overlayContainer, 'active');
+        addClassName(overlay, 'active');
 
         disableScrolling();
     }
@@ -220,8 +212,8 @@ export default function FeaturedProject(props) {
         const overlayContainer = overlayContainerRef.current;
         const overlay = overlayRef.current;
 
-        removeClassName(overlay, 'open');
-        removeClassName(overlayContainer, 'open');
+        removeClassName(overlay, 'active');
+        removeClassName(overlayContainer, 'active');
 
         setTimeout(() => {
             addClassName(overlayContainer, 'hidden');
@@ -255,7 +247,6 @@ export default function FeaturedProject(props) {
             enableScrolling();
         };
     }, []); // Run only when mounting / unmounting.
-
 
     return (
         <div className='featured-project'>

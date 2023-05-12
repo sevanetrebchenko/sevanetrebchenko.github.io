@@ -1,0 +1,102 @@
+.featured-project-image-container {
+    position: relative;
+
+    overflow: hidden;
+
+    // image container fits 100% of the space parent container.
+    height: 100%;
+    width: 100%;
+}
+
+.featured-project-image-showcase {
+    height: inherit;
+    width: inherit;
+
+    &.transitioning {
+        transition: transform 0.3s ease-in-out;
+    }
+}
+
+.featured-project-images {
+    height: inherit;
+    width: inherit;
+
+    display: flex;
+    flex-direction: row;
+
+    img {
+        flex-shrink: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.featured-project-image-navigation {
+    position: absolute;
+    top: 0;
+
+    width: inherit;
+    height: inherit;
+}
+
+.navigation-arrows {
+    z-index: 5;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    height: inherit;
+}
+
+.navigation-arrow {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding-left: 15px;
+    padding-right: 15px;
+    margin: 20px;
+
+    border-radius: 10px;
+
+    background-color: rgba(0, 0, 0, 0);
+    transition: background-color 0.2s ease-in-out;
+
+    i {
+        color: white;
+        font-size: 18px;
+
+        transition: color 0.2s ease-in-out;
+    }
+
+    &:hover {
+        cursor: pointer;
+        background-color: rgba(180, 180, 180, 0.2);
+    }
+}
+
+.featured-project-image-captions {
+    position: absolute;
+
+    top: 0;
+}
+
+.featured-project-image-caption {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+
+    &.active {
+        opacity: 1;
+    }
+}
+
+.featured-project-image-caption-title {
+    color: white;
+}
+
+.featured-project-image-caption-description {
+    color: gray;
+}
+
