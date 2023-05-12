@@ -171,15 +171,19 @@ function ImageShowcase(props) {
                 showCaptions && <div className='featured-project-image-captions'>
                     {
                         images.map((image, index) => {
+                            const imageCaption = image.caption;
+
                             let classNames = ['featured-project-image-caption'];
+                            classNames.push(imageCaption.position.trim().toLowerCase().replace(/\s+/g, '-'));
+
                             if (index == 0) {
                                 classNames.push('active');
                             }
 
                             return (
                                 <div className={classNames.join(' ')} key={index} ref={imageCaptionRefs[index].ref}>
-                                    <span className='featured-project-image-caption-title'>{image.title}</span>
-                                    <span className='featured-project-image-caption-description'>{image.description}</span>
+                                    <span className='featured-project-image-caption-title'>{imageCaption.header}</span>
+                                    <span className='featured-project-image-caption-description'>{imageCaption.description}</span>
                                 </div>
                             );
                         })

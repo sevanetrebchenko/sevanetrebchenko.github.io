@@ -78,25 +78,60 @@
 }
 
 .featured-project-image-captions {
-    position: absolute;
-
-    top: 0;
 }
 
 .featured-project-image-caption {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 30px;
+
+    // Total width of the image showcase container that the caption takes up
+    max-width: 65%;
+
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
 
     &.active {
         opacity: 1;
     }
+
+    &.top-right {
+        top: 0;
+        right: 0;
+        text-align: right;
+    }
+
+    &.top-left {
+        top: 0;
+        left: 0;
+        text-align: left;
+    }
+
+    &.bottom-right {
+        bottom: 0;
+        right: 0;
+        text-align: right;
+    }
+
+    &.bottom-left {
+        bottom: 0;
+        left: 0;
+        text-align: left;
+    }
 }
 
 .featured-project-image-caption-title {
-    color: white;
+    color: gainsboro;
+    font-family: 'Roboto Slab';
 }
 
 .featured-project-image-caption-description {
-    color: gray;
+    color: rgb(167, 167, 167);
+    font-family: 'Roboto Slab';
+
+    font-size: 13px;
 }
 

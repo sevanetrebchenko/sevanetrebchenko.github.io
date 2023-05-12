@@ -46,28 +46,43 @@ export default function Projects(props) {
         images: [
             {
                 src: "images/render.png",
-                title: 'title',
-                description: 'caption'
+                caption: {
+                    header: '2048 samples per pixel',
+                    description: 'Time to render: 16 minutes, 48 seconds ',
+                    position: 'top right'
+                },
             },
             {
                 src: "images/depth_of_field.png",
-                title: 'title',
-                description: 'caption'
+                caption: {
+                    header: '2048 samples per pixel',
+                    description: 'Time to render: 16 minutes, 48 seconds ',
+                    position: 'top left'
+                },
             },
             {
                 src: "images/reflection.jpg",
-                title: 'title',
-                description: 'caption'
+                caption: {
+                    header: '2048 samples per pixel',
+                    description: 'Time to render: 16 minutes, 48 seconds ',
+                    position: 'bottom right'
+                },
             },
             {
                 src: "images/mountains.jpg",
-                title: 'title',
-                description: 'caption'
+                caption: {
+                    header: '2048 samples per pixel',
+                    description: 'Time to render: 16 minutes, 48 seconds ',
+                    position: 'bottom left'
+                },
             },
             {
                 src: "images/reflection.jpg",
-                title: 'title',
-                description: 'caption'
+                caption: {
+                    header: '2048 samples per pixel',
+                    description: 'Time to render: 16 minutes, 48 seconds ',
+                    position: 'top right'
+                },
             },
         ],
         tools: ["C++", "Git", "CMake"],
