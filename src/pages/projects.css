@@ -282,6 +282,7 @@
 
         transition: 0.2s;
     }
+}
 
     /* 
 
@@ -321,7 +322,7 @@
         font-family: 'Roboto Mono';
     } */
 
-
+/* 
 
     .featured-project-learn,
     .featured-project-arrow {
@@ -343,8 +344,6 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        /* padding-left: 10px;
-        padding-right: 10px; */
 
         z-index: 999;
     }
@@ -363,7 +362,6 @@
         height: 100%;
 
         padding: 20px;
-        /* border-radius: 50%; */
     }
 
     .featured-project-navigation-previous:hover,
@@ -390,7 +388,6 @@
 
     .featured-project-navigation-button {
         z-index: 100;
-        /* Needs to show up above other overlapping elements */
         width: 12px;
         height: 12px;
 
@@ -725,7 +722,6 @@
 
     .projects-grid-header a {
         color: orange;
-        /* text-decoration: none; */
         font-size: 18px;
     }
 
@@ -736,4 +732,4 @@
         text-align: center;
     }
 
-}
+} */

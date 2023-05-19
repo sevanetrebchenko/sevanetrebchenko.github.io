@@ -1,0 +1,127 @@
+
+.featured-project {
+    width: 1600px;
+    height: 700px;
+
+    border-radius: 10px;
+
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.featured-project-content {
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+    padding: 30px;
+
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+    flex-basis: 100%;
+
+    grid-row-start: 1;
+    grid-row-end: 1;
+
+    &.justify-right {
+        align-items: end;
+
+        grid-column-start: 6;
+        grid-column-end: -1;
+    }
+
+    &.justify-left {
+        align-items: start;
+
+        grid-column-start: 1;
+        grid-column-end: 3;
+    }
+
+    // background-color: rgba(39, 38, 44, 1);
+}
+
+.featured-project-index {
+    color: gainsboro;
+    font-family: 'Montserrat';
+    font-size: 50px;
+    letter-spacing: 1px;
+    color: gray;
+}
+
+.featured-project-title {
+    color: white;
+    font-family: 'Roboto Slab';
+
+    font-weight: 400;
+    font-size: 34px;
+    letter-spacing: 0.1px;
+}
+
+.featured-project-duration {
+    color: gray;
+    font-family: 'Montserrat';
+    font-size: 16px;
+    font-weight: 500;
+
+    margin-bottom: 30px;
+}
+
+.featured-project-description {
+    color: gainsboro;
+
+    flex-grow: 1;
+    overflow: auto;
+    
+    font-size: 16px;
+    font-weight: 300;
+
+    letter-spacing: 0.3px;
+
+    margin-bottom: 30px;
+    padding-right: 20px;
+}
+
+.featured-project-cta {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    column-gap: 20px;
+
+    padding: 15px 20px;
+    margin: auto;
+
+    border: 1px solid gray;
+    border-radius: 2px;
+
+    background-color: rgba(138, 138, 138, 0);
+    transition: background-color 0.1s ease-in-out;
+
+    // 'Read More' text
+    span {
+        font-family: 'Roboto Slab';
+        text-transform: uppercase;
+
+        color: gray;
+        transition: color 0.1s ease-in-out;
+    }
+
+    // arrow icon
+    i {
+        color: gray;
+        transition: color 0.1s ease-in-out;
+    }
+
+    &:hover {
+        background-color: rgba(138, 138, 138, 0.6);
+    }
+
+    &:hover,
+    &:hover span,
+    &:hover i {
+        cursor: pointer;
+        color: gainsboro;
+    }
+}

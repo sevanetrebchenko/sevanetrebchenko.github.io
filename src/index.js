@@ -7,8 +7,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { getDateObject } from './utility.js'
 
 // Pages.
-import Landing from './pages/landing.js'
-import Projects from './pages/projects.js'
+import Landing from './pages/landing/landing.js'
+import Projects from './pages/projects/projects.js'
 import Blog from './pages/blog.js'
 
 // Stylesheets.

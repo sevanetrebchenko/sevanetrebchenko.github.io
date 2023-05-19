@@ -1,30 +1,26 @@
 
-import React, { forwardRef } from 'react'
-import Navbar from '../components/navbar.js'
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom'
-import Finder from '../components/finder.js'
-import { useState, useRef, useEffect } from 'react'
-
-
+import Navbar from '../../components/navbar.js'
+import PageCover from '../../components/page-cover.js';
+import FeaturedProject from './featured-project.js'
 import './projects.less';
-import './body.css'
-
-import FeaturedProject from './projects/featured-project.js'
+import '../shared.less';
 
 function ProjectEntry(props) {
-    const { project } = props;
+    const { project, span } = props;
 
     return (
-        <li className='project'>
+        <div className={'project ' + span}>
             <div className='project-header'>
                 {/* <i className='fa-regular fa-folder fa-fw project-icon'></i> */}
                 <span className='project-title'>{project.title}</span>
                 <i className='fa-solid fa-arrow-up-right-from-square fa-fw project-link'></i>
             </div>
 
-            <div className='project-outline'>
+            {/* <div className='project-outline'>
                 <span className='project-description'>{project.description}</span>
-            </div>
+            </div> */}
             <div className='project-tools'>
                 {
                     project.tools.map((name, index) => (
@@ -32,8 +28,8 @@ function ProjectEntry(props) {
                     ))
                 }
             </div>
-        </li>
-    )
+        </div>
+    );
 }
 
 
@@ -95,34 +91,48 @@ export default function Projects(props) {
         project
     ];
 
-    let categories = ['Vulkan', 'Raytracing', 'Engine Development']
-
     return (
         <React.Fragment>
             <header>
                 <Navbar></Navbar>
             </header>
 
-            <main className='projects'>
-                <section className='projects-cover' style={{ backgroundImage: 'url(\'images/render.png\')' }}>
-                    <div className='projects-title-container'>
-                        <span className='projects-title'>projects</span>
-                        <span className='projects-description'>this is the page for my completed projects</span>
-                    </div>
+            <PageCover title={'projects'}
+                description={'this is the page for my completed projects'}
+                coverImageUrl={'images/render.png'}></PageCover>
 
-                    <div className='overlay'>
-                    </div>
-                </section>
-
+            <div className='projects-page-content'>
+                <span className='page-section-title'>Featured Projects</span>
                 <div className='featured-projects'>
                     {
                         projects.map((project, index) => (
-                            <FeaturedProject project={project} index={index} key={index}></FeaturedProject>
+                            <FeaturedProject project={project}
+                                index={index}
+                                justification={index % 2 == 0 ? 'left' : 'right'}
+                                key={index}></FeaturedProject>
                         ))
                     }
                 </div>
+                <span className='page-section-title'>Other Noteworthy Projects</span>
+                <div className='projects-grid'>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='double'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    {/* <ProjectEntry project={project} span='triple'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    <ProjectEntry project={project} span='normal'></ProjectEntry> */}
+                </div>
 
-                <div className='projects-grid-header'>
+            </div>
+
+            {/* <div className='projects-grid-header'>
                     <span className='projects-grid-title'>Other Noteworthy Projects</span>
                     <Link to={''}>
                         <span className='projects-grid-description'>view the archive</span>
@@ -135,9 +145,7 @@ export default function Projects(props) {
                     <ProjectEntry project={project}></ProjectEntry>
                     <ProjectEntry project={project}></ProjectEntry>
                     <ProjectEntry project={project}></ProjectEntry>
-                </ul>
-
-            </main>
+                </ul> */}
         </React.Fragment>
     )
 }

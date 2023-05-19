@@ -1,65 +1,17 @@
 // Returns whether a className is present in the classNames of a given element.
 export function hasClassName(element, className) {
     className = className.trim();
-    const classNameString = element.className.trim();
-    const classNames = classNameString.split(/\s+/g);
-
-    return classNames.includes(className);
+    return element.classList.contains(className.trim());
 }
 
 // Appends a className to the given element (provided the element isn't already tagged with that className). 
 export function addClassName(element, className) {
-    className = className.trim();
-    if (className === '') {
-        return;
-    }
-
-    const classNameString = element.className.trim();
-    let classNames = [];
-
-    if (classNameString !== '') {
-        classNames = classNameString.split(/\s+/g);
-    }
-
-    if (!classNames.includes(className)) {
-        classNames.push(className);
-    }
-
-    element.className = classNames.join(' ');
+    element.classList.add(className.trim());
 }
 
 // Removes a className from the given element (provided the element is tagged with that className).
 export function removeClassName(element, className) {
-    className = className.trim();
-    if (className === '') {
-        return;
-    }
-
-    const classNameString = element.className.trim();
-    if (classNameString === '') {
-        return;
-    }
-
-    // Remove all instances of 'className' from the 'classNames' list.
-    let classNames = classNameString.split(/\s+/g);
-    while (true) {
-        const index = classNames.indexOf(className);
-
-        if (index > -1) {
-            classNames.splice(index, 1);
-        }
-        else {
-            break;
-        }
-    }
-
-    if (classNames.length === 0) {
-        // Empty className, remove entire 'class' HTML attribute to keep DOM clean.
-        element.removeAttribute('class');
-    }
-    else {
-        element.className = classNames.join(' ');
-    }
+    element.classList.remove(className.trim());
 }
 
 export function toMilliseconds(seconds) {
