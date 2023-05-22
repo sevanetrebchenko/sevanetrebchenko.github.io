@@ -1,0 +1,46 @@
+
+.expression-container {
+    position: relative;
+    height: 100px; // Arbitrary, just so element has height
+}
+
+.expression > {
+    position: absolute;
+
+    // Center vertically
+    margin-top: auto;
+    margin-bottom: auto;
+    top: 50%; 
+    transform: translateY(-50%);
+
+    padding-left: 16vw;
+
+    display: flex;
+    flex-direction: row;
+
+    // Animate in from right to left when first visible
+    opacity: 0;
+    transition: all 0.8s ease-in-out;
+    left: 40px;
+
+    &.active {
+        left: 20px;
+        opacity: 1;
+    }
+
+    span {
+        font-weight: 300;
+        font-family: 'JetBrains Mono';
+        font-size: 1.8vw;
+        color: gray;
+        white-space: pre; // Maintain whitespace
+
+        &.highlighted {
+            color: white;
+        }
+
+        &.comment {
+            color: rgb(53, 53, 53);
+        }
+    }
+}

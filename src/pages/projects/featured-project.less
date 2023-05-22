@@ -1,57 +1,107 @@
 
+.featured-project-container {
+    position: relative;
+
+    // Native viewport size: 2580px
+    width: 70.313vw; // 1800px 
+    height: 28.125vw; // 720px
+}
+
 .featured-project {
-    width: 1600px;
-    height: 700px;
+    position: absolute;
+    top: 20px;
+
+    width: 100%;
+    height: 100%;
 
     border-radius: 10px;
 
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+
+    opacity: 0;
+
+    transition: all 0.6s ease-in-out;
+
+    &.active {
+        opacity: 1;
+        top: 0;
+    }
+
 }
 
 .featured-project-content {
     display: flex;
     flex-direction: column;
 
-    overflow: hidden;
-
     box-sizing: border-box;
     padding: 30px;
 
+    overflow: hidden;
+
     margin-top: 20px;
     margin-bottom: 20px;
-
-    flex-basis: 100%;
 
     grid-row-start: 1;
     grid-row-end: 1;
 
     &.justify-right {
-        align-items: end;
-
         grid-column-start: 6;
         grid-column-end: -1;
+
+        .featured-project-header {
+            align-items: end;
+
+            .featured-project-index {
+                left: 20px;
+            }
+        }
     }
 
     &.justify-left {
-        align-items: start;
-
         grid-column-start: 1;
         grid-column-end: 3;
+
+        .featured-project-header {
+            align-items: start;
+
+            .featured-project-index {
+                right: 20px;
+            }
+        }
     }
 
     // background-color: rgba(39, 38, 44, 1);
 }
 
+.featured-project-header {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
 .featured-project-index {
-    color: gainsboro;
+    position: absolute;
+
+    top: 40%;
+    margin: auto 0;
+    transform: translateY(-50%);
+
+    z-index: 3;
+
     font-family: 'Montserrat';
-    font-size: 50px;
-    letter-spacing: 1px;
-    color: gray;
+    font-size: 180px;
+    font-weight: 500;
+    color: rgb(65, 65, 65);
 }
 
 .featured-project-title {
+    z-index: 4;
+
     color: white;
     font-family: 'Roboto Slab';
 
@@ -61,12 +111,12 @@
 }
 
 .featured-project-duration {
-    color: gray;
+    z-index: 4;
+
+    color: rgb(189, 189, 189);
     font-family: 'Montserrat';
     font-size: 16px;
     font-weight: 500;
-
-    margin-bottom: 30px;
 }
 
 .featured-project-description {

@@ -1,11 +1,15 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/navbar.js'
 import PageCover from '../../components/page-cover.js';
 import FeaturedProject from './featured-project.js'
+import useStateRef from '../../util/use-state-ref.js';
 import './projects.less';
 import '../shared.less';
+import { addClassName, removeClassName } from '../../util/util.js';
+
+import { ArrayExpression } from '../../components/expression.js';
 
 function ProjectEntry(props) {
     const { project, span } = props;
@@ -32,9 +36,24 @@ function ProjectEntry(props) {
     );
 }
 
-
 export default function Projects(props) {
     const { content } = props;
+
+    const [scrollPosition, setScrollPosition] = useState(0);
+    const handleScroll = () => {
+        const position = window.pageYOffset;
+        setScrollPosition(position);
+
+        // console.log(window.outerHeight);
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     const project = {
         title: "Software Raytracer",
@@ -97,55 +116,34 @@ export default function Projects(props) {
                 <Navbar></Navbar>
             </header>
 
-            <PageCover title={'projects'}
-                description={'this is the page for my completed projects'}
+            <PageCover title={'Projects'}
+                description={'a showcase of some of my best work'}
                 coverImageUrl={'images/render.png'}></PageCover>
 
             <div className='projects-page-content'>
-                <span className='page-section-title'>Featured Projects</span>
-                <div className='featured-projects'>
-                    {
-                        projects.map((project, index) => (
-                            <FeaturedProject project={project}
-                                index={index}
-                                justification={index % 2 == 0 ? 'left' : 'right'}
-                                key={index}></FeaturedProject>
-                        ))
-                    }
-                </div>
-                <span className='page-section-title'>Other Noteworthy Projects</span>
-                <div className='projects-grid'>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='double'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    {/* <ProjectEntry project={project} span='triple'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry>
-                    <ProjectEntry project={project} span='normal'></ProjectEntry> */}
-                </div>
+                <ArrayExpression name={'featured_projects'} content={projects.length} shouldEmphasizeName={true}>
+                    <div className='featured-projects'>
+                        {
+                            projects.map((project, index) => (
+                                <FeaturedProject project={project}
+                                    index={index}
+                                    justification={index % 2 == 0 ? 'right' : 'left'}
+                                    key={index}></FeaturedProject>
+                            ))
+                        }
+                    </div>
+                </ArrayExpression>
+
+                {/* <ArrayExpression name={'other_projects'} type={'list'} content={projects.length}>
+                    <div className='projects-grid'>
+                        <ProjectEntry project={project} span='normal'></ProjectEntry>
+                        <ProjectEntry project={project} span='normal'></ProjectEntry>
+                        <ProjectEntry project={project} span='double'></ProjectEntry>
+                        <ProjectEntry project={project} span='normal'></ProjectEntry>
+                    </div>
+                </ArrayExpression> */}
 
             </div>
-
-            {/* <div className='projects-grid-header'>
-                    <span className='projects-grid-title'>Other Noteworthy Projects</span>
-                    <Link to={''}>
-                        <span className='projects-grid-description'>view the archive</span>
-                    </Link>
-                </div>
-
-                <ul className='projects-grid'>
-                    <ProjectEntry project={project}></ProjectEntry>
-                    <ProjectEntry project={project}></ProjectEntry>
-                    <ProjectEntry project={project}></ProjectEntry>
-                    <ProjectEntry project={project}></ProjectEntry>
-                    <ProjectEntry project={project}></ProjectEntry>
-                </ul> */}
         </React.Fragment>
     )
 }

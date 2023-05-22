@@ -1,50 +1,62 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import FeaturedProjectShowcase from './featured-project-showcase.js';
+import useStateRef from '../../util/use-state-ref.js';
+import { addClassName, removeClassName } from '../../util/util.js';
+
 import './featured-project.less'
 
 export default function FeaturedProject(props) {
     const { project, index, justification } = props;
-    const projectContainerRef = useRef(null);
+    const featuredProjectRef = useRef(null);
+    const [featuredProjectBoundingRectRef, setFeaturedProjectBoundingRect] = useStateRef(null);
 
-    // useEffect(() => {
-    //     const projectContainer = projectContainerRef.current;
+    useEffect(() => {
+        const handleScroll = function () {
+            const featuredProject = featuredProjectRef.current;
+            if (!featuredProject) {
+                return;
+            }
 
-    //     const options = {
-    //         root: null, // Default to the browser viewport.
-    //         rootMargin: '0px', // No padding.
-    //         threshold: 0.4
-    //     }
+            let featuredProjectBoundingRect = featuredProjectBoundingRectRef.current;
+            if (!featuredProjectBoundingRectRef.current) {
+                featuredProjectBoundingRect = featuredProject.getBoundingClientRect();
+                setFeaturedProjectBoundingRect(featuredProjectBoundingRect);
+            }
 
-    //     const callbackFunction = function (entries) {
-    //         const [ entry ] = entries;
-    //         if (entry.isIntersecting) {
-    //             addClassName(entry.target, 'active');
-    //         }
-    //     }
+            if (window.scrollY + window.innerHeight > featuredProjectBoundingRect.y + (featuredProjectBoundingRect.height * 0.3)) {
+                addClassName(featuredProject, 'active');
+            }
+            else {
+                removeClassName(featuredProject, 'active');
+            }
+        }
 
-    //     const observer = new IntersectionObserver(callbackFunction, options);
-    //     observer.observe(projectContainer);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
 
-    //     return () => {
-    //         observer.unobserve(projectContainer);
-    //     }
-    // }, [projectContainerRef]);
+        return () => {
+            window.removeEventListener('scroll', handleScroll, { passive: true });
+        }
+    }, []);
 
-    // 'justification' indicates which side the project overview is on
     return (
-        <div className='featured-project'>
-            <FeaturedProjectShowcase images={project.images} showCaptions={true} justification={justification}></FeaturedProjectShowcase>
-            <div className={'featured-project-content justify-' + justification}>
-                <span className='featured-project-index'>{(index + 1).toString().padStart(2, '0')}</span>
+        <div className='featured-project-container'>
+            <div className='featured-project' ref={featuredProjectRef}>
+                <FeaturedProjectShowcase images={project.images} showCaptions={true} justification={justification}></FeaturedProjectShowcase>
+                <div className={'featured-project-content justify-' + justification}>
+                    <span className='featured-project-header'>
+                        <span className='featured-project-title'>{project.title}</span>
+                        <span className='featured-project-duration'>July 2022 - Present (8 months)</span>
+                        <span className='featured-project-index'>{(index + 1).toString().padStart(2, '0')}</span>
+                    </span>
 
-                <span className='featured-project-title'>{project.title}</span>
-                <span className='featured-project-duration'>July 2022 - Present (8 months)</span>
-                <span className='featured-project-description'>{project.description}</span>
+                    <span className='featured-project-description'>{project.description}</span>
 
-                <div className='featured-project-cta'>
-                    <span>Read More</span>
-                    <i className='fa-solid fa-angle-right fa-fw'></i>
+                    <div className='featured-project-cta'>
+                        <span>Read More</span>
+                        <i className='fa-solid fa-angle-right fa-fw'></i>
+                    </div>
                 </div>
             </div>
         </div>

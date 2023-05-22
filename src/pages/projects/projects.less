@@ -3,6 +3,56 @@
 .projects-page-content {
     background-color: #1a191d;
     width: 100%;
+
+    position: relative;
+}
+
+.floating-section-header {
+	position: relative;
+	height: 130px;
+    width: 1400px;
+
+    margin: auto;
+
+    white-space: nowrap;
+
+    span {
+        position: absolute;
+
+        margin: auto 0;
+        top: 50%; // Center vertically
+        transform: translateY(-50%);
+
+        left: 40px;
+        font-family: 'JetBrains Mono';
+
+        font-size: 40px;
+        font-weight: 400;
+
+        color: rgba(68, 68, 68);
+        opacity: 0;
+    
+        transition: all 0.8s ease-in-out;
+
+        &.active {
+            left: 20px;
+            opacity: 1;
+        }
+    }
+}
+
+.floating-header {
+    font-family: 'Cabin', sans-serif;
+
+    text-align: center;
+
+    letter-spacing: 1px;
+
+    font-size: 80px;
+    font-weight: 600;
+    color: gray;
+
+    transition: transform 1s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
 // @project-entry-height: 550px;
