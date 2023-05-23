@@ -2,7 +2,7 @@ import React, { useState, createRef, useRef, useEffect, } from 'react';
 import useStateRef from '../../util/use-state-ref';
 import { addClassName, hasClassName, removeClassName, toMilliseconds } from '../../util/util';
 
-import './featured-project-showcase.less'
+import './featured-project-showcase.scss'
 
 export default function FeaturedProjectShowcase(props) {
     const { images, justification, showCaptions = false } = props;

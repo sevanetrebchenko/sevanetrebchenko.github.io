@@ -5,8 +5,8 @@ import Navbar from '../../components/navbar.js'
 import PageCover from '../../components/page-cover.js';
 import FeaturedProject from './featured-project.js'
 import useStateRef from '../../util/use-state-ref.js';
-import './projects.less';
-import '../shared.less';
+import './projects.scss';
+import '../shared.scss';
 import { addClassName, removeClassName } from '../../util/util.js';
 
 import { ArrayExpression } from '../../components/expression.js';
@@ -38,22 +38,6 @@ function ProjectEntry(props) {
 
 export default function Projects(props) {
     const { content } = props;
-
-    const [scrollPosition, setScrollPosition] = useState(0);
-    const handleScroll = () => {
-        const position = window.pageYOffset;
-        setScrollPosition(position);
-
-        // console.log(window.outerHeight);
-    };
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
 
     const project = {
         title: "Software Raytracer",

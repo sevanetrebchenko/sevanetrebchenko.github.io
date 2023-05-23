@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { hasClassName, addClassName, removeClassName, enableScrolling, disableScrolling, toMilliseconds } from '../util/util.js';
-import './navbar.less';
+import './navbar.scss';
 
 function NavbarElement(props) {
     const { destination, children } = props;

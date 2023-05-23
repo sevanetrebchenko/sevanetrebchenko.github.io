@@ -39,22 +39,13 @@ module.exports = (env) => {
           }
         },
         {
-          // .css files
-          test: /\.css$/,
+          // .css/.less/.scss files
+          test: /\.(css|less|scss)$/,
           exclude: /node_modules/,
           use: [
             'style-loader',
             'css-loader',
-          ],
-        },
-        // .less files
-        {
-          test: /\.less$/,
-          exclude: /node_modules/,
-          use: [
-            'style-loader',
-            'css-loader',
-            'less-loader'
+            'sass-loader',
           ],
         },
         {

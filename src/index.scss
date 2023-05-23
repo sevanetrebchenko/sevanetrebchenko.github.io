@@ -1,5 +1,9 @@
+$aos-distance: 20px;
+@import 'node_modules/aos/src/sass/aos.scss';
+
 body {
     margin: 0;
+    overflow-x: hidden;
 }
 
 .root {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StringExpression } from './expression';
-import './page-cover.less';
+import './page-cover.scss';
 
 export default function PageCover(props) {
     const { title, description, coverImageUrl } = props;

@@ -3,16 +3,16 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
 import { getDateObject } from './utility.js'
 
 // Pages.
 import Landing from './pages/landing/landing.js'
 import Projects from './pages/projects/projects.js'
 import Blog from './pages/blog.js'
+import AOS from 'aos';
 
 // Stylesheets.
-import './index.css'
+import './index.scss'
 import Search from './pages/search.js'
 
 function loadContent() {
@@ -56,10 +56,16 @@ function loadContent() {
 // Entry point.
 function Application() {
     const raw = loadContent();
+    AOS.init({
+        mirror: false,
+        once: true
+    });
+
     if (!raw) {
         console.debug('Loading website content...');
         return;
     }
+
 
     let content = [];
     content.posts = [];

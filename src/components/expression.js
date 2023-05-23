@@ -1,53 +1,6 @@
 
-import React, { Fragment, useRef, useEffect } from 'react';
-import { addClassName, removeClassName } from '../util/util';
-import useStateRef from '../util/use-state-ref';
-
-import './expression.less'
-
-// Base 'Expression' functionality.
-function Expression(props) {
-    const { children } = props;
-    const expressionRef = useRef(null);
-    const [expressionBoundingRectRef, setExpressionBoundingRect] = useStateRef(null);
-
-    useEffect(() => {
-        const handleScroll = function () {
-            const expression = expressionRef.current;
-            if (!expression) {
-                return;
-            }
-
-            let expressionBoundingRect = expressionBoundingRectRef.current;
-            if (!expressionBoundingRectRef.current) {
-                expressionBoundingRect = expression.getBoundingClientRect();
-                setExpressionBoundingRect(expressionBoundingRect);
-            }
-
-            if (window.scrollY + window.innerHeight > expressionBoundingRect.y + (expressionBoundingRect.height * 1.2)) {
-                addClassName(expression, 'active');
-            }
-            else {
-                removeClassName(expression, 'active');
-            }
-        }
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll();
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll, { passive: true });
-        }
-    }, []);
-
-    return (
-        <div className='expression-container'>
-            <div className='expression' ref={expressionRef}>
-                {children}
-            </div>
-        </div>
-    );
-}
+import React, { Fragment } from 'react';
+import './expression.scss'
 
 // .variable_name = string('content');
 function StringExpression(props) {
@@ -78,13 +31,13 @@ function StringExpression(props) {
     }
 
     return (
-        <Expression>
+        <div className='expression' data-aos='fade-left' data-aos-duration='400' data-aos-easing='ease-in-out'>
             {
                 elements.map((element, index) => (
                     <Fragment key={index}>{element}</Fragment>
                 ))
             }
-        </Expression>
+        </div>
     );
 }
 
@@ -117,39 +70,68 @@ function ArrayExpressionHeader(props) {
     }
 
     return (
-        <Expression>
+        <div className='expression'>
             {
                 elements.map((element, index) => (
                     <Fragment key={index}>{element}</Fragment>
                 ))
             }
-        </Expression>
-    );
-}
-
-function ArrayExpressionFooter(props) {
-    const { name } = props;
-
-    // Build footer expression string: }; // end of variable name
-    return (
-        <Expression>
-            <span>{'}'}</span>,
-            <span className='comment'>{`; // end of ${name.replace(/_+/g, ' ')}`}</span>
-        </Expression>
+        </div>
     );
 }
 
 // .variable_name = array[count] {
-//    ...
+//    { children... }
 // }; // end of variable name
 function ArrayExpression(props) {
-    const { children } = props;
+    const { name, content, shouldEmphasizeName = false, shouldEmphasizeContent = false, children } = props;
+
+    // Build header expression string: .variable_name = array[count] {
+    let header = [];
+    if (shouldEmphasizeName) {
+        header.push(<span>{'.'}</span>);
+        header.push(<span className='highlighted'>{name}</span>);
+
+        if (shouldEmphasizeContent) {
+            header.push(<span>{` = array[`}</span>);
+            header.push(<span className='highlighted'>{content}</span>);
+            header.push(<span>{`] {`}</span>);
+        }
+        else {
+            header.push(<span>{` = array[${content}] {`}</span>);
+        }
+    }
+    else if (shouldEmphasizeContent) {
+        header.push(<span>{`.${name} = array[`}</span>);
+        header.push(<span className='highlighted'>{content}</span>);
+        header.push(<span>{`]`}</span>);
+    }
+    else {
+        header.push(<span>{`.${name} = array[${content}]`}</span>);
+    }
+
+    // Build footer expression string: }; // end of variable name
+    let footer = [];
+    footer.push(<span>{'}'}</span>);
+    footer.push(<span className='comment'>{`; // end of ${name.replace(/_+/g, ' ')}`}</span>);
 
     return (
         <Fragment>
-            <ArrayExpressionHeader {...props}></ArrayExpressionHeader>
+            <div className='expression' data-aos='fade-left' data-aos-duration='400' data-aos-easing='ease-in-out'>
+                {
+                    header.map((element, index) => (
+                        <Fragment key={index}>{element}</Fragment>
+                    ))
+                }
+            </div>
             {children}
-            <ArrayExpressionFooter {...props}></ArrayExpressionFooter>
+            <div className='expression' data-aos='fade-left' data-aos-duration='400' data-aos-easing='ease-in-out'>
+                {
+                    footer.map((element, index) => (
+                        <Fragment key={index}>{element}</Fragment>
+                    ))
+                }
+            </div>
         </Fragment>
     );
 }
@@ -158,9 +140,9 @@ function ArrayExpression(props) {
 function Comment(props) {
     const { content } = props;
     return (
-        <Expression>
+        <div className='expression'>
             <span className='comment'>{content}</span>
-        </Expression>
+        </div>
     );
 }
 

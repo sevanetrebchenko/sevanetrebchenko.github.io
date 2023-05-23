@@ -1,0 +1,27 @@
+
+.expression {
+    // Center vertically
+    padding-left: 16vw;
+
+    display: flex;
+    flex-direction: row;
+
+    padding-top: 40px;
+    padding-bottom: 40px;
+
+    span {
+        font-weight: 300;
+        font-family: 'JetBrains Mono';
+        font-size: 1.8vw;
+        color: gray;
+        white-space: pre; // Maintain whitespace
+
+        &.highlighted {
+            color: white;
+        }
+
+        &.comment {
+            color: rgb(53, 53, 53);
+        }
+    }
+}
