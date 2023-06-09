@@ -19,11 +19,8 @@
 
         display: flex;
         flex-direction: column;
-        align-items: center;
 
         padding-bottom: 40px;
-
-        row-gap: 40px;
     }
 
     .blog-cover {
@@ -84,6 +81,9 @@
     .post-list {
         display: flex;
         flex-direction: column;
+        align-items: center;
+
+        width: 100%;
 
         row-gap: 20px;
     }
@@ -91,15 +91,7 @@
     .post-list-header {
         display: flex;
         flex-direction: column;
-        align-items: center;
-
-        row-gap: 20px;
-    }
-
-    .categories {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
+        width: 100%;
     }
 
     .left,
@@ -133,9 +125,8 @@
     .category-list {
         display: flex;
         flex-direction: row;
-
-        justify-content: center;
-        column-gap: 20px;
+        flex-wrap: wrap;
+        max-width: 1200px;
     }
 
     .category {
@@ -143,14 +134,20 @@
         text-transform: lowercase;
 
         font-family: 'Roboto Mono';
-        font-size: 14px;
+        font-size: 28px;
 
-        padding: 10px 15px;
-        border: 1px solid white;
+        /* padding: 10px 15px; */
+        /* border: 1px solid white; */
         border-radius: 5px;
+        white-space: pre;
 
-        color: white;
+        color: cadetblue;
         transition: 0.2s;
+
+        &::after {
+            content: ", ";
+            color: gray;
+        }
     }
 
     .category:hover {
@@ -166,7 +163,7 @@
         display: flex;
         flex-direction: column; */
 
-        max-width: 1000px;
+        width: 56vw;
 
         background-color: #1e1d22;
         border: solid 1px #27262c;
@@ -211,7 +208,7 @@
     .post-no-cover {
         display: flex;
         flex-direction: column;
-        max-width: 1000px;
+        width: 56vw;
         background-color: #1e1d22;
         border: solid 1px #27262c;
         border-radius: 10px;
@@ -260,19 +257,23 @@
 
     .post-title {
         color: white;
-        font-size: 24px;
+        font-size: 28px;   
+        font-family: 'Roboto Slab';
     }
 
     .post-description {
         color: gray;
-        font-size: 14px;
-
-        margin-bottom: 5px;
+        font-size: 16px;
+        font-family: 'Roboto Slab';
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .post-date {
         color: rgb(87, 87, 87);
-        font-family: 'Roboto Mono';
+        font-size: 18px;
+        font-weight: 500;
+        font-family: 'Montserrat';
     }
 
 }

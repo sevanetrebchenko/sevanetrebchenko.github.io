@@ -148,7 +148,7 @@ function Application() {
     // Set up routes for main site pages.
     routes.push(<Route exact path={'/'} element={<Landing content={content}/>}></Route>);
     routes.push(<Route exact path={'/projects'} element={<Projects content={content}/>}></Route>);
-    routes.push(<Route exact path={'/blog'} element={<Blog content={content}/>}></Route>);
+    routes.push(<Route exact path={'/journal'} element={<Blog content={content}/>}></Route>);
     routes.push(<Route path={'/search/*'} element={<Search/>}/>);
     // routes.push(<Route exact path={'/archives'} element={<Landing content={content}/>}/>);
     // routes.push(<Route exact path={'search'} element={<Search />}/>);

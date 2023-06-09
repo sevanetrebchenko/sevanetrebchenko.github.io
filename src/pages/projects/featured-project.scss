@@ -1,10 +1,8 @@
 
 .featured-project {
     position: relative;
-
-    // Native viewport size: 2580px
-    width: 70.313vw; // 1800px 
-    height: 28.125vw; // 720px
+    width: 54vw;
+    height: 24vw;
 
     border-radius: 10px;
 
@@ -52,8 +50,6 @@
             }
         }
     }
-
-    // background-color: rgba(39, 38, 44, 1);
 }
 
 .featured-project-header {
@@ -62,21 +58,21 @@
     width: 100%;
     position: relative;
 
-    padding-top: 50px;
-    padding-bottom: 50px;
+    padding-top: 1vw;
+    padding-bottom: 30px;
 }
 
 .featured-project-index {
     position: absolute;
 
-    top: 50%;
+    top: 30%;
     margin: auto 0;
     transform: translateY(-50%);
 
     z-index: 3;
 
     font-family: 'Montserrat';
-    font-size: 7.031vw;
+    font-size: 7vw;
     font-weight: 500;
     color: rgb(65, 65, 65);
 }
@@ -88,8 +84,9 @@
     font-family: 'Roboto Slab';
 
     font-weight: 400;
-    font-size: 34px;
+    font-size: 1.1vw;
     letter-spacing: 0.1px;
+    padding-right: 20px;
 }
 
 .featured-project-duration {
@@ -97,8 +94,9 @@
 
     color: rgb(189, 189, 189);
     font-family: 'Montserrat';
-    font-size: 16px;
+    font-size: 0.62vw;
     font-weight: 500;
+    padding-right: 20px;
 }
 
 .featured-project-description {
@@ -107,26 +105,26 @@
     flex-grow: 1;
     overflow: auto;
 
-    font-size: 16px;
+    font-size: 0.6vw;
     font-weight: 300;
 
     letter-spacing: 0.3px;
 
     margin-bottom: 30px;
-    padding-right: 20px;
+    padding-right: 20px; // Leave space for scroll bar
 }
 
 .featured-project-cta {
     display: flex;
     flex-direction: row;
     align-items: baseline;
-    column-gap: 20px;
+    column-gap: 15px;
 
-    padding: 15px 20px;
+    padding: 10px 15px;
     margin: auto;
 
     border: 1px solid gray;
-    border-radius: 2px;
+    border-radius: 3px;
 
     background-color: rgba(138, 138, 138, 0);
     transition: background-color 0.1s ease-in-out;
@@ -134,15 +132,16 @@
     // 'Read More' text
     span {
         font-family: 'Roboto Slab';
+        font-size: 0.6vw;
         text-transform: uppercase;
-
-        color: gray;
         transition: color 0.1s ease-in-out;
+        color: gray;
     }
 
     // arrow icon
     i {
         color: gray;
+        font-size: 0.6vw;
         transition: color 0.1s ease-in-out;
     }
 

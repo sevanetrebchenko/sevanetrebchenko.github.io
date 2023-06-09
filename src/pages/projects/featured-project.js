@@ -23,7 +23,7 @@ export default function FeaturedProject(props) {
                     <span className='featured-project-description'>{project.description}</span>
 
                     <div className='featured-project-cta'>
-                        <span>Read More</span>
+                        <span>{'Read More'}</span>
                         <i className='fa-solid fa-angle-right fa-fw'></i>
                     </div>
                 </div>

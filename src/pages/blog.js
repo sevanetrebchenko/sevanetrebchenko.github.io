@@ -4,7 +4,12 @@ import Finder from '../components/finder.js';
 import Navbar from '../components/navbar.js'
 import { Link } from 'react-router-dom';
 
+import Page from './page.js';
+
+import PageCover from '../components/page-cover.js';
+
 import './blog.css'
+import { ArrayExpression, StringExpression, SingleLineExpression, ObjectExpression, ContainerExpression } from '../components/expression.js';
 
 function Post1(props) {
     const { content } = props;
@@ -77,22 +82,22 @@ function Header(props) {
 
     return (
         <div className='post-list-header'>
-            <Finder></Finder>
-            <div className='categories'>
-                <div className='left'>
-                    <i className='fa-solid fa-angle-left fa-fw'></i>
-                </div>
-                <div className='category-list'>
-                    {
-                        categories.map((name, index) => (
-                            <span className='category' key={index}>{name}</span>
-                        ))
-                    }
-                </div>
-                <div className='right'>
-                    <i className='fa-solid fa-angle-right fa-fw'></i>
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <ObjectExpression name={'search'} shouldEmphasizeName={true}>
+                    <Finder></Finder>
+                </ObjectExpression>
             </div>
+            {/* <ArrayExpression name={'categories'} content={categories.length} shouldEmphasizeName={true}>
+                <div className='categories'>
+                    <div className='category-list'>
+                        {
+                            categories.map((name, index) => (
+                                <span className='category' key={index}>{name}</span>
+                            ))
+                        }
+                    </div>
+                </div>
+            </ArrayExpression> */}
         </div>
     )
 }
@@ -113,38 +118,27 @@ export default function Blog(props) {
 
     return (
         <React.Fragment>
-            <header className='blog-header'>
-                <Navbar></Navbar>
-            </header>
+            <Navbar></Navbar>
+            <Page title={"Journal"} description={'a collection of notes, code snippets, and the ideas behind my work'} coverImageUrl={'images/reflection.jpg'}>
+                <ObjectExpression name={'search'} shouldEmphasizeName={true}>
+                    <Finder></Finder>
+                </ObjectExpression>
+                <ContainerExpression name={'notes'} type={'array'} content={8} shouldEmphasizeName={true}>
+                    <div className='post-list'>
+                        <Post1 content={postWithCover}></Post1>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithCover}></Post1>
 
-            <div className='blog-content'>
-                <section className='blog-cover' style={{ backgroundImage: 'url(\'images/mountains.jpg\')' }}>
-                    <div className='blog-title-container'>
-                        <span className='blog-title'>blog</span>
-                        <span className='blog-description'>this is where I put my thoughts into writing</span>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithCover}></Post1>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithoutCover}></Post1>
+                        <Post1 content={postWithCover}></Post1>
                     </div>
-
-                    <div className='overlay'>
-                    </div>
-                </section>
-
-                <Header></Header>
-
-                <div className='post-list'>
-                    <Post1 content={postWithCover}></Post1>
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithCover}></Post1>
-
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithCover}></Post1>
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithoutCover}></Post1>
-                    <Post1 content={postWithCover}></Post1>
-
-                </div>
-            </div>
+                </ContainerExpression>
+            </Page>
         </React.Fragment>
     );
 }

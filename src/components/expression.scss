@@ -1,27 +1,30 @@
-
 .expression {
-    // Center vertically
-    padding-left: 16vw;
+    // padding-left: 2vw;
+    // padding-right: 16ch;
 
     display: flex;
     flex-direction: row;
+    align-items: center;
 
-    padding-top: 40px;
-    padding-bottom: 40px;
+    white-space: pre-wrap;
+    align-items: baseline;
 
-    span {
+    width: 58%;
+    padding-bottom: 20px;
+}
+
+.expression-element {
+    font-weight: 200;
+    font-family: 'JetBrains Mono';
+    font-size: 1.2vw;
+    color: gray;
+    white-space: pre;
+
+    &.highlighted {
+        color: white;
         font-weight: 300;
-        font-family: 'JetBrains Mono';
-        font-size: 1.8vw;
-        color: gray;
-        white-space: pre; // Maintain whitespace
-
-        &.highlighted {
-            color: white;
-        }
-
-        &.comment {
-            color: rgb(53, 53, 53);
-        }
+    }
+    &.comment {
+        color: rgb(53, 53, 53);
     }
 }

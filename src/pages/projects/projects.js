@@ -3,13 +3,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/navbar.js'
 import PageCover from '../../components/page-cover.js';
+import Page from '../page.js';
 import FeaturedProject from './featured-project.js'
 import useStateRef from '../../util/use-state-ref.js';
 import './projects.scss';
 import '../shared.scss';
 import { addClassName, removeClassName } from '../../util/util.js';
 
-import { ArrayExpression } from '../../components/expression.js';
+import { ContainerExpression } from '../../components/expression.js';
 
 function ProjectEntry(props) {
     const { project, span } = props;
@@ -89,9 +90,9 @@ export default function Projects(props) {
     };
 
     const projects = [
-        project,
-        project,
-        project
+        // project,
+        // project,
+        // project
     ];
 
     return (
@@ -100,12 +101,10 @@ export default function Projects(props) {
                 <Navbar></Navbar>
             </header>
 
-            <PageCover title={'Projects'}
+            <Page title={'Projects'}
                 description={'a showcase of some of my best work'}
-                coverImageUrl={'images/render.png'}></PageCover>
-
-            <div className='projects-page-content'>
-                <ArrayExpression name={'featured_projects'} content={projects.length} shouldEmphasizeName={true}>
+                coverImageUrl={'images/render.png'}>
+                <ContainerExpression name={'featured_projects'} type={'array'} content={projects.length} shouldEmphasizeName={true}>
                     <div className='featured-projects'>
                         {
                             projects.map((project, index) => (
@@ -116,7 +115,24 @@ export default function Projects(props) {
                             ))
                         }
                     </div>
-                </ArrayExpression>
+                </ContainerExpression>
+            </Page>
+
+            {/* <PageCover ></PageCover>
+
+            <div className='projects-page-content'>
+                <ContainerExpression name={'featured_projects'} type={'array'} content={projects.length} shouldEmphasizeName={true}>
+                    <div className='featured-projects'>
+                        {
+                            projects.map((project, index) => (
+                                <FeaturedProject project={project}
+                                    index={index}
+                                    justification={index % 2 == 0 ? 'right' : 'left'}
+                                    key={index}></FeaturedProject>
+                            ))
+                        }
+                    </div>
+                </ContainerExpression>
 
                 {/* <ArrayExpression name={'other_projects'} type={'list'} content={projects.length}>
                     <div className='projects-grid'>
@@ -127,7 +143,6 @@ export default function Projects(props) {
                     </div>
                 </ArrayExpression> */}
 
-            </div>
         </React.Fragment>
     )
 }

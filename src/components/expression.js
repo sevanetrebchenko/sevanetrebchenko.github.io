@@ -1,33 +1,82 @@
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+import AnimateHeight from 'react-animate-height';
 import './expression.scss'
 
-// .variable_name = string('content');
-function StringExpression(props) {
-    const { name, content, shouldEmphasizeName = false, shouldEmphasizeContent = false } = props;
+// Primitive format:
+// .name = type(content)
+function PrimitiveExpression(props) {
+    const { name, type, content, shouldEmphasizeName = false, shouldEmphasizeContent = false } = props;
     let elements = [];
+    let separator = ''
 
-    // Build header expression string: .variable_name = array[count] {
-    if (shouldEmphasizeName) {
-        elements.push(<span>{'.'}</span>);
-        elements.push(<span className='highlighted'>{name}</span>);
+    // strings are considered primitive, with the added '' separator
+    if (type == 'string') {
+        separator = '\'';
+    }
 
+    let contentSplit = content.split(/(\s)/);
+    let contentElements = contentSplit.map((element, index) => {
         if (shouldEmphasizeContent) {
-            elements.push(<span>{` = string(\'`}</span>);
-            elements.push(<span className='highlighted'>{content}</span>);
-            elements.push(<span>{`\');`}</span>);
+            if (index == contentSplit.length - 1) {
+                return (
+                    <div>
+                        <span className='expression-element highlighted' key={index}>{element}</span>
+                        <span className='expression-element'>{`${separator})`}</span>
+                        <span className='expression-element comment'>{';'}</span>
+                    </div>
+                );
+            }
+            else {
+                return <span className='expression-element highlighted' key={index}>{element}</span>
+            }
         }
         else {
-            elements.push(<span>{` = string(\'${content}\');`}</span>);
+            if (index == contentSplit.length - 1) {
+                return (
+                    <div>
+                        <span className='expression-element' key={index}>{element}</span>
+                        <span className='expression-element'>{`${separator})`}</span>
+                        <span className='expression-element comment'>{';'}</span>
+                    </div>
+                );
+            }
+            else {
+                return <span className='expression-element' key={index}>{element}</span>
+            }
         }
+    });
+
+    if (shouldEmphasizeName) {
+        elements.push(
+            <span className='expression-element'>{'.'}</span>,
+            <span className='expression-element highlighted'>{name}</span>,
+            <span className='expression-element'>{` = ${type}(${separator}`}</span>
+        );
+
+        elements.push(
+            contentElements.map((element, index) => (
+                <Fragment key={index}>{element}</Fragment>
+            ))
+        );
     }
     else if (shouldEmphasizeContent) {
-        elements.push(<span>{`.${name} = string(\'`}</span>);
-        elements.push(<span className='highlighted'>{content}</span>);
-        elements.push(<span>{`\');`}</span>);
+        elements.push(<span className='expression-element'>{`.${name} = ${type}(${separator}`}</span>);
+
+        elements.push(
+            contentElements.map((element, index) => (
+                <Fragment key={index}>{element}</Fragment>
+            ))
+        );
     }
     else {
-        elements.push(<span>{`.${name} = string(\'${content}\');`}</span>);
+        elements.push(<span className='expression-element'>{`.${name} = ${type}(${separator}`}</span>);
+
+        elements.push(
+            contentElements.map((element, index) => (
+                <Fragment key={index}>{element}</Fragment>
+            ))
+        );
     }
 
     return (
@@ -41,36 +90,28 @@ function StringExpression(props) {
     );
 }
 
-// TODO: format name based on external style guide / configuration file.
-function ArrayExpressionHeader(props) {
-    const { name, content, shouldEmphasizeName = false, shouldEmphasizeContent = false } = props;
+// .name = { ...children }
+function ObjectExpression(props) {
+    const { name, shouldEmphasizeName = false, children } = props;
     let elements = [];
 
-    // Build header expression string: .variable_name = array[count] {
     if (shouldEmphasizeName) {
-        elements.push(<span>{'.'}</span>);
-        elements.push(<span className='highlighted'>{name}</span>);
-
-        if (shouldEmphasizeContent) {
-            elements.push(<span>{` = array[`}</span>);
-            elements.push(<span className='highlighted'>{content}</span>);
-            elements.push(<span>{`] {`}</span>);
-        }
-        else {
-            elements.push(<span>{` = array[${content}] {`}</span>);
-        }
-    }
-    else if (shouldEmphasizeContent) {
-        elements.push(<span>{`.${name} = array[`}</span>);
-        elements.push(<span className='highlighted'>{content}</span>);
-        elements.push(<span>{`]`}</span>);
+        elements.push(
+            <span className='expression-element'>{'.'}</span>,
+            <span className='expression-element highlighted'>{name}</span>,
+            <span className='expression-element'>{` = { `}</span>
+        );
     }
     else {
-        elements.push(<span>{`.${name} = array[${content}]`}</span>);
+        elements.push(<span className='expression-element'>{`.${name} = { `}</span>);
     }
 
+    elements.push([children]);
+    elements.push(<span className='expression-element'>{' }'}</span>);
+    elements.push(<span className='expression-element comment'>{';'}</span>);
+
     return (
-        <div className='expression'>
+        <div className='expression' data-aos='fade-left' data-aos-duration='400' data-aos-easing='ease-in-out'>
             {
                 elements.map((element, index) => (
                     <Fragment key={index}>{element}</Fragment>
@@ -80,40 +121,34 @@ function ArrayExpressionHeader(props) {
     );
 }
 
-// .variable_name = array[count] {
-//    { children... }
-// }; // end of variable name
-function ArrayExpression(props) {
-    const { name, content, shouldEmphasizeName = false, shouldEmphasizeContent = false, children } = props;
-
-    // Build header expression string: .variable_name = array[count] {
+function ContainerExpression(props) {
+    const { name, type, content = null, shouldEmphasizeName = false, children } = props;
     let header = [];
-    if (shouldEmphasizeName) {
-        header.push(<span>{'.'}</span>);
-        header.push(<span className='highlighted'>{name}</span>);
 
-        if (shouldEmphasizeContent) {
-            header.push(<span>{` = array[`}</span>);
-            header.push(<span className='highlighted'>{content}</span>);
-            header.push(<span>{`] {`}</span>);
-        }
-        else {
-            header.push(<span>{` = array[${content}] {`}</span>);
-        }
+    // Different container expressions have different separators.
+    let startSeparator = '(';
+    let endSeparator = ')';
+    if (type == 'array') {
+        startSeparator = '[';
+        endSeparator = ']';
     }
-    else if (shouldEmphasizeContent) {
-        header.push(<span>{`.${name} = array[`}</span>);
-        header.push(<span className='highlighted'>{content}</span>);
-        header.push(<span>{`]`}</span>);
+
+    if (shouldEmphasizeName) {
+        header.push(
+            <span className='expression-element'>{'.'}</span>,
+            <span className='expression-element highlighted'>{name}</span>,
+            <span className='expression-element'>{` = ${type}${startSeparator}${content ? content : ''}${endSeparator} {`}</span>
+        );
     }
     else {
-        header.push(<span>{`.${name} = array[${content}]`}</span>);
+        header.push(<span className='expression-element'>{`.${name} = ${type}${startSeparator}${content ? content : ''}${endSeparator} {`}</span>);
     }
 
-    // Build footer expression string: }; // end of variable name
-    let footer = [];
-    footer.push(<span>{'}'}</span>);
-    footer.push(<span className='comment'>{`; // end of ${name.replace(/_+/g, ' ')}`}</span>);
+    let footer = []
+    footer.push(
+        <span className='expression-element'>{'}'}</span>,
+        <span className='expression-element comment'>{`; // end of ${name.replace(/_+/g, ' ')}`}</span>
+    );
 
     return (
         <Fragment>
@@ -140,12 +175,12 @@ function ArrayExpression(props) {
 function Comment(props) {
     const { content } = props;
     return (
-        <div className='expression'>
+        <div className='expression comment'>
             <span className='comment'>{content}</span>
         </div>
     );
 }
 
 export {
-    StringExpression, ArrayExpression, Comment
+    Comment, PrimitiveExpression, ObjectExpression, ContainerExpression
 };

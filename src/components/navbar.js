@@ -92,7 +92,7 @@ export default function Navbar(props) {
     }, []); // Only run when mounting / unmounting.
 
     return (
-        <div className='navbar'>
+        <section className='navbar'>
             <div className='navbar-mobile'>
                 <i className='fa-solid fa-bars fa-fw navbar-button navbar-dropdown-toggle' ref={dropdownToggleRef} onClick={openDropdown}></i>
                 <React.Fragment>
@@ -118,10 +118,10 @@ export default function Navbar(props) {
                 <NavbarElement destination={'/projects'}>
                     <span className='navbar-element-name'>// projects</span>
                 </NavbarElement>
-                <NavbarElement destination={'/blog'}>
-                    <span className='navbar-element-name'>// blog</span>
+                <NavbarElement destination={'/journal'}>
+                    <span className='navbar-element-name'>// journal</span>
                 </NavbarElement>
             </div>
-        </div>
+        </section>
     );
 }

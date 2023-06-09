@@ -1,5 +1,5 @@
 import React from 'react';
-import { StringExpression } from './expression';
+import { StringExpression, SingleLineExpression, PrimitiveExpression } from './expression';
 import './page-cover.scss';
 
 export default function PageCover(props) {
@@ -12,11 +12,16 @@ export default function PageCover(props) {
         <div className='page-cover' style={style} >
             <div className='page-cover-content'>
                 <div className='page-cover-title-container'>
-                    <code className='first'>{'struct'}</code>
+                    <code className='first'>{'class'}</code>
                     <span className='page-cover-title'>{title}</span>
                     <code className='second'>{'{'}</code>
                 </div>
-                <StringExpression name={'description'} content={'a showcase of some of my best work'} shouldEmphasizeContent={true}></StringExpression>
+                <PrimitiveExpression
+                    name={'description'}
+                    type={'string'}
+                    content={description}
+                    shouldEmphasizeContent={true}>
+                </PrimitiveExpression>
             </div>
             <div className='page-cover-overlay'>
             </div>
