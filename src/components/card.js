@@ -6,13 +6,13 @@ export default function Card(props) {
     const { title, abstract, categories, date } = props;
     return (
         <div className="card">
-            <p className="title">{title}</p>
-            <p className="date">{date}</p>
-            <p className="abstract">{abstract}</p>
+            <span className="title">{title}</span>
+            <span className="date">{date}</span>
+            <span className="abstract">{abstract}</span>
             <div className="categories">
                 {
                     categories.map((category, id) => (
-                        <p key={id}>{category}</p>
+                        <span key={id}>{category}</span>
                     ))
                 }
             </div>

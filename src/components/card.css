@@ -26,16 +26,15 @@
         flex-direction: row;
         column-gap: 20px;
 
-        p {
-            margin: 0;
+        span {
             font-family: "Roboto Mono";
             color: gray;
             transition: 0.15s;
         }
-        p::before {
+        span::before {
             content: "#";
         }
-        p:hover {
+        span:hover {
             cursor: pointer;
             color: moccasin;
         }

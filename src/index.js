@@ -66,18 +66,34 @@ function Posts(props) {
 function Application() {
     const content = loadContent();
     if (!content) {
-        console.log("Loading site content...");
         return null;
     }
-    console.log("done");
+
+    // Generate list of all categories
+    let categories = new Map();
+    for (const post of content.posts) {
+        if (!post.categories) {
+            continue;
+        }
+
+        for (const category of post.categories) {
+            if (!categories.has(category)) {
+                categories.set(category, 0);
+            }
+
+            categories.set(category, categories.get(category) + 1);
+        }
+    }
 
     return (
-        <div className="landing">
-            <div className="main">
-                <Sidebar></Sidebar>
-                <Posts posts={content["blog"]}></Posts>
+        <Router>
+            <div className="landing">
+                <div className="main">
+                    <Sidebar categories={categories}></Sidebar>
+                    <Posts posts={content.posts}></Posts>
+                </div>
             </div>
-        </div>
+        </Router>
     );
 }
 
