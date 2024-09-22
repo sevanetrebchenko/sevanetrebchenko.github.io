@@ -69,17 +69,39 @@ function Categories(props) {
     )
 }
 
+function Archive(props) {
+    const { archive } = props;
+    return (
+        <div className="sidebar-archive">
+            <span>Archive</span>
+            <div className="archive">
+                {
+                    Array.from(archive, ([date, count]) => {
+                        const year = date.getFullYear();
+                        const month = date.toLocaleString('default', { month: 'long' });
+                        const location = 'archives' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
+                        return (
+                            <Link to={location} className='category' key={location}>
+                                <span className='name'>{month}</span>
+                                <span className='count'> ({count})</span>
+                            </Link>
+                        );
+                    })
+                }
+            </div>
+        </div>
+    );
+}
+
 export default function Sidebar(props) {
-    const { categories } = props;
-    if (!categories) {
-        return null;
-    }
+    const { categories, archive } = props;
 
     return (
         <div className="sidebar">
             <div className="sidebar-content">
                 <Masthead></Masthead>
                 <Categories categories={categories}></Categories>
+                <Archive archive={archive}></Archive>
             </div>
             <Footer></Footer>
         </div>

@@ -2,7 +2,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import {BrowserRouter as Router, Routes, Route, useParams} from 'react-router-dom'
 
 // Components
 import Card from "./components/card";
@@ -10,6 +10,11 @@ import Sidebar from "./components/sidebar";
 
 // Stylesheets
 import './index.css'
+
+function parseDate(date) {
+    const [month, day, year] = date.split('-');
+    return new Date(year, month - 1, day); // month is 0-indexed in JavaScript
+}
 
 function loadContent() {
     const [content, setContent] = useState(null);
@@ -40,8 +45,18 @@ function loadContent() {
 
                 return response.json();
             })
-            .then(text => {
-                setContent(text);
+            .then(data => {
+                if (data) {
+                    // Parse post dates into JavaScript Date objects
+                    const parsed = data.posts.map(post => ({
+                        ...post,
+                        date: parseDate(post.date)
+                    }));
+
+                    // Sort by publish date
+                    parsed.sort((a, b) => b.date - a.date)
+                    setContent({ ...data, posts: parsed });
+                }
             });
     }, [filepath]);
 
@@ -49,7 +64,17 @@ function loadContent() {
 }
 
 function Posts(props) {
-    const { posts } = props;
+    let { posts } = props;
+
+    // The 'year' and 'month' params are only valid when the user is redirected from the 'archive' section
+    const { year, month } = useParams();
+    if (year && month) {
+        // Filter posts to only show those that were published in the given year / month
+        posts = posts.filter(post => {
+            return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
+        });
+    }
+
     return (
         <div className="posts-container">
             <div className="posts">
@@ -63,15 +88,9 @@ function Posts(props) {
     )
 }
 
-function Application() {
-    const content = loadContent();
-    if (!content) {
-        return null;
-    }
-
-    // Generate list of all categories
+function getCategories(posts) {
     let categories = new Map();
-    for (const post of content.posts) {
+    for (const post of posts) {
         if (!post.categories) {
             continue;
         }
@@ -85,12 +104,65 @@ function Application() {
         }
     }
 
+    // Sort category names alphabetically
+    return new Map(
+        Array.from(categories.entries()).sort((a, b) => {
+            return a[0].localeCompare(b[0]);
+        })
+    );
+}
+
+function getArchive(posts) {
+    // Generate archive of all post dates
+    let archive = new Map();
+    for (const post of posts) {
+        const date = post.date;
+        if (!date) {
+            // Skip post if no publish date was set
+            continue;
+        }
+
+        if (!archive.has(date)) {
+            archive.set(date, 0);
+        }
+        archive.set(date, archive.get(date) + 1);
+    }
+
+    // Sort posts by date published, most recent first
+    return new Map(Array.from(archive.entries()).sort((a, b) => {
+        return new Date(b[0]) - new Date(a[0]);
+    }));
+}
+
+function Application() {
+    const content = loadContent();
+    if (!content) {
+        return null;
+    }
+
+    const categories = getCategories(content.posts);
+    const archive = getArchive(content.posts);
+
+    const routes = [];
+
+    // Set up routes for main site pages.
+    routes.push(<Route exact path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
+    routes.push(<Route exact path={'/archives/:year/:month'} element={<Posts posts={content.posts}></Posts>}/>);
+
     return (
         <Router>
             <div className="landing">
                 <div className="main">
-                    <Sidebar categories={categories}></Sidebar>
-                    <Posts posts={content.posts}></Posts>
+                    <Sidebar categories={categories} archive={archive}></Sidebar>
+                    <Routes>
+                        {
+                            routes.map((route, index) => (
+                                <React.Fragment key={index}>
+                                    {route}
+                                </React.Fragment>
+                            ))
+                        }
+                    </Routes>
                 </div>
             </div>
         </Router>

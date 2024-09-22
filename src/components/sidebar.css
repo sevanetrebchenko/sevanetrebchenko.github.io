@@ -3,7 +3,7 @@
     .sidebar {
         display: flex;
         flex: 1;
-        min-width: 520px;
+        min-width: 480px;
         flex-direction: column;
         justify-content: right;
         margin: 80px;
@@ -24,6 +24,7 @@
 
         .title {
             margin: 0;
+            font-weight: bold;
             font-size: 32px;
         }
 
@@ -42,7 +43,9 @@
         .categories {
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             column-gap: 20px;
+            row-gap: 10px;
             font-size: 16px;
         }
 
@@ -63,6 +66,16 @@
         }
         .category:hover {
             color: gray;
+        }
+    }
+
+    .sidebar-archive {
+        display: flex;
+        flex-direction: column;
+
+        .archive {
+            display: flex;
+            flex-direction: column;
         }
     }
 

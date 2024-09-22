@@ -16,9 +16,10 @@
             "abstract": "This is a sample post for my website",
             "categories": [
                 "vulkan",
-                "programming"
+                "programming",
+                "cpp"
             ],
-            "date": "10-10-2020",
+            "date": "9-11-2020",
             "revised": "",
             "filepath": "blog/README.md"
         }
