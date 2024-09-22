@@ -4,8 +4,15 @@ import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
+// Components
+import Card from "./components/card";
+import Sidebar from "./components/sidebar";
+
+// Stylesheets
+import './index.css'
+
 function loadContent() {
-    const [content, setContent] = useState('');
+    const [content, setContent] = useState(null);
     const filepath = 'content.json';
 
     // Load blog configuration.
@@ -25,8 +32,7 @@ function loadContent() {
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
-                        // TODO: 404 page.
-                        return "File not found.";
+                        return null;
                     }
 
                     throw new Error('fetch() response was not ok');
@@ -37,20 +43,44 @@ function loadContent() {
             .then(text => {
                 setContent(text);
             });
-    }, []);
+    }, [filepath]);
 
     return content;
 }
 
-import Page from "./components/page";
-
-import './index.css'
-
-function Application() {
+function Posts(props) {
+    const { posts } = props;
     return (
-        <Page></Page>
+        <div className="posts-container">
+            <div className="posts">
+                {
+                    posts.map((post, id) => (
+                        <Card key={id} title={post.title} abstract={post.abstract} date={post.date} categories={post.categories} />
+                    ))
+                }
+            </div>
+        </div>
     )
 }
+
+function Application() {
+    const content = loadContent();
+    if (!content) {
+        console.log("Loading site content...");
+        return null;
+    }
+    console.log("done");
+
+    return (
+        <div className="landing">
+            <div className="main">
+                <Sidebar></Sidebar>
+                <Posts posts={content["blog"]}></Posts>
+            </div>
+        </div>
+    );
+}
+
 
 //
 //

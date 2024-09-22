@@ -60,20 +60,8 @@ module.exports = (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         // use index.html in the public directory as the base template for the generated html page
-        template: path.join(__dirname, 'config', 'index.html')
-      }),
-      new CopyWebpackPlugin({
-        patterns: [
-          {
-            from: './config/content.json',
-            to: './content.json'
-          },
-          {
-            from: './public',
-            to: './public'
-          }
-        ],
-      }),
+        template: path.join(__dirname, 'public', 'index.html')
+      })
     ]
   }
 };

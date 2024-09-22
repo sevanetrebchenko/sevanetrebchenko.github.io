@@ -3,7 +3,7 @@
     .sidebar {
         display: flex;
         flex: 1;
-        min-width: 500px;
+        min-width: 600px;
         flex-direction: row;
         justify-content: right;
     }
@@ -13,7 +13,7 @@
         flex: 1;
         flex-direction: column;
         row-gap: 30px;
-        padding: 50px;
+        padding: 80px;
     }
 
     .sidebar-masthead {

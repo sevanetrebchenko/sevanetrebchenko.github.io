@@ -21,8 +21,13 @@ function Masthead() {
 function Link(props) {
     const { icon, url, children } = props;
 
+    let onClick = (e) => {
+        e.preventDefault();
+        window.location.href = url;
+    }
+
     return (
-        <div className="link" onClick={(e) => { e.preventDefault(); redirect(url); }}>
+        <div className="link" onClick={onClick}>
             <i className={icon}></i>
             <p>{ children }</p>
         </div>
@@ -37,6 +42,14 @@ function Social() {
             <Link icon="fab fa-youtube" url="https://www.youtube.com/@sevanetrebchenko">YouTube</Link>
         </div>
     );
+}
+
+function Categories() {
+
+}
+
+function Footer() {
+
 }
 
 export default function Sidebar() {
