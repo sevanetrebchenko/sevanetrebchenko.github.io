@@ -1,0 +1,68 @@
+
+@media only screen and (min-width: 640px) {
+    .sidebar {
+        display: flex;
+        flex: 1;
+        min-width: 500px;
+        flex-direction: row;
+        justify-content: right;
+    }
+
+    .sidebar-container {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        row-gap: 30px;
+        padding: 50px;
+    }
+
+    .sidebar-masthead {
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+        font-family: "JetBrains Mono";
+
+        .title {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .description {
+            margin: 0;
+        }
+    }
+
+    .sidebar-social {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        row-gap: 10px;
+
+        .link {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            column-gap: 10px;
+            padding: 5px;
+            transition: 0.15s;
+
+            i {
+                font-size: 25px;
+                width: 25px;
+                height: 25px;
+                text-align: center;
+            }
+
+            p {
+                font-family: "JetBrains Mono";
+                margin: 0;
+            }
+        }
+        .link:hover {
+            cursor: pointer;
+            color: #9c9c9c;
+        }
+
+    }
+
+}

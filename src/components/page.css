@@ -1,0 +1,41 @@
+
+@media only screen and (min-width: 640px) {
+    .page {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .page::before {
+        display: flex;
+        flex: 1;
+
+        content: "";
+        background-color: white;
+    }
+
+    .page::after {
+        display: flex;
+        flex: 1;
+
+        content: "";
+        background-color: #eeeeee;
+    }
+
+    .page-container {
+        display: flex;
+        flex-direction: row;
+        width: 1280px;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: row;
+
+        width: 100%;
+        min-width: 800px;
+        background-color: #eeeeee;
+    }
+
+
+}
