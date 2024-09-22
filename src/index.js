@@ -64,15 +64,9 @@ function loadContent() {
 }
 
 function Posts(props) {
-    let { posts } = props;
-
-    // The 'year' and 'month' params are only valid when the user is redirected from the 'archive' section
-    const { year, month } = useParams();
-    if (year && month) {
-        // Filter posts to only show those that were published in the given year / month
-        posts = posts.filter(post => {
-            return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
-        });
+    let { posts, filter } = props;
+    if (filter) {
+        posts = posts.filter(filter);
     }
 
     return (
@@ -145,9 +139,30 @@ function Application() {
 
     const routes = [];
 
-    // Set up routes for main site pages.
+    // Set up routes for main site pages
     routes.push(<Route exact path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
-    routes.push(<Route exact path={'/archives/:year/:month'} element={<Posts posts={content.posts}></Posts>}/>);
+
+    // Tags
+    routes.push(
+        <Route exact path={'/tag/:tag'} element={
+            <Posts posts={content.posts} filter={(post) => {
+                // Filter posts to only show those that were published in the specified year / month
+                const { tag } = useParams();
+                return post.categories.includes(tag);
+            }}/>}>
+        </Route>
+    );
+
+    // Archive
+    routes.push(
+        <Route exact path={'/archive/:year/:month'} element={
+            <Posts posts={content.posts} filter={(post) => {
+                // Filter posts to only show those that were published in the specified year / month
+                const { year, month } = useParams();
+                return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
+            }}/>}>
+        </Route>
+    );
 
     return (
         <Router>

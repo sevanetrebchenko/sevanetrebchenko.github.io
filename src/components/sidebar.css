@@ -21,6 +21,8 @@
         flex-direction: column;
         row-gap: 10px;
         font-family: "JetBrains Mono";
+        color: black;
+        text-decoration: none;
 
         .title {
             margin: 0;

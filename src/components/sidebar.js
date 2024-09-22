@@ -7,14 +7,14 @@ import "./sidebar.css"
 
 function Masthead() {
     return (
-        <div className="sidebar-masthead">
+        <Link to={'/'} className="sidebar-masthead">
             <span className="title">
                 Seva Netrebchenko
             </span>
             <span className="description">
                 Software engineer and graphics enthusiast
             </span>
-        </div>
+        </Link>
     )
 }
 
@@ -55,7 +55,7 @@ function Categories(props) {
             <div className="categories">
                 {
                     Array.from(categories, ([name, count]) => {
-                        const location = 'category' + '/' + name.replace(' ', '-').toLowerCase();
+                        const location = 'tag' + '/' + name.replace(' ', '-').toLowerCase();
                         return (
                             <Link to={location} className='category' key={name}>
                                 <span className='name'>{name}</span>
@@ -79,7 +79,7 @@ function Archive(props) {
                     Array.from(archive, ([date, count]) => {
                         const year = date.getFullYear();
                         const month = date.toLocaleString('default', { month: 'long' });
-                        const location = 'archives' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
+                        const location = 'archive' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
                         return (
                             <Link to={location} className='category' key={location}>
                                 <span className='name'>{month}</span>
