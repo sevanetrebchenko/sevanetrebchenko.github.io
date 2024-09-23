@@ -26,15 +26,15 @@ function Social() {
         <div className="social">
             <i className="fab fa-github fa-fw" onClick={(e) => {
                 e.preventDefault();
-                navigateTo('https://github.com/sevanetrebchenko/');
+                window.location.href = 'https://github.com/sevanetrebchenko/';
             }}/>
             <i className="fab fa-linkedin fa-fw" onClick={(e) => {
                 e.preventDefault();
-                navigateTo('https://www.linkedin.com/in/sevanetrebchenko/');
+                window.location.href = 'https://www.linkedin.com/in/sevanetrebchenko/';
             }}/>
             <i className="fab fa-youtube fa-fw" onClick={(e) => {
                 e.preventDefault();
-                navigateTo('https://www.youtube.com/@sevanetrebchenko');
+                window.location.href = 'https://www.youtube.com/@sevanetrebchenko';
             }}/>
         </div>
     );
