@@ -89,14 +89,23 @@ function Posts(props) {
     const tags = queryParams.get("tags") || "";
 
     // Filter posts based on the search query
-    filtered = filtered.filter(post =>
-        // Filter by search query
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.abstract.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    filtered = filtered.filter(post => {
+        // Filter by query params
+        if (searchQuery) {
+            if (!post.title.toLowerCase().includes(searchQuery.toLowerCase()) && !post.abstract.toLowerCase().includes(searchQuery.toLowerCase())) {
+                return false;
+            }
+        }
 
         // Filter by post categories
-        tags.split(",").some(tag => post.categories.includes(tag))
-    );
+        if (tags.length > 0) {
+            if (!tags.split(",").some(tag => post.categories.includes(tag))) {
+                return false;
+            }
+        }
+
+        return true;
+    });
 
     return (
         <div className="posts-container">

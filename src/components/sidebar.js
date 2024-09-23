@@ -1,4 +1,3 @@
-
 import React, {useEffect, useState} from "react";
 import {Link, useLocation, useNavigate} from 'react-router-dom'
 
@@ -20,8 +19,6 @@ function Masthead() {
 }
 
 function Social() {
-    const navigateTo = useNavigate();
-
     return (
         <div className="social">
             <i className="fab fa-github fa-fw" onClick={(e) => {
@@ -50,23 +47,35 @@ function Footer() {
 }
 
 function Categories(props) {
-    const { categories } = props;
+    const {categories} = props;
+
+    const [unselectedTags, setUnselectedTags] = useState(Array.from(categories.keys()));
     const [selectedTags, setSelectedTags] = useState([]);
     const navigateTo = useNavigate();
     const location = useLocation();
 
     const handleClick = (tag) => (e) => {
         e.preventDefault();
-        if (selectedTags.includes(tag)) {
-            // Deselect tag (remove it from the selected tags list)
-            setSelectedTags(selectedTags.filter(selected => selected !== tag));
-        }
-        else {
-            // Sort selected tags alphabetically in query params
-            let tags = [...selectedTags, tag].sort((a, b) => {
+
+        let selected = selectedTags;
+        let unselected = unselectedTags;
+
+        if (selected.includes(tag)) {
+            // Remove tag from selected
+            setSelectedTags(selected.filter(t => t !== tag));
+
+            // Add tag to unselected
+            setUnselectedTags([...unselected, tag].sort((a, b) => {
                 return a.localeCompare(b);
-            });
-            setSelectedTags(tags);
+            }));
+        } else {
+            // Remove tag from unselected
+            setUnselectedTags(unselected.filter(t => t !== tag));
+
+            // Add tag to selected
+            setSelectedTags([...selected, tag].sort((a, b) => {
+                return a.localeCompare(b);
+            }));
         }
     }
 
@@ -85,16 +94,29 @@ function Categories(props) {
     return (
         <div className="sidebar-categories">
             <span>Tags</span>
+            <div className="selected-categories">
+                {
+                    Array.from(categories)
+                        .filter(([tag, _]) => selectedTags.includes(tag))
+                        .map(([tag, count]) => (
+                            <div className={"category selected"} key={tag} onClick={handleClick(tag)}>
+                                <span className='name'>{tag}</span>
+                                <span className='count'>{count}</span>
+                                <i className="fa-solid fa-xmark fa-fw"></i>
+                            </div>
+                        ))
+                }
+            </div>
             <div className="categories">
                 {
-                    Array.from(categories, ([tag, count]) => {
-                        return (
+                    Array.from(categories)
+                        .filter(([tag, _]) => unselectedTags.includes(tag))
+                        .map(([tag, count]) => (
                             <div className={"category"} key={tag} onClick={handleClick(tag)}>
                                 <span className='name'>{tag}</span>
                                 <span className='count'>{count}</span>
                             </div>
-                        );
-                    })
+                        ))
                 }
             </div>
         </div>
@@ -102,7 +124,7 @@ function Categories(props) {
 }
 
 function Archive(props) {
-    const { archive } = props;
+    const {archive} = props;
     return (
         <div className="sidebar-archive">
             <span>Archive</span>
@@ -110,7 +132,7 @@ function Archive(props) {
                 {
                     Array.from(archive, ([date, count]) => {
                         const year = date.getFullYear();
-                        const month = date.toLocaleString('default', { month: 'long' });
+                        const month = date.toLocaleString('default', {month: 'long'});
                         const location = 'archive' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
                         return (
                             <Link to={location} key={location}>
@@ -126,7 +148,7 @@ function Archive(props) {
 }
 
 export default function Sidebar(props) {
-    const { categories, archive } = props;
+    const {categories, archive} = props;
 
     return (
         <div className="sidebar">

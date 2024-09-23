@@ -43,22 +43,25 @@
         font-family: "Roboto Mono";
         font-size: 24px;
 
+        .selected-categories,
         .categories {
             display: flex;
             flex-direction: row;
             flex-wrap: wrap;
-            column-gap: 20px;
+            column-gap: 15px;
             row-gap: 10px;
             font-size: 16px;
         }
 
         .category {
             display: flex;
+            align-items: center;
             text-decoration: none;
             color: black;
             flex-direction: row;
-            column-gap: 10px;
+            column-gap: 5px;
             transition: 0.2s;
+            padding: 5px;
 
             .count::before {
                 content: "(";
@@ -67,8 +70,25 @@
                 content: ")";
             }
         }
+        .category.selected {
+            color: orange;
+
+            i {
+                color: gray;
+                margin: 0;
+                transition: 0.15s;
+            }
+            i:hover {
+                color: red;
+                cursor: pointer;
+            }
+        }
         .category:hover {
+            cursor: pointer;
             color: gray;
+        }
+        .category.selected:hover {
+            cursor: pointer;
         }
     }
 
