@@ -51,6 +51,7 @@ function loadContent() {
                     // Parse post dates into JavaScript Date objects
                     const parsed = data.posts.map(post => ({
                         ...post,
+                        categories: post.categories.map(category => ( category.toLowerCase() )),
                         date: parseDate(post.date)
                     }));
 
