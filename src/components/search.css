@@ -1,0 +1,54 @@
+@media(min-width: 0px) {
+
+    .search {
+        display: flex;
+        flex-direction: row;
+        flex-grow: 1;
+        border: gainsboro solid 1px;
+        border-radius: 15px;
+
+        margin-bottom: 60px;
+
+        i {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: transparent;
+            border: none;
+            color: black;
+
+            padding: 25px;
+            transition: 0.15s;
+
+            font-size: 20px;
+        }
+        .search-button {
+            color: gainsboro;
+        }
+        .clear-button:hover {
+            cursor: pointer;
+            color: gray;
+        }
+
+        .search-bar {
+            display: flex;
+            flex-direction: row;
+            flex: 1;
+            background: none;
+            padding: 20px;
+            font-size: 16px;
+            border: none;
+            font-family: "JetBrains Mono";
+        }
+        .search-bar:focus {
+            outline: none;
+        }
+        input:hover {
+            content: "";
+        }
+
+
+    }
+
+}

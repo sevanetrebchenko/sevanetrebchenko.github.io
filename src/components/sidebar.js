@@ -21,15 +21,15 @@ function Masthead() {
 function Social() {
     return (
         <div className="social">
-            <i className="fab fa-github" onClick={(e) => {
+            <i className="fab fa-github fa-fw" onClick={(e) => {
                 e.preventDefault();
                 window.location.href = 'https://github.com/sevanetrebchenko/';
             }}/>
-            <i className="fab fa-linkedin" onClick={(e) => {
+            <i className="fab fa-linkedin fa-fw" onClick={(e) => {
                 e.preventDefault();
                 window.location.href = 'https://www.linkedin.com/in/sevanetrebchenko/';
             }}/>
-            <i className="fab fa-youtube" onClick={(e) => {
+            <i className="fab fa-youtube fa-fw" onClick={(e) => {
                 e.preventDefault();
                 window.location.href = 'https://www.youtube.com/@sevanetrebchenko';
             }}/>

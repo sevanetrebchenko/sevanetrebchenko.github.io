@@ -2,11 +2,12 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import {BrowserRouter as Router, Routes, Route, useParams} from 'react-router-dom'
+import {BrowserRouter as Router, Routes, Route, useParams, useLocation} from 'react-router-dom'
 
 // Components
 import Card from "./components/card";
 import Sidebar from "./components/sidebar";
+import Search from "./components/search";
 
 // Stylesheets
 import './index.css'
@@ -65,15 +66,36 @@ function loadContent() {
 
 function Posts(props) {
     let { posts, filter } = props;
-    if (filter) {
-        posts = posts.filter(filter);
+    const { tag, year, month } = useParams();
+
+    let filtered = posts;
+    if (filter === 'tag' && tag) {
+        filtered = posts.filter(post => post.categories.includes(tag));
     }
+    else if (filter === 'archive' && year && month) {
+        // Filter posts to only show those that were published in the specified year / month
+        filtered = filtered.filter(post => {
+            return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
+        })
+    }
+
+    // Get the search query from the URL
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const searchQuery = queryParams.get('q') || '';
+
+    // Filter posts based on the search query
+    filtered = filtered.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.abstract.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="posts-container">
+            <Search></Search>
             <div className="posts">
                 {
-                    posts.map((post, id) => (
+                    filtered.map((post, id) => (
                         <Card key={id} title={post.title} abstract={post.abstract} date={post.date} categories={post.categories} />
                     ))
                 }
@@ -143,26 +165,10 @@ function Application() {
     routes.push(<Route exact path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
 
     // Tags
-    routes.push(
-        <Route exact path={'/tag/:tag'} element={
-            <Posts posts={content.posts} filter={(post) => {
-                // Filter posts to only show those that were published in the specified year / month
-                const { tag } = useParams();
-                return post.categories.includes(tag);
-            }}/>}>
-        </Route>
-    );
+    routes.push(<Route exact path={'/tag/:tag'} element={<Posts posts={content.posts} filter='tag' />}></Route>);
 
     // Archive
-    routes.push(
-        <Route exact path={'/archive/:year/:month'} element={
-            <Posts posts={content.posts} filter={(post) => {
-                // Filter posts to only show those that were published in the specified year / month
-                const { year, month } = useParams();
-                return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
-            }}/>}>
-        </Route>
-    );
+    routes.push(<Route exact path={'/tag/:tag'} element={<Posts posts={content.posts} filter='archive' />}></Route>);
 
     return (
         <Router>

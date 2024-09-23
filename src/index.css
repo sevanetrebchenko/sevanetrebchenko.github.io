@@ -34,14 +34,15 @@ body {
 
     .posts-container {
         padding: 80px;
-        width: 100%;
         background-color: #eeeeee;
     }
 
     .posts {
         display: flex;
+        flex: 1;
         flex-direction: column;
         row-gap: 80px;
-        width: 1080px;
+        min-width: 1080px;
+        max-width: 1080px;
     }
 }
