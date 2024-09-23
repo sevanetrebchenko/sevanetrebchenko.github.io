@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, {useState} from "react";
 import { Link } from 'react-router-dom'
 
 // Stylesheets
@@ -81,9 +81,9 @@ function Archive(props) {
                         const month = date.toLocaleString('default', { month: 'long' });
                         const location = 'archive' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
                         return (
-                            <Link to={location} className='category' key={location}>
-                                <span className='name'>{month}</span>
-                                <span className='count'> ({count})</span>
+                            <Link to={location} key={location}>
+                                <span className='name'>{month + ' ' + year}</span>
+                                <span className='count'>{count}</span>
                             </Link>
                         );
                     })

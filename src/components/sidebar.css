@@ -32,6 +32,7 @@
 
         .description {
             margin: 0;
+            width: 100%;
         }
     }
 
@@ -74,10 +75,34 @@
     .sidebar-archive {
         display: flex;
         flex-direction: column;
+        font-family: "JetBrains Mono";
+        font-size: 24px;
+        row-gap: 10px;
 
         .archive {
             display: flex;
             flex-direction: column;
+            font-size: 16px;
+            row-gap: 5px;
+
+            a {
+                display: flex;
+                flex-direction: row;
+                column-gap: 10px;
+                transition: 0.2s;
+                text-decoration: none;
+                color: black;
+
+                .count::before {
+                    content: "(";
+                }
+                .count::after {
+                    content: ")";
+                }
+            }
+            a:hover {
+                color: gray;
+            }
         }
     }
 
