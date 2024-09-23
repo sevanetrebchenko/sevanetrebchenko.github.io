@@ -1,9 +1,10 @@
 
-import React, {useState} from "react";
-import { Link } from 'react-router-dom'
+import React, {useEffect, useState} from "react";
+import {Link, useLocation, useNavigate} from 'react-router-dom'
 
 // Stylesheets
 import "./sidebar.css"
+import {sort} from "css-loader/dist/utils";
 
 function Masthead() {
     return (
@@ -19,19 +20,21 @@ function Masthead() {
 }
 
 function Social() {
+    const navigateTo = useNavigate();
+
     return (
         <div className="social">
             <i className="fab fa-github fa-fw" onClick={(e) => {
                 e.preventDefault();
-                window.location.href = 'https://github.com/sevanetrebchenko/';
+                navigateTo('https://github.com/sevanetrebchenko/');
             }}/>
             <i className="fab fa-linkedin fa-fw" onClick={(e) => {
                 e.preventDefault();
-                window.location.href = 'https://www.linkedin.com/in/sevanetrebchenko/';
+                navigateTo('https://www.linkedin.com/in/sevanetrebchenko/');
             }}/>
             <i className="fab fa-youtube fa-fw" onClick={(e) => {
                 e.preventDefault();
-                window.location.href = 'https://www.youtube.com/@sevanetrebchenko';
+                navigateTo('https://www.youtube.com/@sevanetrebchenko');
             }}/>
         </div>
     );
@@ -47,20 +50,49 @@ function Footer() {
 }
 
 function Categories(props) {
-    const {categories} = props;
+    const { categories } = props;
+    const [selectedTags, setSelectedTags] = useState([]);
+    const navigateTo = useNavigate();
+    const location = useLocation();
+
+    const handleClick = (tag) => (e) => {
+        e.preventDefault();
+        if (selectedTags.includes(tag)) {
+            // Deselect tag (remove it from the selected tags list)
+            setSelectedTags(selectedTags.filter(selected => selected !== tag));
+        }
+        else {
+            // Sort selected tags alphabetically in query params
+            let tags = [...selectedTags, tag].sort((a, b) => {
+                return a.localeCompare(b);
+            });
+            setSelectedTags(tags);
+        }
+    }
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        if (selectedTags.length > 0) {
+            // Set the tags parameter
+            queryParams.set('tags', selectedTags.join(','));
+        } else {
+            // Clear only the tags parameter
+            queryParams.delete('tags');
+        }
+        navigateTo(`${location.pathname}?${queryParams.toString()}`);
+    }, [selectedTags]);
 
     return (
         <div className="sidebar-categories">
-            <span>Categories</span>
+            <span>Tags</span>
             <div className="categories">
                 {
-                    Array.from(categories, ([name, count]) => {
-                        const location = 'tag' + '/' + name.replace(' ', '-').toLowerCase();
+                    Array.from(categories, ([tag, count]) => {
                         return (
-                            <Link to={location} className='category' key={name}>
-                                <span className='name'>{name}</span>
+                            <div className={"category"} key={tag} onClick={handleClick(tag)}>
+                                <span className='name'>{tag}</span>
                                 <span className='count'>{count}</span>
-                            </Link>
+                            </div>
                         );
                     })
                 }

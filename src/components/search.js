@@ -7,7 +7,7 @@ import {useNavigate, useLocation} from "react-router-dom";
 
 export default function Search(props) {
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigateTo = useNavigate();
     const [query, setQuery] = useState('');
 
     // Initialize the query state based on the URL when the component mounts
@@ -22,23 +22,31 @@ export default function Search(props) {
         const query = e.target.value;
         setQuery(query);
 
+        const queryParams = new URLSearchParams(location.search);
+
         if (query) {
-            navigate(`?q=${query}`);
+            queryParams.set("q", query);
         }
         else {
-            // Remove the query string from the URL, but maintain the location of the page
-            navigate(location.pathname);
+            // Remove only the query string from the URL
+            queryParams.delete("q");
         }
+
+        navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }
 
     const onClear = function (e) {
         e.preventDefault();
         setQuery('');
-        navigate('/');
+
+        const queryParams = new URLSearchParams(location.search);
+        // Remove only the query string from the URL
+        queryParams.delete("q");
+        navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }
 
     // Configure visible buttons
-    let button = null;
+    let button;
     if (query) {
         // Display 'clear' button when the search field has input
         button = <i className='fa-solid fa-xmark fa-fw clear-button' onClick={onClear}/>;

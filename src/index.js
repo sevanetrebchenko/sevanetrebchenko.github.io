@@ -2,7 +2,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import {BrowserRouter as Router, Routes, Route, useParams, useLocation} from 'react-router-dom'
+import {BrowserRouter as Router, Routes, Route, useParams, useLocation, Navigate} from 'react-router-dom'
 
 // Components
 import Card from "./components/card";
@@ -65,29 +65,37 @@ function loadContent() {
 }
 
 function Posts(props) {
-    let { posts, filter } = props;
-    const { tag, year, month } = useParams();
+    let { posts } = props;
+    const { year, month } = useParams();
 
     let filtered = posts;
-    if (filter === 'tag' && tag) {
-        filtered = posts.filter(post => post.categories.includes(tag));
-    }
-    else if (filter === 'archive' && year && month) {
-        // Filter posts to only show those that were published in the specified year / month
+    if (year) {
         filtered = filtered.filter(post => {
-            return post.date.getFullYear() === Number(year) && post.date.getMonth() === Number(month - 1);
-        })
+            return post.date.getFullYear() === Number(year);
+        });
+
+        if (month) {
+            filtered = filtered.filter(post => {
+                return post.date.getMonth() === Number(month - 1);
+            });
+        }
     }
 
     // Get the search query from the URL
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
-    const searchQuery = queryParams.get('q') || '';
+
+    const searchQuery = queryParams.get("q") || "";
+    const tags = queryParams.get("tags") || "";
 
     // Filter posts based on the search query
     filtered = filtered.filter(post =>
+        // Filter by search query
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.abstract.toLowerCase().includes(searchQuery.toLowerCase())
+        post.abstract.toLowerCase().includes(searchQuery.toLowerCase()) ||
+
+        // Filter by post categories
+        tags.split(",").some(tag => post.categories.includes(tag))
     );
 
     return (
@@ -162,13 +170,11 @@ function Application() {
     const routes = [];
 
     // Set up routes for main site pages
-    routes.push(<Route exact path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
-
-    // Tags
-    routes.push(<Route exact path={'/tag/:tag'} element={<Posts posts={content.posts} filter='tag' />}></Route>);
+    routes.push(<Route path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
 
     // Archive
-    routes.push(<Route exact path={'/tag/:tag'} element={<Posts posts={content.posts} filter='archive' />}></Route>);
+    routes.push(<Route path={'/archive/:year'} element={<Posts posts={content.posts} />}></Route>);
+    routes.push(<Route path={'/archive/:year/:month'} element={<Posts posts={content.posts} />}></Route>);
 
     return (
         <Router>
