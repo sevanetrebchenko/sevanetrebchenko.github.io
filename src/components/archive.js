@@ -10,7 +10,7 @@ export default function Archive(props) {
 
     return (
         <div className="archive">
-            <span className='archive-title'>Archive</span>
+            <span className='archive-header'>Archive</span>
             <div className="archive-elements">
                 {
                     Array.from(archive, ([date, count]) => {

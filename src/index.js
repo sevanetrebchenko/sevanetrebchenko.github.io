@@ -174,7 +174,7 @@ function Application() {
         return null;
     }
 
-    const categories = getCategories(content.posts);
+    const tags = getCategories(content.posts);
     const archive = getArchive(content.posts);
 
     const routes = [];
@@ -190,7 +190,7 @@ function Application() {
         <Router>
             <div className="landing">
                 <div className="main">
-                    <Sidebar categories={categories} archive={archive}></Sidebar>
+                    <Sidebar tags={tags} archive={archive}></Sidebar>
                     <Routes>
                         {
                             routes.map((route, index) => (
