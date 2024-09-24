@@ -1,0 +1,41 @@
+
+@media only screen and (min-width: 640px) {
+
+    .archive {
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+    }
+
+    .archive-title {
+        font-family: "JetBrains Mono";
+        font-size: 24px;
+    }
+
+    .archive-elements {
+        display: flex;
+        flex-direction: column;
+        row-gap: 5px;
+    }
+
+    .archive-element {
+        display: flex;
+        flex-direction: row;
+        column-gap: 10px;
+
+        font-family: "JetBrains Mono";
+        font-size: 16px;
+        color: black;
+        text-decoration: none;
+
+        transition: color 0.15s ease-in-out;
+    }
+    .archive-element.selected {
+        font-weight: bold;
+    }
+    .archive-element:hover {
+        cursor: pointer;
+        color: orange;
+    }
+
+}

@@ -45,6 +45,40 @@
         font-size: 24px;
         max-width: 100%;
 
+        .header {
+            display: flex;
+            flex-direction: row;
+            column-gap: 20px;
+
+            .title {
+                align-content: center;
+            }
+
+            .clear-button {
+                display: flex;
+                flex-direction: row;
+                column-gap: 10px;
+                margin-top: 3px;
+                align-items: center;
+
+                cursor: pointer;
+                color: gainsboro;
+                align-content: center;
+                text-transform: uppercase;
+
+                font-size: 16px;
+
+                i {
+                    transition: 0.15s;
+                }
+            }
+            .clear-button:hover {
+                i {
+                    color: red;
+                }
+            }
+        }
+
         .selected-categories,
         .categories {
             display: flex;

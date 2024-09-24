@@ -3,7 +3,7 @@ import {Link, useLocation, useNavigate} from 'react-router-dom'
 
 // Stylesheets
 import "./sidebar.css"
-import {sort} from "css-loader/dist/utils";
+import Archive from "./archive";
 
 function Masthead() {
     return (
@@ -79,6 +79,12 @@ function Categories(props) {
         }
     }
 
+    const handleClearSelection = (e) => {
+        e.preventDefault();
+        setSelectedTags([]);
+        setUnselectedTags(Array.from(categories.keys()));
+    };
+
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         if (selectedTags.length > 0) {
@@ -93,7 +99,15 @@ function Categories(props) {
 
     return (
         <div className="sidebar-categories">
-            <span>Tags</span>
+            <div className="header">
+                <span className="title">Tags</span>
+                {
+                    selectedTags.length > 0 && <div className='clear-button' onClick={handleClearSelection}>
+                        <span>CLEAR SELECTION</span>
+                        <i className="fa-solid fa-xmark fa-fw"></i>
+                    </div>
+                }
+            </div>
             <div className="selected-categories">
                 {
                     Array.from(categories)
@@ -117,30 +131,6 @@ function Categories(props) {
                                 <span className='count'>{count}</span>
                             </div>
                         ))
-                }
-            </div>
-        </div>
-    )
-}
-
-function Archive(props) {
-    const {archive} = props;
-    return (
-        <div className="sidebar-archive">
-            <span>Archive</span>
-            <div className="archive">
-                {
-                    Array.from(archive, ([date, count]) => {
-                        const year = date.getFullYear();
-                        const month = date.toLocaleString('default', {month: 'long'});
-                        const location = 'archive' + '/' + year + '/' + (date.getMonth() + 1); // Date month is zero-based
-                        return (
-                            <Link to={location} key={location}>
-                                <span className='name'>{month + ' ' + year}</span>
-                                <span className='count'>{count}</span>
-                            </Link>
-                        );
-                    })
                 }
             </div>
         </div>
