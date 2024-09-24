@@ -45,21 +45,13 @@ export default function Search(props) {
         navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }
 
-    // Configure visible buttons
-    let button;
-    if (query) {
-        // Display 'clear' button when the search field has input
-        button = <i className='fa-solid fa-xmark fa-fw clear-button' onClick={onClear}/>;
-    }
-    else {
-        // Display 'search' button when there is nothing in the input field
-        button = <i className='fa-solid fa-magnifying-glass fa-fw search-button' />;
-    }
-
     return (
         <div className="search">
             <input className='search-bar' placeholder='Type something...' onInput={onInput} value={query}></input>
-            { button }
+            {
+                // Display 'clear' button when the search field has input, otherwise display 'search' button
+                query ? <i className='fa-solid fa-xmark fa-fw clear-button' onClick={onClear}/> : <i className='fa-solid fa-magnifying-glass fa-fw search-button'/>
+            }
         </div>
     );
 }

@@ -3,6 +3,8 @@ import {useLocation, useNavigate} from "react-router-dom";
 
 // Stylesheet
 import "./tags.css"
+import ClearSelectionButton from "./clear-selection-button";
+import SidebarButton from "./sidebar-button";
 
 function Tag(props) {
     const { name, count, selected, onClick } = props;
@@ -31,27 +33,28 @@ export default function Tags(props) {
     const navigateTo = useNavigate();
     const location = useLocation();
 
-    const handleClick = (tag) => (e) => {
-        let selected = selectedTags;
-        let unselected = unselectedTags;
+    const selectTag = (tag) => (e) => {
+        e.preventDefault();
 
-        if (selected.includes(tag)) {
-            // Remove tag from selected
-            setSelectedTags(selected.filter(t => t !== tag));
+        // Remove tag from unselected
+        setUnselectedTags(unselectedTags.filter(t => t !== tag));
 
-            // Add tag to unselected
-            setUnselectedTags([...unselected, tag].sort((a, b) => {
-                return a.localeCompare(b);
-            }));
-        } else {
-            // Remove tag from unselected
-            setUnselectedTags(unselected.filter(t => t !== tag));
+        // Add tag to selected
+        setSelectedTags([...selectedTags, tag].sort((a, b) => {
+            return a.localeCompare(b);
+        }));
+    }
 
-            // Add tag to selected
-            setSelectedTags([...selected, tag].sort((a, b) => {
-                return a.localeCompare(b);
-            }));
-        }
+    const deselectTag = (tag) => (e) => {
+        e.preventDefault();
+
+        // Remove tag from selected
+        setSelectedTags(selectedTags.filter(t => t !== tag));
+
+        // Add tag to unselected
+        setUnselectedTags([...unselectedTags, tag].sort((a, b) => {
+            return a.localeCompare(b);
+        }));
     }
 
     const handleClearSelection = (e) => {
@@ -76,27 +79,22 @@ export default function Tags(props) {
         <div className="tags">
             <div className="tags-header">
                 <span className="title">Tags</span>
-                {
-                    selectedTags.length > 0 && <div className='clear-button' onClick={handleClearSelection}>
-                        <span>CLEAR SELECTION</span>
-                        <i className="fa-solid fa-xmark fa-fw"></i>
-                    </div>
-                }
+                <ClearSelectionButton shouldRender={() => selectedTags.length > 0} onClick={handleClearSelection}></ClearSelectionButton>
             </div>
             {
                 selectedTags.length > 0 && <div className="tags-elements selected">
                     {
-                        Array.from(tags)
-                            .filter(([tag, _]) => selectedTags.includes(tag))
-                            .map(([tag, count]) => (<Tag name={tag} count={count} selected={true} onClick={handleClick(tag)} key={tag}></Tag>))
+                        selectedTags.map((tag) => (
+                            <SidebarButton name={tag} count={tags.get(tag)} selected={true} onClick={deselectTag(tag)} key={tag}></SidebarButton>
+                        ))
                     }
                 </div>
             }
             <div className="tags-elements">
                 {
-                    Array.from(tags)
-                        .filter(([tag, _]) => unselectedTags.includes(tag))
-                        .map(([tag, count]) => (<Tag name={tag} count={count} selected={false} onClick={handleClick(tag)} key={tag}></Tag>))
+                    unselectedTags.map((tag) => (
+                        <SidebarButton name={tag} count={tags.get(tag)} selected={false} onClick={selectTag(tag)} key={tag}></SidebarButton>
+                    ))
                 }
             </div>
         </div>

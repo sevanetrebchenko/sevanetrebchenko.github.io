@@ -1,0 +1,25 @@
+
+.clear-button {
+    display: flex;
+    flex-direction: row;
+
+    column-gap: 10px;
+    margin-top: 3px;
+
+    align-items: center;
+
+    color: gainsboro;
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    i {
+        transition: color 0.15s;
+    }
+}
+.clear-button:hover {
+    i {
+        color: red;
+    }
+}

@@ -1,0 +1,35 @@
+
+.sidebar-button {
+    display: flex;
+    flex-direction: row;
+    padding: 5px;
+    column-gap: 5px;
+
+    font-family: "JetBrains Mono";
+    font-size: 16px;
+    color: black;
+    text-decoration: none;
+
+    transition: color 0.15s;
+}
+.sidebar-button:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+
+.sidebar-button.selected {
+    color: orange;
+
+    i {
+        font-size: 16px;
+        color: gainsboro;
+        align-self: center;
+        transition: color 0.15s;
+    }
+}
+.sidebar-button.selected:hover {
+    color: gainsboro;
+    i {
+        color: red;
+    }
+}

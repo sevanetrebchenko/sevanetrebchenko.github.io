@@ -16,23 +16,6 @@
         .title {
             font-size: 24px;
         }
-
-        .clear-button {
-            display: flex;
-            flex-direction: row;
-
-            column-gap: 10px;
-            margin-top: 3px;
-
-            align-items: center;
-
-            color: gainsboro;
-            text-transform: uppercase;
-
-            font-size: 16px;
-
-            cursor: pointer;
-        }
     }
 
     .tags-elements {
@@ -48,36 +31,6 @@
         font-size: 16px;
     }
     .tags-elements.selected {
-    }
-
-    .tag {
-        display: flex;
-        flex-direction: row;
-        column-gap: 5px;
-        padding: 5px;
-
-        color: black;
-        transition: color 0.15s;
-    }
-    .tag:hover {
-        cursor: pointer;
-        color: gainsboro;
-    }
-    .tag.selected {
-        color: orange;
-
-        i {
-            font-size: 16px;
-            color: gainsboro;
-            align-self: center;
-            transition: color 0.15s;
-        }
-    }
-    .tag.selected:hover {
-        color: gainsboro;
-        i {
-            color: red;
-        }
     }
 
 }

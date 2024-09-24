@@ -30,14 +30,9 @@
         span {
             font-family: "Roboto Mono";
             color: gray;
-            transition: 0.15s;
         }
         span::before {
             content: "#";
-        }
-        span:hover {
-            cursor: pointer;
-            color: moccasin;
         }
 
     }

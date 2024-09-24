@@ -4,9 +4,7 @@
         display: flex;
         flex-direction: row;
         flex-grow: 1;
-        border: gainsboro solid 1px;
-        border-radius: 15px;
-
+        border-bottom: gainsboro solid 1px;
         margin-bottom: 60px;
 
         i {
@@ -18,13 +16,15 @@
             border: none;
             color: black;
 
-            padding: 25px;
-            transition: 0.15s;
+            padding: 15px;
 
             font-size: 20px;
         }
         .search-button {
             color: gainsboro;
+        }
+        .clear-button {
+            transition: 0.15s;
         }
         .clear-button:hover {
             cursor: pointer;
@@ -36,10 +36,10 @@
             flex-direction: row;
             flex: 1;
             background: none;
-            padding: 20px;
             font-size: 16px;
             border: none;
             font-family: "JetBrains Mono";
+            padding-left: 10px;
         }
         .search-bar:focus {
             outline: none;
