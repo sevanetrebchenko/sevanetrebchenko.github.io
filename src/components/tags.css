@@ -10,6 +10,8 @@
 
     .tags-header {
         display: flex;
+        align-items: baseline;
+
         flex-direction: row;
         column-gap: 20px;
 
@@ -21,6 +23,8 @@
     .tags-elements {
         display: flex;
         flex-direction: row;
+        align-items: baseline;
+
         flex-wrap: wrap;
         column-gap: 15px;
 
@@ -30,7 +34,9 @@
         font-family: "JetBrains Mono";
         font-size: 16px;
     }
-    .tags-elements.selected {
+    .tags-elements.selected i {
+        /* translate the icon slightly down to account for tags being all lowercase */
+        transform: translateY(7%);
     }
 
 }

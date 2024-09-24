@@ -1,6 +1,7 @@
 
 .sidebar-button {
     display: flex;
+    align-items: baseline;
     flex-direction: row;
     padding: 5px;
     column-gap: 5px;
@@ -19,14 +20,14 @@
 
 .sidebar-button.selected {
     color: orange;
-
-    i {
-        font-size: 16px;
-        color: gainsboro;
-        align-self: center;
-        transition: color 0.15s;
-    }
 }
+
+.sidebar-button.selected > i {
+    font-size: 16px;
+    color: gainsboro;
+    transition: color 0.15s;
+}
+
 .sidebar-button.selected:hover {
     color: gainsboro;
     i {

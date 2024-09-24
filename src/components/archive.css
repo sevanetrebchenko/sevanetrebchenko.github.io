@@ -9,6 +9,7 @@
 
     .archive-header {
         display: flex;
+        align-items: baseline;
         flex-direction: row;
         column-gap: 20px;
 
@@ -20,10 +21,6 @@
         display: flex;
         flex-direction: column;
         row-gap: 5px;
-    }
-
-    .archive-element {
-
     }
 
 }
