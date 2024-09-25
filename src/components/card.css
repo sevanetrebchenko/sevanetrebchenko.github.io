@@ -44,9 +44,15 @@
         span {
             font-family: "JetBrains Mono";
             font-weight: 200;
+            color: inherit;
+            transition: color 0.15s;
 
             /* Visually align text baseline with the date */
             transform: translateY(-2.5%);
+        }
+        span:hover {
+            cursor: pointer;
+            color: orange;
         }
     }
 }

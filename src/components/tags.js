@@ -5,62 +5,69 @@ import {useLocation, useNavigate} from "react-router-dom";
 import "./tags.css"
 import ClearSelectionButton from "./clear-selection-button";
 import SidebarButton from "./sidebar-button";
-
-function Tag(props) {
-    const { name, count, selected, onClick } = props;
-
-    let classNames = ["tag"];
-    if (selected) {
-        classNames.push("selected");
-    }
-
-    return (
-        <div className={classNames.join(" ")} onClick={onClick}>
-            <span className='name'>{name}</span>
-            <span className='count'>({count})</span>
-            {
-                selected && <i className="fa-solid fa-xmark fa-fw"></i>
-            }
-        </div>
-    )
-}
+import {useGlobalState} from "../index";
 
 export default function Tags(props) {
     const {tags} = props;
 
-    const [unselectedTags, setUnselectedTags] = useState(Array.from(tags.keys()));
+    const [unselectedTags, setUnselectedTags] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
+    const [state, setState] = useGlobalState();
     const navigateTo = useNavigate();
     const location = useLocation();
 
     const selectTag = (tag) => (e) => {
         e.preventDefault();
 
-        // Remove tag from unselected
-        setUnselectedTags(unselectedTags.filter(t => t !== tag));
-
         // Add tag to selected
-        setSelectedTags([...selectedTags, tag].sort((a, b) => {
-            return a.localeCompare(b);
-        }));
+        const selected = [...selectedTags, tag].sort((a, b) => a.localeCompare(b));
+
+        // Remove tag from unselected
+        const unselected = unselectedTags.filter(t => t !== tag);
+
+        setSelectedTags(selected);
+        setUnselectedTags(unselected);
+
+        // Update global state immediately
+        setState({
+            selectedTags: selected,
+            unselectedTags: unselected,
+        });
     }
 
     const deselectTag = (tag) => (e) => {
         e.preventDefault();
 
         // Remove tag from selected
-        setSelectedTags(selectedTags.filter(t => t !== tag));
+        const selected = selectedTags.filter(t => t !== tag);
 
         // Add tag to unselected
-        setUnselectedTags([...unselectedTags, tag].sort((a, b) => {
-            return a.localeCompare(b);
-        }));
+        const unselected = [...unselectedTags, tag].sort((a, b) => a.localeCompare(b))
+
+        setSelectedTags(selected);
+        setUnselectedTags(unselected);
+
+        // Update global state immediately
+        setState({
+            selectedTags: selected,
+            unselectedTags: unselected,
+        });
     }
 
     const handleClearSelection = (e) => {
         e.preventDefault();
-        setSelectedTags([]);
-        setUnselectedTags(Array.from(tags.keys()));
+
+        const selected = [];
+        const unselected = Array.from(tags.keys());
+
+        setSelectedTags(selected);
+        setUnselectedTags(unselected);
+
+        // Update global state immediately
+        setState({
+            selectedTags: selected,
+            unselectedTags: unselected,
+        });
     };
 
     useEffect(() => {
@@ -74,6 +81,30 @@ export default function Tags(props) {
         }
         navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }, [selectedTags]);
+
+    // Initialize component state from global state when component mounts
+    useEffect(() => {
+        const unselected = Array.from(tags.keys());
+        setSelectedTags([]);
+        setUnselectedTags(unselected);
+        setState({
+            ...state,
+            selectedTags: [],
+            unselectedTags: Array.from(tags.keys()),
+        });
+    }, []);
+
+    // Update component state when global state is updated
+    useEffect(() => {
+        const selected = state.selectedTags;
+        if (selected.length > 0) {
+            setSelectedTags(selected);
+        }
+        const unselected = state.unselectedTags;
+        if (unselected.length > 0) {
+            setUnselectedTags(unselected);
+        }
+    }, [state]);
 
     return (
         <div className="tags">

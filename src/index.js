@@ -1,5 +1,5 @@
 
-import React, {createContext} from 'react'
+import React, {createContext, useContext} from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import {BrowserRouter as Router, Routes, Route, useParams, useLocation, Navigate} from 'react-router-dom'
@@ -11,6 +11,30 @@ import Search from "./components/search";
 
 // Stylesheets
 import './index.css'
+
+// Global application state
+const initialState = {
+    selectedTags: [],
+    unselectedTags: [],
+};
+const GlobalStateContext = createContext();
+
+export function GlobalStateProvider(props) {
+    const {children} = props;
+    const [state, setState] = useState(initialState);
+
+    return (
+        <GlobalStateContext.Provider value={[state, setState]}>
+            {children}
+        </GlobalStateContext.Provider>
+    );
+}
+
+// Custom hook to use the global state
+export const useGlobalState = () => {
+    return useContext(GlobalStateContext);
+};
+
 
 function parseDate(date) {
     const [month, day, year] = date.split('-');
@@ -329,4 +353,8 @@ function Application() {
 // }
 
 // main
-createRoot(document.getElementsByClassName('root')[0]).render(<Application />)
+createRoot(document.getElementsByClassName('root')[0]).render(
+    <GlobalStateProvider>
+        <Application />
+    </GlobalStateProvider>
+)
