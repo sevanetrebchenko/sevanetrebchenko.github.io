@@ -7,17 +7,18 @@
 
     align-items: center;
 
-    color: gainsboro;
+    color: gray;
 
+    font-family: "JetBrains Mono", monospace;
     font-size: 16px;
+    font-weight: 200;
 
     cursor: pointer;
 
-    i {
-        transition: color 0.15s;
-    }
+    transition: color 0.15s;
 }
 .clear-button:hover {
+    color: gainsboro;
     i {
         color: red;
     }

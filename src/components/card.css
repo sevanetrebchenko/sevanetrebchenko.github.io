@@ -3,23 +3,37 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    padding: 50px;
+    row-gap: 15px;
 
     background-color: white;
+    box-shadow: none;
+    transition: box-shadow 0.15s;
+    padding: 50px;
+    border-radius: 5px;
 
     .title {
-        margin: 0;
-        font-family: "Roboto Mono";
+        font-family: "Noto Serif", serif;
+        font-weight: 400;
         font-size: 32px;
+        color: black;
+        transition: color 0.15s;
     }
 
     .abstract {
-        font-family: "Roboto Mono";
-        font-size: 16px;
+        font-family: "Noto Serif", serif;
+        font-weight: 300;
+        font-size: 18px;
     }
 
     .date {
-        font-family: "JetBrains Mono";
+        font-family: "Noto Serif", serif;
+        font-size: 19px;
+        font-weight: 300;
+        color: black;
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        column-gap: 10px;
     }
 
     .categories {
@@ -28,12 +42,30 @@
         column-gap: 20px;
 
         span {
-            font-family: "Roboto Mono";
-            color: gray;
-        }
-        span::before {
-            content: "#";
-        }
+            font-family: "JetBrains Mono";
+            font-weight: 200;
 
+            /* Visually align text baseline with the date */
+            transform: translateY(-2.5%);
+        }
     }
+}
+.card:hover {
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1)
+}
+
+.abstract {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.meta {
+    display: flex;
+    flex-direction: row;
+    column-gap: 40px;
+    align-items: baseline;
+
+    color: gray;
 }
