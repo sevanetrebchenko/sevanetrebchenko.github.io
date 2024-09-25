@@ -1,17 +1,21 @@
 import React from 'react';
+import {useNavigate} from "react-router-dom";
 
 // Components
 import {useGlobalState} from "../index";
+import {getPostUrl} from "../helpers";
 
 // Stylesheet
-import './card.css'
+import './post-card.css'
 
-export default function Card(props) {
-    const { title, abstract, categories, date } = props;
+export default function PostCard(props) {
+    const {post} = props;
     const [state, setState] = useGlobalState();
+    const navigateTo = useNavigate();
 
     const handleClick = (e) => {
         e.preventDefault();
+        navigateTo(getPostUrl(post.title));
     }
 
     const selectTag = (tag) => {
@@ -33,27 +37,30 @@ export default function Card(props) {
     return (
         <div className="card" onClick={handleClick}>
             <div className="abstract">
-                <span className="title">{title}</span>
-                <span className="description">{abstract}</span>
+                <span className="title">{post.title}</span>
+                <span className="description">{post.abstract}</span>
             </div>
             <div className="meta">
                 <div className="date">
                     <i className="fa fa-clock-o fa-fw"></i>
-                    <span>{`${date.toLocaleString('default', {month: 'long'})} ${date.getDate()}, ${date.getFullYear()}`}</span>
+                    <span>{`${post.date.toLocaleString('default', {month: 'long'})} ${post.date.getDate()}, ${post.date.getFullYear()}`}</span>
                 </div>
                 <div className="categories">
                     {
-                        categories.map((category, id) => {
+                        post.tags.map((tag, id) => {
                             let className = null;
-                            if (state.selectedTags.includes(category)) {
+                            if (state.selectedTags.includes(tag)) {
                                 className = "selected"
                             }
 
-                            return <span key={id} className={className} onClick={() => selectTag(category)}>#{category}</span>
+                            return <span key={id} className={className} onClick={(e) => {
+                                e.stopPropagation();
+                                selectTag(tag);
+                            }}>#{tag}</span>
                         })
                     }
                 </div>
             </div>
         </div>
-    )
+    );
 }

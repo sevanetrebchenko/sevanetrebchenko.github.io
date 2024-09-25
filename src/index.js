@@ -1,15 +1,15 @@
 
-import React, {createContext, useContext} from 'react'
+import React, { createContext, useContext } from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import {BrowserRouter as Router, Routes, Route, useParams, useLocation, Navigate} from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Components
-import Card from "./components/card";
-import Sidebar from "./components/sidebar";
-import Search from "./components/search";
+import Landing from "./pages/landing";
+import { getPostUrl } from "./helpers";
+import Post from "./pages/post";
 
-// Stylesheets
+// Stylesheet
 import './index.css'
 
 // Global application state
@@ -75,7 +75,7 @@ function loadContent() {
                     // Parse post dates into JavaScript Date objects
                     const parsed = data.posts.map(post => ({
                         ...post,
-                        categories: post.categories.map(category => ( category.toLowerCase() )),
+                        tags: post.tags.map(category => category.toLowerCase()),
                         date: parseDate(post.date)
                     }));
 
@@ -89,88 +89,32 @@ function loadContent() {
     return content;
 }
 
-function Posts(props) {
-    let { posts } = props;
-    const { year, month } = useParams();
-
-    let filtered = posts;
-    if (year) {
-        filtered = filtered.filter(post => {
-            return post.date.getFullYear() === Number(year);
-        });
-
-        if (month) {
-            filtered = filtered.filter(post => {
-                return post.date.getMonth() === Number(month - 1);
-            });
-        }
-    }
-
-    // Get the search query from the URL
-    const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-
-    const searchQuery = queryParams.get("q") || "";
-    const tags = queryParams.get("tags") || "";
-
-    // Filter posts based on the search query
-    filtered = filtered.filter(post => {
-        // Filter by query params
-        if (searchQuery) {
-            if (!post.title.toLowerCase().includes(searchQuery.toLowerCase()) && !post.abstract.toLowerCase().includes(searchQuery.toLowerCase())) {
-                return false;
-            }
-        }
-
-        // Filter by post categories
-        if (tags.length > 0) {
-            if (!tags.split(",").some(tag => post.categories.includes(tag))) {
-                return false;
-            }
-        }
-
-        return true;
-    });
-
-    return (
-        <div className="posts-container">
-            <Search></Search>
-            <div className="posts">
-                {
-                    filtered.map((post, id) => (
-                        <Card key={id} title={post.title} abstract={post.abstract} date={post.date} categories={post.categories} />
-                    ))
-                }
-            </div>
-        </div>
-    )
-}
-
-function getCategories(posts) {
-    let categories = new Map();
+function getTags(posts) {
+    let tags = new Map();
     for (const post of posts) {
-        if (!post.categories) {
+        if (!post.tags) {
+            // Post has no tags
             continue;
         }
 
-        for (const category of post.categories) {
-            if (!categories.has(category)) {
-                categories.set(category, 0);
+        // Get the number of posts that have a given tag
+        for (const tag of post.tags) {
+            if (!tags.has(tag)) {
+                tags.set(tag, 0);
             }
-
-            categories.set(category, categories.get(category) + 1);
+            tags.set(tag, tags.get(tag) + 1);
         }
     }
 
-    // Sort category names alphabetically
+    // Sort tag names alphabetically
     return new Map(
-        Array.from(categories.entries()).sort((a, b) => {
+        Array.from(tags.entries()).sort((a, b) => {
             return a[0].localeCompare(b[0]);
         })
     );
 }
 
-function getArchive(posts) {
+function generateArchive(posts) {
     // Generate archive of all post dates
     let archive = new Map();
     for (const post of posts) {
@@ -198,163 +142,42 @@ function Application() {
         return null;
     }
 
-    const tags = getCategories(content.posts);
-    const archive = getArchive(content.posts);
+    const tags = getTags(content.posts);
+    const archive = generateArchive(content.posts);
 
     const routes = [];
 
     // Set up routes for main site pages
-    routes.push(<Route path={'/'} element={<Posts posts={content.posts}></Posts>}></Route>);
 
-    // Archive
-    routes.push(<Route path={'/archive/:year'} element={<Posts posts={content.posts} />}></Route>);
-    routes.push(<Route path={'/archive/:year/:month'} element={<Posts posts={content.posts} />}></Route>);
+    // Landing page
+    let landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
+    routes.push(<Route path={'/'} element={landing}></Route>);
+    routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
+    routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
+
+    // Posts
+    for (const post of content.posts) {
+        routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
+    }
 
     return (
         <Router>
-            <div className="landing">
-                <div className="main">
-                    <Sidebar tags={tags} archive={archive}></Sidebar>
-                    <Routes>
-                        {
-                            routes.map((route, index) => (
-                                <React.Fragment key={index}>
-                                    {route}
-                                </React.Fragment>
-                            ))
-                        }
-                    </Routes>
-                </div>
-            </div>
+            <Routes>
+                {
+                    routes.map((route, index) => (
+                        <React.Fragment key={index}>
+                            {route}
+                        </React.Fragment>
+                    ))
+                }
+            </Routes>
         </Router>
     );
 }
-
-
-//
-//
-// // Entry point.
-// function Application() {
-//     const raw = loadContent();
-//     AOS.init({
-//         mirror: false,
-//         once: true
-//     });
-//
-//     if (!raw) {
-//         console.debug('Loading website content...');
-//         return;
-//     }
-//
-//
-//     let content = [];
-//     content.posts = [];
-//
-//     for (const post of raw.blog) {
-//         let copy = {...post};
-//
-//         // Replace date string with object.
-//         copy.date = getDateObject(post.date);
-//         content.posts.push(copy);
-//     }
-//
-//     for (let post of raw.projects) {
-//         let copy = {...post};
-//
-//         // Replace date string with object.
-//         copy.date = getDateObject(post.date);
-//         content.posts.push(copy);
-//     }
-//
-//     // Sort posts by date published.
-//     content.posts.sort((first, second) => {
-//         // Comparator:
-//         // if a > b:  1, else
-//         // if a < b: -1, else
-//         // 0
-//         if (first.date.year == second.date.year) {
-//             if (first.date.month == second.date.month) {
-//                 if (first.date.day == second.date.day) {
-//                     return 0; // Equal.
-//                 }
-//
-//                 return first.date.day > second.date.day ? -1 : 1;
-//             }
-//
-//             return first.date.month > second.date.month ? -1 : 1;
-//         }
-//
-//         return first.date.year > second.date.year ? -1 : 1;
-//     });
-//
-//     // Generate archive.
-//     let archives = new Map(); // Mapping of year to an array of posts published in that year.
-//     for (let i = 0; i < content.posts.length; ++i) {
-//         const post = content.posts[i];
-//
-//         if (!archives.has(post.date.year)) {
-//             archives.set(post.date.year, []);
-//         }
-//
-//         archives.get(post.date.year).push(i); // Save index of post, referenced later by content.posts[i].
-//     }
-//
-//     content.archives = archives;
-//
-//     // Generate category list.
-//     let categories = new Map();
-//     for (const post of content.posts) {
-//         if (!post.categories) {
-//             continue;
-//         }
-//
-//         for (const category of post.categories) {
-//             if (!categories.has(category)) {
-//                 categories.set(category, 0);
-//             }
-//
-//             categories.set(category, categories.get(category) + 1);
-//         }
-//     }
-//
-//     console.log(categories);
-//
-//     content.categories = Array.from(categories).sort(function(a, b) {
-//         return a[0].localeCompare(b[0]);
-//     });
-//
-//     let routes = [];
-//
-//     // Set up routes for main site pages.
-//     routes.push(<Route exact path={'/'} element={<Landing content={content}/>}></Route>);
-//     routes.push(<Route exact path={'/projects'} element={<Projects content={content}/>}></Route>);
-//     routes.push(<Route exact path={'/journal'} element={<Blog content={content}/>}></Route>);
-//     routes.push(<Route path={'/search/*'} element={<Search/>}/>);
-//     // routes.push(<Route exact path={'/archives'} element={<Landing content={content}/>}/>);
-//     // routes.push(<Route exact path={'search'} element={<Search />}/>);
-//
-//     // Set up routes to website post pages.
-//     for (const post of content.posts) {
-//     }
-//     //
-//     // return (
-//     //     <Router>
-//     //         <Routes>
-//     //             {
-//     //                 routes.map((route, index) => (
-//     //                     <React.Fragment key={index}>
-//     //                         {route}
-//     //                     </React.Fragment>
-//     //                 ))
-//     //             }
-//     //         </Routes>
-//     //     </Router>
-//     // );
-// }
 
 // main
 createRoot(document.getElementsByClassName('root')[0]).render(
     <GlobalStateProvider>
         <Application />
     </GlobalStateProvider>
-)
+);
