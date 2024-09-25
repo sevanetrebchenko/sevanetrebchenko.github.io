@@ -50,9 +50,12 @@
             /* Visually align text baseline with the date */
             transform: translateY(-2.5%);
         }
+        span.selected {
+            color: orange;
+        }
         span:hover {
             cursor: pointer;
-            color: orange;
+            color: gainsboro;
         }
     }
 }

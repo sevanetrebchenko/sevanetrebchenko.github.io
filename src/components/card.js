@@ -43,9 +43,14 @@ export default function Card(props) {
                 </div>
                 <div className="categories">
                     {
-                        categories.map((category, id) => (
-                            <span key={id} onClick={() => selectTag(category)}>#{category}</span>
-                        ))
+                        categories.map((category, id) => {
+                            let className = null;
+                            if (state.selectedTags.includes(category)) {
+                                className = "selected"
+                            }
+
+                            return <span key={id} className={className} onClick={() => selectTag(category)}>#{category}</span>
+                        })
                     }
                 </div>
             </div>
