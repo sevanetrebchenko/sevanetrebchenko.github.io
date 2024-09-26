@@ -5,9 +5,9 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Components
-import Landing from "./pages/landing";
-import { getPostUrl } from "./helpers";
-import Post from "./pages/post";
+import Landing from "./pages/landing.js";
+import { getPostUrl } from "./helpers.js";
+import Post from "./pages/post.js";
 
 // Stylesheet
 import './index.css'
@@ -151,14 +151,16 @@ function Application() {
 
     // Landing page
     let landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
-    routes.push(<Route path={'/'} element={landing}></Route>);
+    // routes.push(<Route path={'/'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
 
     // Posts
-    for (const post of content.posts) {
-        routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
-    }
+    // for (const post of content.posts) {
+    //     routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
+    // }
+    routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
+
 
     return (
         <Router>

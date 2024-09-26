@@ -1,7 +1,6 @@
 
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
 
 module.exports = (env) => {
   const isProduction = env === 'production';
@@ -12,14 +11,14 @@ module.exports = (env) => {
     },
     output: {
       filename: 'bundle.js',
-      path: path.resolve(__dirname, 'build'),
+      path: path.resolve(__dirname + '/build'),
     },
     devtool: isProduction ? 'source-map' : 'inline-source-map',
     target: 'web',
     devServer: {
       port: '3000',
       static: {
-        directory: path.join(__dirname, 'public')
+        directory: 'public'
       },
       open: true,
       hot: true,
@@ -27,10 +26,6 @@ module.exports = (env) => {
     },
     resolve: {
       extensions: ['.js', '.jsx', '.json'],
-      fallback: {
-        "path": require.resolve("path-browserify"),
-        "process": require.resolve("process/browser")
-      }
     },
     module: {
       rules: [
@@ -43,31 +38,20 @@ module.exports = (env) => {
           }
         },
         {
-          // .css files
-          test: /\.(css)$/,
+          // .css/.less/.scss files
+          test: /\.(css|less|scss)$/,
           exclude: /node_modules/,
           use: [
-            'style-loader', // Include this if you're using CSS
+            'style-loader',
             'css-loader',
           ],
         },
-        // {
-        //   test: /\.svg/,
-        //   exclude: /node_modules/,
-        //   use: [
-        //     '@svgr/webpack'
-        //   ],
-        // },
       ],
     },
     plugins: [
       new HtmlWebpackPlugin({
         // use index.html in the public directory as the base template for the generated html page
         template: path.join(__dirname, 'public', 'index.html')
-      }),
-      // Optionally add the ProvidePlugin if you're using process
-      new webpack.ProvidePlugin({
-        process: 'process/browser',
       }),
     ]
   }

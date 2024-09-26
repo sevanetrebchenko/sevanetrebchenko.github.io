@@ -1,0 +1,38 @@
+
+.post-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #eeeeee;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 50px;
+}
+
+.post {
+    display: flex;
+    width: 1024px;
+
+    margin: 0 auto;
+    padding: 50px;
+
+    background-color: white;
+    border-radius: 5px;
+}
+
+.post-header {
+    display: flex;
+    flex-direction: row;
+    column-gap: 200px;
+}
+.post-title {
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    font-size: 32px;
+}
+
+.back-button {
+    position: relative;
+    left: 0;
+}
