@@ -10,7 +10,7 @@ import "./sidebar.css"
 
 function Masthead() {
     return (
-        <Link to={'/'} className="sidebar-masthead">
+        <Link to={'/'} className="masthead">
             <span className="title">
                 Seva Netrebchenko
             </span>
@@ -42,7 +42,7 @@ function Social() {
 
 function Footer() {
     return (
-        <div className="sidebar-footer">
+        <div className="footer">
             <Social></Social>
             <span className="copyright">Copyright © 2024 Seva Netrebchenko</span>
         </div>
@@ -54,7 +54,7 @@ export default function Sidebar(props) {
 
     return (
         <div className="sidebar">
-            <div className="sidebar-content">
+            <div className="content">
                 <Masthead></Masthead>
                 <Tags tags={tags}></Tags>
                 <Archive archive={archive}></Archive>

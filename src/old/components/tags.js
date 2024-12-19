@@ -108,7 +108,7 @@ export default function Tags(props) {
 
     return (
         <div className="tags">
-            <div className="tags-header">
+            <div className="sidebar-tag-header">
                 <span className="title">Tags</span>
                 <ClearSelectionButton shouldRender={() => selectedTags.length > 0} onClick={handleClearSelection}></ClearSelectionButton>
             </div>
@@ -121,7 +121,7 @@ export default function Tags(props) {
                     }
                 </div>
             }
-            <div className="tags-elements">
+            <div className="sidebar-tags-elements">
                 {
                     unselectedTags.map((tag) => (
                         <SidebarButton name={tag} count={tags.get(tag)} selected={false} onClick={selectTag(tag)} key={tag}></SidebarButton>

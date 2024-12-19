@@ -1,17 +1,15 @@
 
-.post-container {
-    width: 100vw;
-    height: 100vh;
+.posts {
     background-color: #eeeeee;
 
     display: flex;
+    flex: 1;
     flex-direction: column;
-
-    padding: 50px;
 }
 
 .post {
     display: flex;
+    flex-direction: column;
     width: 1024px;
 
     margin: 0 auto;
@@ -23,7 +21,7 @@
 
 .post-header {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     column-gap: 200px;
 }
 .post-title {
@@ -32,7 +30,10 @@
     font-size: 32px;
 }
 
-.back-button {
-    position: relative;
-    left: 0;
+.post-content {
+
+    h1 {
+        font-family: "Noto Serif", serif;
+    }
+
 }

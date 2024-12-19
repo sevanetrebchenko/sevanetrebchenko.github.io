@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 // Components
 import Landing from "./pages/landing.js";
 import { getPostUrl } from "./helpers.js";
+import Post from "./pages/post.js";
 
 // Stylesheet
 import './index.css'

@@ -34,6 +34,9 @@ import rangeParser from 'parse-numeric-range'
 
 import processLanguageCpp from '../languages/cpp'
 
+// Stylesheet
+
+
 export default function Post(props) {
     const { post } = props;
     const [content, setContent] = useState('');
@@ -72,14 +75,23 @@ export default function Post(props) {
         getFile();
     }, []);
 
-    return <MarkdownFile path={post.filepath} content={content} />
+    return (
+        <div className="post-container">
+            <div className="post">
+                <div className="post-header">
+                    <span className="post-title">{post.title}</span>
+                </div>
+                <div className="post-content">
+                    <MarkdownFile path={post.filepath} content={content}/>
+                </div>
+            </div>
+        </div>
+    );
 }
 
-function MarkdownFile({ path, content }) {
+function MarkdownFile({path, content}) {
     const MarkdownComponents = {
-        code({ node, inline, className, children, ...args }) {
-            console.log('found on line ' + node.position.start.line);
-
+        code({node, inline, className, children, ...args}) {
             let added = [];
             let removed = [];
             let modified = [];
@@ -147,6 +159,8 @@ function MarkdownFile({ path, content }) {
             const processToken = function (token, parentTypes = []) {
                 let tokenized = [];
 
+                console.log(token);
+
                 if (typeof token == 'string') {
                     // split on newlines and whitespace characters
                     let temp = [];
@@ -186,7 +200,7 @@ function MarkdownFile({ path, content }) {
                         }
                     }
                 }
-                else { // if (typeof input == 'object') {
+                else { // if (typeof token == 'object') {
                     let types = [...parentTypes];
                     if (!parentTypes.includes(token.type)) {
                         types.push(token.type);
@@ -383,3 +397,33 @@ function MarkdownFile({ path, content }) {
         </ReactMarkdown>
     );
 }
+
+
+
+
+
+// identifier = /[A-Za-z_][A-Za-z0-9_]*/
+//
+// re = new RegExp(/\s*(template\s*<\s*(?:[^>]*)\s*>)?\s*(class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([^;{]*))?\s*\{\s*([^{}]*(?:\{[^{}]*\}[^{}]*)*)?\}\s*;/gm)
+//
+// raw = `template <typename T, typename U>
+// class MyClass : public BaseClass, protected AnotherClass {
+// public:
+//     T myVar;
+//
+//
+//     void myFunction() {
+//         // do something
+//     }
+// };`
+//
+// const match = re.exec(raw);
+// if (match) {
+//     const template = match[1] // Matches line: template <...>
+//     const type = match[2] // Matches 'class' or 'struct'
+//     const name = match[3] // Matches class name
+//     const inheritance = match[4] // Matches any parent classes
+//     const body = match[5] // Matches class body
+//
+//     console.log({ template, type, name, inheritance, body });
+// }

@@ -19,6 +19,18 @@ let classes = [
     'deque',
 ];
 
+let keywords = [
+    'bool', 'b8',
+    'char', 'u8', 'i8',
+    'short', 'u16', 'i16',
+    'int', 'u32', 'i32',
+    'float', 'f32',
+    'double', 'f64',
+    'void',
+    'unsigned', 'signed',
+    'const'
+]
+
 let namespaces = [
     // standard namespaces
     'std'

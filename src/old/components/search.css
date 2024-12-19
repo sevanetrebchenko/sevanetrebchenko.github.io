@@ -3,7 +3,6 @@
     .search {
         display: flex;
         flex-direction: row;
-        flex-grow: 1;
         border-bottom: gainsboro solid 1px;
         margin-bottom: 60px;
 

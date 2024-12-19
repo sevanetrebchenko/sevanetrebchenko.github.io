@@ -1,0 +1,235 @@
+/*body {*/
+/*    color: black;*/
+/*    font-family: monospace;*/
+/*    font-size: 16px;*/
+/*    line-height: 1.5em;*/
+/*    margin: 0 auto;*/
+/*    max-width: 720px;*/
+/*    min-height: 100%;*/
+/*    overflow-wrap: break-word;*/
+/*}*/
+
+/*h1 {*/
+/*    display: block;*/
+/*    font-size: 2em;*/
+/*    margin: 0 auto;*/
+/*    margin-block-start: 0.67em;*/
+/*    margin-block-end: 0.67em;*/
+/*    margin-inline-start: 0px;*/
+/*    margin-inline-end: 0px;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*header {*/
+/*    max-width: 640px;*/
+/*    margin: 0 auto;*/
+/*    padding: 4rem 2rem;*/
+/*}*/
+
+/*.directory-tree ul {*/
+/*    line-height: 30px;*/
+/*    margin-left: 10px;*/
+/*    padding-left: 20px;*/
+/*    border-left: 1px dashed #ddd;*/
+/*    text-decoration: none;*/
+/*}*/
+
+/*.directory-tree a {*/
+/*    text-decoration: none;*/
+/*}*/
+
+/*.directory-tree li {*/
+/*    list-style: none;*/
+/*    color: #888;*/
+/*    font-size: 17px;*/
+/*    font-weight: normal;*/
+/*    text-decoration: none;*/
+/*}*/
+
+/*.directory-tree .folder {*/
+/*    border-bottom: 1px solid transparent;*/
+/*    color: #888;*/
+/*    transition: all 0.2s ease;*/
+/*    color: #777;*/
+/*    text-decoration: none;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*.directory-tree .folder:hover {*/
+/*    cursor: default;*/
+/*}*/
+
+/*.directory-tree li:before {*/
+/*    margin-right: 5px;*/
+/*    content: "";*/
+/*    height: 20px;*/
+/*    vertical-align: middle;*/
+/*    width: 20px;*/
+/*    background-repeat: no-repeat;*/
+/*    display: inline-block;*/
+/*    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='lightgrey' d='M85.714,42.857V87.5c0,1.487-0.521,2.752-1.562,3.794c-1.042,1.041-2.308,1.562-3.795,1.562H19.643 c-1.488,0-2.753-0.521-3.794-1.562c-1.042-1.042-1.562-2.307-1.562-3.794v-75c0-1.487,0.521-2.752,1.562-3.794 c1.041-1.041,2.306-1.562,3.794-1.562H50V37.5c0,1.488,0.521,2.753,1.562,3.795s2.307,1.562,3.795,1.562H85.714z M85.546,35.714 H57.143V7.311c3.05,0.558,5.505,1.767,7.366,3.627l17.41,17.411C83.78,30.209,84.989,32.665,85.546,35.714z' /></svg>");*/
+/*    background-position: center 2.5px;*/
+/*    background-size: 60% auto;*/
+/*}*/
+
+/*.directory-tree li:hover  {*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.directory-tree li.folder:before {*/
+/*    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='lightblue' d='M96.429,37.5v39.286c0,3.423-1.228,6.361-3.684,8.817c-2.455,2.455-5.395,3.683-8.816,3.683H16.071 c-3.423,0-6.362-1.228-8.817-3.683c-2.456-2.456-3.683-5.395-3.683-8.817V23.214c0-3.422,1.228-6.362,3.683-8.817 c2.455-2.456,5.394-3.683,8.817-3.683h17.857c3.422,0,6.362,1.228,8.817,3.683c2.455,2.455,3.683,5.395,3.683,8.817V25h37.5 c3.422,0,6.361,1.228,8.816,3.683C95.201,31.138,96.429,34.078,96.429,37.5z' /></svg>");*/
+/*    background-position: center top;*/
+/*    background-size: 75% auto;*/
+/*}*/
+
+/*div[class*="language-"] {*/
+/*    background-color: rgb(43, 43, 43);*/
+/*    color: rgb(169, 183, 198);*/
+
+/*    font-family: 'JetBrains Mono';*/
+/*    font-style: normal;*/
+/*    font-weight: 300;*/
+/*    font-size: 16px;*/
+
+/*    line-height: 1.5em;*/
+
+/*    display: flex;*/
+/*    flex-direction: row;*/
+
+/*    overflow-x: scroll;*/
+
+/*    border-radius: 10px;*/
+
+/*    padding-top: 1em;*/
+/*    padding-bottom: 1em;*/
+
+/*    -moz-tab-size: 4;*/
+/*    -o-tab-size: 4;*/
+/*    tab-size: 4;*/
+
+/*    -webkit-hyphens: none;*/
+/*    -moz-hyphens: none;*/
+/*    -ms-hyphens: none;*/
+/*    hyphens: none;*/
+/*}*/
+
+/*.meta-container {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+
+/*    color: rgb(93, 96, 99);*/
+
+/*    -webkit-user-select: none;*/
+/*    -ms-user-select: none;*/
+/*    user-select: none;*/
+/*}*/
+
+/*.meta-block {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+
+/*.code-container {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    flex-grow: 1;*/
+/*}*/
+
+/*.code-block {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+
+/*.line-number {*/
+/*    padding: 0em;*/
+/*    margin: 0em;*/
+/*}*/
+
+/*.separator {*/
+/*    border-width: 1px;*/
+/*    border-right-style: solid;*/
+/*}*/
+
+/*.padding {*/
+/*    padding-left: 0.5em;*/
+/*    padding-right: 0.5em;*/
+/*}*/
+
+/*!* diff *!*/
+/*.diff {*/
+/*    padding: 0em 1em 0em 1em;*/
+/*}*/
+
+/*.added {*/
+/*    background-color: rgb(41, 68, 54);*/
+/*}*/
+
+/*.removed {*/
+/*    background-color: rgb(88, 49, 49);*/
+/*}*/
+
+/*.modified {*/
+/*    background-color: rgb(47, 62, 69);*/
+/*}*/
+
+/*.highlighted {*/
+/*    background-color: rgb(76, 76, 46);*/
+/*}*/
+
+
+/*!* SECTION: Language syntax hightlighting ------------------------------------------------------ *!*/
+
+/*.language-cpp .comment {*/
+/*    color: rgb(128, 128, 128);*/
+/*}*/
+
+/*.language-cpp .keyword,*/
+/*.language-cpp .boolean,*/
+/*.language-cpp .semicolon*/
+/*{*/
+/*    color: rgb(206, 136, 70);*/
+/*}*/
+
+/*.language-cpp .string,*/
+/*.language-cpp .char*/
+/*{*/
+/*    color: rgb(106, 135, 89);*/
+/*}*/
+
+/*.language-cpp .macro-directive-hash,*/
+/*.language-cpp .macro-directive,*/
+/*.language-cpp .macro-expression*/
+/*{*/
+/*    color: rgb(187, 181, 41);*/
+/*}*/
+/*.language-cpp .macro-name*/
+/*{*/
+/*    color: 	rgb(144, 139, 37);*/
+/*}*/
+
+/*.language-cpp .function*/
+/*{*/
+/*    color: 	rgb(255, 198, 109);*/
+/*}*/
+
+/*.language-cpp .class-name,*/
+/*.language-cpp .namespace-name*/
+/*{*/
+/*    color: rgb(181, 182, 227);*/
+/*}*/
+
+/*.language-cpp .number,*/
+/*.language-cpp .symbol*/
+/*{*/
+/*    color: rgb(104, 151, 187);*/
+/*}*/
+
+/*.language-cpp .member-variable*/
+/*{*/
+/*    color: rgb(152, 118, 170);*/
+/*}*/
+
+/*.language-cpp .undefined*/
+/*{*/
+/*    color: 	rgb(104, 106, 78);*/
+/*}*/

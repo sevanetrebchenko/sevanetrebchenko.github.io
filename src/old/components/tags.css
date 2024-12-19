@@ -1,7 +1,7 @@
 
 @media only screen and (min-width: 640px) {
 
-    .tags {
+    .sidebar-tags {
         display: flex;
         flex-direction: column;
         font-family: "Noto Serif", serif;
@@ -9,7 +9,7 @@
         row-gap: 10px;
     }
 
-    .tags-header {
+    .sidebar-tags-header {
         display: flex;
         align-items: baseline;
 
@@ -21,7 +21,7 @@
         }
     }
 
-    .tags-elements {
+    .sidebar-tags-elements {
         display: flex;
         flex-direction: row;
         align-items: baseline;
@@ -37,7 +37,7 @@
 
         font-size: 16px;
     }
-    .tags-elements.selected i {
+    .sidebar-tags-elements.selected i {
         /* translate the icon slightly down to account for tags being all lowercase */
         transform: translateY(7%);
     }

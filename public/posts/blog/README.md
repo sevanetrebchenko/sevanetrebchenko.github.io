@@ -1,5 +1,3 @@
-<h1 style="text-align:center;">Spark's ECS Architecture - Part 2: Components</h1>
-
 If you haven't already, make sure to read the previous posts in this series!
  - [Spark's ECS Architecture: An Overview](https://sevanetrebchenko.com/blog/spark-ecs)
  - [Spark's ECS Architecture - Part 1: Entities](https://sevanetrebchenko.com/blog/spark-ecs-part-1)
@@ -12,116 +10,173 @@ The way in which groups of components are stored will ultimately an impact on th
 
 Let's say we have a Transform system that operates on any entity that has a Transfrom component. An example update loop of such a system would look as follows:
 
-```cpp added:{18-19} removed:{} modified:{14-16} highlighted:{20-23} hidden:{1-9} line-numbers:{enable}
-
-struct Transform {
-
-}
-
-struct TransformSystem {
-  int allTransformComponents;
-}
-
+```cpp added:{} removed:{} modified:{} highlighted:{} hidden:{} line-numbers:{enable}
 #pragma once
-#include <iostream> 
-#include <string>
 
-#define TEST_DEFINE_1 1
-#define TEST_DEFINE_2 2
-// #define TEST_DEFINE_3 3
+#ifndef TEST
+#define TEST
 
-#if defined(TEST_DEFINE_1)
+#include <stdexcept> // std::runtime_error
+#include <string> // std::string
+#include <iostream> // std::cout
+#include <concepts> // std::same_as
 
-  #if defined(TEST_DEFINE_2)
+#define ASSERT(EXPRESSION, MESSAGE)        \
+    if (!(EXPRESSION)) {                   \
+        throw std::runtime_error(MESSAGE); \
+    }
 
-    // more test code
-  #else 
-
-    // asdf asdf asdf 
-    ...
-  #endif
-
-  // hahahehe
-
-#elif defined(TEST_DEFINE_2)
-
-  #if defined(TEST_DEFINE_1)
-
-    // more test code
-  #else 
-
-    // asdf asdf asdf 
-    ...
-  #endif
-
-#else
-
-  // hahahehe
-
-#endif
-
-template <typename Tddd>
+template <typename T>
 class MyClass {
- public:
-  #define MY_PROPERTY      const Tddd* 
-  MY_PROPERTY  my_property;
-
-    struct Features {
-    } m_features;
-
-   ...
+    public:
+        MyClass(T value) : m_value(value) {
+            ASSERT(value > 0, "value must be greater than 0");
+        }
+        
+        ~MyClass() {
+            // Complex destructor logic
+        }
+    
+        T value() const;
+    
+    private:
+        T m_value;
 };
 
-        enum class Mode {
-            MODE_STICKY_KEYS          = 1u << 0u,
-            MODE_STICKY_MOUSE_BUTTONS = 1u << 1u,
-        };
+T MyClass::value() const {
+    return m_value;
+}
 
-const constant = 4;
+namespace utility {
+
+    namespace detail {
+        // Nested namespaces
+        
+        struct Animal {
+            enum class State {
+                
+            };
+        }
+    
+        template <typename T>
+        concept Container = requires(T container) {
+            // 1. container must have valid begin() / end()
+            { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
+            
+            // 2. container iterator must be incrementable
+            { ++std::begin(container) };
+            
+            // 3. container iterator must support comparison operators
+            { std::begin(container) == std::begin(container) } -> std::same_as<bool>;
+            { std::begin(container) != std::begin(container) } -> std::same_as<bool>;
+            
+            // 4. container iterator must be deferenceable
+            { *std::begin(container) };
+        };
+    
+    }
+    
+    template <typename ...Ts>
+    void print(const Ts&... args) {
+        (std::cout << ... << args) << '\n';
+    }
+    
+    template <Container T>
+    void print(const T& container) {
+        std::cout << "[ ";
+        
+        std::vector<int>::const_iterator end = std::end(c);
+        for (auto iter = std::begin(c); iter != end; ++iter) {
+            std::cout << *iter;
+            if (iter + 1 != end) {
+                std::cout << ", ";
+            }
+        }
+        
+        std::cout << " ]" << '\n';
+    }
+
+}
+
+namespace math {
+
+    struct Vector3 {
+        Vector3() : x(0.0f), y(0.0f), z(0.0f) {
+        }
+    
+        Vector3(float x, float y, float z) : x(x), y(y), z(z) {
+        }
+        
+        ~Vector3() = default;
+    
+        Vector3 operator+(const Vector3& other) const {
+            return { x + other.x, y + other.y, z + other.z };
+        }
+    
+        Vector3 operator-(const Vector3& other) const {
+            return { x - other.x, y - other.y, z - other.z };
+        }
+    
+        Vector3 operator*(float s) const {
+            return { x * s, y * s, z * s };
+        }
+    
+        Vector3 operator/(float s) const {
+            return { x / s, y / s, z / s };
+        }
+    
+        // Returns the magnitude of the vector
+        float length() const {
+            return std::sqrt(x * x + y * y + z * z);
+        }
+        
+        void print() const {
+            using namespace utility;
+            print("(", x, ", ", y, ", ", z, ")");
+        }
+        
+        float x;
+        float y;
+        float z;
+    };
+
+    // Dot product
+    float dot(Vector3 a, Vector3 b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+    
+    // Cross product
+    Vector3 cross(Vector3 a, Vector3 b) {
+        return { 
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        };
+    }
+    
+    // Returns a unit vector oriented in the same direction as 'v'
+    Vector3 normalize(const Vector3& v) {
+        float length = v.length();
+        if (length > 0.0f) {
+            return v / length;
+        }
+        return { };
+    }
+
+}
+
+
 
 int main() {
-  MyClass<int> my_object;
-  my_object.my_property = 42;
-  my_object.my_property = 'd';
-  my_object.call_function();
+    // Prints "Hello, world!"
+    utility::print("Hello", ",", " ", "world", "!");
+    
+    // Prints "[ 0, 1, 2, 3, 4, 5 ]"
+    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
+    utility::print(vec);
 
-  std::move(myObject);
-
-  const CONSTANT = 123123u;
-
-  std::cout << my_object.my_property << std::endl;
-  return 0;
+    return 0;
 }
 
-
- namespace lightswitch::    asdf   {
-  class Derived : protected Base<float...> {
-        public:
-
-        protected:
-
-        private:
-         int m_member;
-  };
-}
-
-using namespace a::b::c::d;
-namespace alias = ab::t::trad;
-
-
-void TransformSystem::Update(float deltaTime) {
-  using U = lightswitch::asdf::Derived::
-lightswitch::asdf::Derived affff;
-
-    if (test) {
-        using U = std::unique_ptr<const int*, float, Tt>::gg;
-    }
-
-    #define HEHEHAHA
-    for (Transform& transformComponent : allTransformComponents) {
-      transformComponent->m_member;
-        // Update transform component here.
-       ...
-    }
-}
+#endif // TEST
 ```

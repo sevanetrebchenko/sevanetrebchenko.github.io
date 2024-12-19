@@ -1,0 +1,42 @@
+
+body {
+    margin: 0;
+}
+
+.root {
+}
+
+
+/*.landing::before {*/
+/*    display: flex;*/
+/*    flex: 1;*/
+
+/*    content: "";*/
+/*    background-color: white;*/
+/*}*/
+
+/*.landing::after {*/
+/*    display: flex;*/
+/*    flex: 1;*/
+
+/*    content: "";*/
+/*    background-color: #eeeeee;*/
+/*}*/
+
+/*.main {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+
+/*.posts-container {*/
+/*    padding: 80px;*/
+/*    background-color: #eeeeee;*/
+/*}*/
+
+/*.posts {*/
+/*    display: flex;*/
+/*    flex: 1;*/
+/*    flex-direction: column;*/
+/*    row-gap: 80px;*/
+/*}*/
+
