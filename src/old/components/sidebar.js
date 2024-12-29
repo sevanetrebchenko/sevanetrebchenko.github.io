@@ -9,16 +9,7 @@ import Tags from "./tags";
 import "./sidebar.css"
 
 function Masthead() {
-    return (
-        <Link to={'/'} className="masthead">
-            <span className="title">
-                Seva Netrebchenko
-            </span>
-            <span className="description">
-                Software engineer and graphics enthusiast
-            </span>
-        </Link>
-    )
+
 }
 
 function Social() {
@@ -40,14 +31,7 @@ function Social() {
     );
 }
 
-function Footer() {
-    return (
-        <div className="footer">
-            <Social></Social>
-            <span className="copyright">Copyright © 2024 Seva Netrebchenko</span>
-        </div>
-    );
-}
+
 
 export default function Sidebar(props) {
     const {tags, archive} = props;

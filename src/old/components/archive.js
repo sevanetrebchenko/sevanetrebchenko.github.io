@@ -21,13 +21,21 @@ export default function Archive(props) {
                         const year = date.getFullYear();
                         const path = `archive/${year}/${(date.getMonth() + 1)}`;
                         const selected = location.pathname === `/${path}`;
-                        return <SidebarButton key={path} name={`${date.toLocaleString('default', {month: 'long'})} ${year}`} count={count} selected={selected} onClick={(e) => {
+                        const selectArchive = (e) => {
                             e.preventDefault();
 
                             // Keep query params unmodified
                             const queryParams = new URLSearchParams(location.search);
                             navigateTo(selected ? `/?${queryParams.toString()}` : `${path}?${queryParams.toString()}`);
-                        }} />
+                        };
+
+                        return (
+                            <div className={"tag" + (selected ? " selected" : "")} onClick={selectArchive}>
+                                <span
+                                    className="name">{`${date.toLocaleString('default', {month: 'long'})} ${year}`}</span>
+                                <span className="count">({count})</span>
+                            </div>
+                        );
                     })
                 }
             </div>

@@ -161,7 +161,6 @@ function Application() {
     // }
     // routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
 
-
     return (
         <Router>
             <Routes>

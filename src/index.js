@@ -5,18 +5,18 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Components
-import Landing from "./pages/landing.js";
-import { getPostUrl } from "./helpers.js";
+import Landing from "./pages/landing/landing.js";
+import { getPostUrl } from "./utils.js";
 
-// Stylesheet
-import './index.css'
+// Stylesheets
+import "./index.css"
 
 // Global application state
 const initialState = {
     selectedTags: [],
     unselectedTags: [],
 };
-const GlobalStateContext = createContext();
+const GlobalStateContext = createContext(null);
 
 export function GlobalStateProvider(props) {
     const {children} = props;
@@ -135,7 +135,7 @@ function generateArchive(posts) {
     }));
 }
 
-function Application() {
+function App() {
     const content = loadContent();
     if (!content) {
         return null;
@@ -146,20 +146,17 @@ function Application() {
 
     const routes = [];
 
-    // Set up routes for main site pages
-
-    // Landing page
-    let landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
+    // Configure routes for main site pages
+    const landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
     routes.push(<Route path={'/'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
 
-    // Posts
+    // Configure routes for post pages
     // for (const post of content.posts) {
     //     routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
     // }
     // routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
-
 
     return (
         <Router>
@@ -179,6 +176,6 @@ function Application() {
 // main
 createRoot(document.getElementsByClassName('root')[0]).render(
     <GlobalStateProvider>
-        <Application />
+        <App />
     </GlobalStateProvider>
 );

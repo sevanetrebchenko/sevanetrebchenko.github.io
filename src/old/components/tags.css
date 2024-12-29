@@ -22,20 +22,7 @@
     }
 
     .sidebar-tags-elements {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
 
-        flex-wrap: wrap;
-        column-gap: 15px;
-
-        min-width: 100%;
-        max-width: 100%;
-
-        font-family: "JetBrains Mono";
-        font-weight: 200;
-
-        font-size: 16px;
     }
     .sidebar-tags-elements.selected i {
         /* translate the icon slightly down to account for tags being all lowercase */

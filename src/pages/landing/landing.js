@@ -1,11 +1,10 @@
 
-import React from "react";
-import { useLocation, useParams } from "react-router-dom";
+import React, {useEffect, useState} from "react";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
+import {useGlobalState} from "../../index";
 
 // Components
-import Sidebar from "../components/sidebar";
-import Search from "../components/search";
-import PostCard from "../components/post-card";
+import Sidebar from "./sidebar"
 
 // Stylesheets
 import "./landing.css"
@@ -72,7 +71,7 @@ export default function Landing(props) {
     return (
         <div className="landing">
             <Sidebar tags={tags} archive={archive} />
-            <Posts posts={posts} />
+            {/*<Posts posts={posts} />*/}
         </div>
     );
 }
