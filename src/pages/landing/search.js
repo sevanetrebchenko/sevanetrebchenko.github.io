@@ -1,7 +1,10 @@
-import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
+import {useLocation, useNavigate} from "react-router-dom";
 
-export default function Search(props) {
+// Stylesheet
+import "./search.css"
+
+export default function Search() {
     const location = useLocation();
     const navigateTo = useNavigate();
     const [query, setQuery] = useState("");

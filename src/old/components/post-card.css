@@ -12,56 +12,21 @@
     border-radius: 5px;
 
     .title {
-        font-family: "Noto Serif", serif;
-        font-weight: 400;
-        font-size: 32px;
-        color: black;
-        transition: color 0.15s;
+
     }
 
     .abstract {
-        font-family: "Noto Serif", serif;
-        font-weight: 300;
-        font-size: 18px;
+
     }
 
     .date {
-        font-family: "Noto Serif", serif;
-        font-size: 19px;
-        font-weight: 300;
-        color: black;
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        column-gap: 10px;
+
     }
 
-    .categories {
-        display: flex;
-        flex-direction: row;
-        column-gap: 20px;
 
-        span {
-            font-family: "JetBrains Mono";
-            font-weight: 200;
-            color: inherit;
-            transition: color 0.15s;
-
-            /* Visually align text baseline with the date */
-            transform: translateY(-2.5%);
-        }
-        span.selected {
-            color: orange;
-        }
-        span:hover {
-            cursor: pointer;
-            color: gainsboro;
-        }
-    }
 }
 .card:hover {
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1)
+
 }
 
 .abstract {
@@ -71,10 +36,5 @@
 }
 
 .meta {
-    display: flex;
-    flex-direction: row;
-    column-gap: 40px;
-    align-items: baseline;
 
-    color: gray;
 }

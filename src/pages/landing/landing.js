@@ -1,10 +1,11 @@
 
-import React, {useEffect, useState} from "react";
-import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
-import {useGlobalState} from "../../index";
+import React from "react";
+import {useLocation, useParams} from "react-router-dom";
 
 // Components
 import Sidebar from "./sidebar"
+import Postcard from "./postcard";
+import Search from "./search";
 
 // Stylesheets
 import "./landing.css"
@@ -53,11 +54,11 @@ function Posts(props) {
 
     return (
         <div className="posts">
-            <Search />
+            <Search></Search>
             <div className="content">
                 {
                     filtered.map((post, id) => (
-                        <PostCard post={post} key={id} />
+                        <Postcard post={post} key={id} />
                     ))
                 }
             </div>
@@ -71,7 +72,7 @@ export default function Landing(props) {
     return (
         <div className="landing">
             <Sidebar tags={tags} archive={archive} />
-            {/*<Posts posts={posts} />*/}
+            <Posts posts={posts} />
         </div>
     );
 }
