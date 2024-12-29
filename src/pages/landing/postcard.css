@@ -78,3 +78,7 @@
     cursor: pointer;
     color: gainsboro;
 }
+.postcard > .metadata .tag.selected:hover {
+    cursor: pointer;
+    color: orange;
+}
