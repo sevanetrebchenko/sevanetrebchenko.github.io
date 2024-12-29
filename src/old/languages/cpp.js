@@ -46,54 +46,42 @@ function isLowercase(token) {
 }
 
 function parseClassNames(tokens) {
-    // register classes parsed by the parsing library
+    // Include classes parsed by Prism
     for (let token of tokens) {
         let content = token.content;
         let types = token.types;
 
-        if (types.includes('class-name') && !classes.includes(content)) {
+        if (types.includes("class-name") && !classes.includes(content)) {
             classes.push(content);
         }
     }
 
-    let line = '';
+    let line = "";
     for (let token of tokens) {
         line += token.content.toString();
     }
 
-    // parsing: using alias = a::b::c; (where c is a namespace class member)
+    // using alias = a::b::c; (where c is a class within namespace a::b)
     {
-        let regex = /^\s*using \w+ = [\s\S]+/;
-        let match = regex.exec(line);
-
-        let keywords = [
-            'bool', 'b8',
-            'char', 'u8', 'i8',
-            'short', 'u16', 'i16',
-            'int', 'u32', 'i32',
-            'float', 'f32',
-            'double', 'f64',
-            'void',
-            'unsigned', 'signed',
-            'const'
-        ];
-
+        const regexp = /^\s*using \w+ = [\s\S]+/;
+        const match = regexp.exec(line);
         if (match) {
-            const names = match[0].replace(/(\s*using )/, '').replace(/( = )|[,\s<>]+/g, '::').split(/:{2}/);
+            const names = match[0].replace(/\s*using\s+/, "").replace(/[,\s<>=]+/g, ":").split(":");
 
-            for (let i in names) {
+            for (const i in names) {
                 let name = names[i];
-                name = name.replace(/[*&]+/g, '');
 
-                if (name == '') {
+                // Alias may be for a pointer / reference type
+                name = name.replace(/[*&]+/g, "");
+                if (name === "") {
                     continue;
                 }
-
                 if (keywords.includes(name)) {
+                    // Type may contain C++ keywords, which should be ignored
                     continue;
                 }
 
-                // lowercase identifiers typically represent global variables or namespaces
+                // In my personal coding style, lowercase identifiers represent namespaces and should not be considered here
                 if (!classes.includes(name) && !isLowercase(name)) {
                     classes.push(name);
                 }
@@ -108,22 +96,19 @@ function parseNamespaceNames(tokens) {
         line += token.content.toString();
     }
 
-    // valid syntax highlighting variants:
+    // As this syntax highlighting is based on my personal C++ coding style, there is a subset of valid namespace variants that I use:
     //   - namespace a::b::c { ... }
     //   - using namespace a::b::c;
     //   - namespace alias = a::b::c;
-    //   - using a::b; (namespace class member)
 
-    // parsing: namespace a::b::c { ... }
+    // namespace a::b::c { ... }
     {
-        let regex = /^\s*(?:\bnamespace\b)\s+[a-zA-Z0-9_:\s]+/;
-        let match = regex.exec(line);
-
+        const regexp = /^\s*\bnamespace\b\s+[a-zA-Z0-9_:\s]+/;
+        const match = regexp.exec(line);
         if (match) {
-            // split by scope resolution operator
-            const names = match[0].replace(/\bnamespace\b|[:]/g, ' ').trim().split(/\s+/);
-
-            for (let name of names) {
+            // Split by scope resolution operator
+            const names = match[0].replace(/\bnamespace\b|:/g, " ").trim().split(/\s+/);
+            for (const name of names) {
                 if (!namespaces.includes(name)) {
                     namespaces.push(name);
                 }
@@ -131,16 +116,14 @@ function parseNamespaceNames(tokens) {
         }
     }
 
-    // parsing: using namespace a::b::c;
+    // using namespace a::b::c;
     {
-        let regex = /^\s*(?:\busing\b)\s+(?:\bnamespace\b)\s+[a-zA-Z0-9_:\s]+/;
-        let match = regex.exec(line);
-
+        const regexp = /^\s*\busing\b\s+\bnamespace\b\s+[a-zA-Z0-9_:\s]+/;
+        const match = regexp.exec(line);
         if (match) {
-            // split by scope resolution operator
-            const names = match[0].replace(/(\busing\b)|(\bnamespace\b)|[:]/g, ' ').trim().split(/\s+/);
-
-            for (let name of names) {
+            // Split by scope resolution operator
+            const names = match[0].replace(/\busing\b|\bnamespace\b|:/g, " ").trim().split(/\s+/);
+            for (const name of names) {
                 if (!namespaces.includes(name)) {
                     namespaces.push(name);
                 }
@@ -148,63 +131,15 @@ function parseNamespaceNames(tokens) {
         }
     }
 
-    // parsing: namespace alias = a::b::c;
+    // namespace alias = a::b::c;
     {
-        let regex = /^\s*(?:\bnamespace\b)\s+\w+\s+=\s+[a-zA-Z0-9_:\s]+/;
-        let match = regex.exec(line);
-
+        const regexp = /^\s*\bnamespace\b\s+\w+\s+=\s+[a-zA-Z0-9_:\s]+/;
+        const match = regexp.exec(line);
         if (match) {
-            const names = match[0].replace(/(\bnamespace\b)|[:=]/g, ' ').trim().split(/\s+/);
-
-            for (let name of names) {
+            const names = match[0].replace(/\bnamespace\b|[:=]/g, ' ').trim().split(/\s+/);
+            for (const name of names) {
                 if (!namespaces.includes(name)) {
                     namespaces.push(name);
-                }
-            }
-        }
-    }
-
-    // parsing: using alias = a::b::c;
-    {
-        let regex = /^\s*(?:\busing\b)\s+\w+\s+=\s+[a-zA-Z0-9_:<>,\*&\s]+/;
-        let match = regex.exec(line);
-
-        let keywords = [
-            'bool', 'b8',
-            'char', 'u8', 'i8',
-            'short', 'u16', 'i16',
-            'int', 'u32', 'i32',
-            'float', 'f32',
-            'double', 'f64',
-            'void',
-            'unsigned', 'signed',
-            'const'
-        ];
-
-        if (match) {
-            const names = match[0].replace(/(\busing\b)|[:<>,\*&\s=]/g, ' ').trim().split(/\s+/g);
-
-            // 'c' from the above comment can either be a namespace class member or a global namespace variable
-            const c = names.pop();
-
-            if (!isLowercase(c) && !classes.includes(c)) {
-                // all lowercase trailing identifier is a global namespace member variable and has no syntax highlighting
-                classes.push(c);
-            }
-
-            for (let name of names) {
-                if (keywords.includes(name)) {
-                    continue;
-                }
-
-                // namespaces are always going to be lowercase
-                if (isLowercase(name)) {
-                    if (!namespaces.includes(name)) {
-                        namespaces.push(name);
-                    }
-                }
-                else if (!classes.includes(name)) {
-                    classes.push(name);
                 }
             }
         }

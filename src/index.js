@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Components
 import Landing from "./pages/landing/landing.js";
+import Post from "./pages/post/post"
 import { getPostUrl } from "./utils.js";
 
 // Stylesheets
@@ -148,15 +149,15 @@ function App() {
 
     // Configure routes for main site pages
     const landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
-    routes.push(<Route path={'/'} element={landing}></Route>);
+    // routes.push(<Route path={'/'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
 
     // Configure routes for post pages
-    // for (const post of content.posts) {
-    //     routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
-    // }
-    // routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
+    for (const post of content.posts) {
+        routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
+    }
+    routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
 
     return (
         <Router>
