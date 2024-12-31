@@ -3,82 +3,7 @@ let memberVariables = [];
 
 // Contains a non-exhaustive list of standard C++ types I use
 let classes = [
-    // Containers
-    "array",
-    "vector",
-    "list",
-    "forward_list",
-    "deque",
-    "queue",
-    "priority_queue",
-    "stack",
-    "set",
-    "multiset",
-    "map",
-    "multimap",
-    "unordered_set",
-    "unordered_multiset",
-    "unordered_map",
-    "unordered_multimap",
 
-    // Types
-    "string",
-    "wstring",
-    "u16string",
-    "u32string",
-    "pair",
-    "tuple",
-    "complex",
-    "random_device",
-    "mt19937",
-    "any",
-    "optional",
-    "variant",
-    "function",
-    "regex",
-    "smatch",
-
-    // Streams
-    "cin",
-    "cout",
-    "cerr",
-    "ifstream",
-    "ofstream",
-    "fstream",
-    "istringstream",
-    "ostringstream",
-    "stringstream",
-
-    // Managed pointers
-    "unique_ptr",
-    "shared_ptr",
-    "weak_ptr",
-
-    // Threading
-    "thread",
-    "mutex",
-    "lock_guard",
-    "unique_lock",
-    "condition_variable",
-    "future",
-    "promise",
-    "async",
-
-    // Chrono library
-    "time_point",
-    "duration",
-    "system_clock",
-    "high_resolution_clock",
-
-    // Exceptions
-    "exception",
-    "runtime_error",
-    "logic_error",
-    "domain_error",
-    "invalid_argument",
-    "out_of_range",
-
-    "type" // Support for ::type to be registered as a class
 ];
 
 let keywords = [
@@ -897,11 +822,178 @@ function updateSyntaxHighlighting(tokens) {
     return updatedTokens;
 }
 
+function applyNamespaceNames(lines) {
+    // double-colons get parsed as namespaces with the custom Prism syntax highlighting
+    // Remove this manually
+    for (let line = 0; line < lines.length; ++line) {
+        for (let token of lines[line]) {
+            if (token.types.includes("double-colon")) {
+                token.types = ["double-colon"];
+            }
+        }
+    }
+
+    // Extract all namespace names
+    let namespaceNames = [
+        // Standard namespace names
+        "std",
+        "chrono",
+        "this_thread",
+        "experimental",
+        "filesystem",
+        "ranges",
+        "literals",
+        "numeric_limits",
+        "random",
+        "ios",
+        "type_traits",
+        "algorithm",
+        "iterator",
+        "memory",
+        "locale",
+        "placeholders"
+    ];
+
+    for (let line = 0; line < lines.length; ++line) {
+        for (let token of lines[line]) {
+            if (token.types.includes("namespace-name") && !namespaceNames.includes(token.content)) {
+                namespaceNames.push(token.content);
+            }
+        }
+    }
+
+    // Apply namespace name syntax highlighting
+    for (let line = 0; line < lines.length; ++line) {
+        for (let token of lines[line]) {
+            if (namespaceNames.includes(token.content) && !token.types.includes("namespace-name")) {
+                token.types = ["namespace-name"];
+            }
+        }
+    }
+}
+
+function applyClassNames(lines) {
+    // Extract all class names
+    let classNames = [
+        // Containers
+        "array",
+        "vector",
+        "list",
+        "forward_list",
+        "deque",
+        "queue",
+        "priority_queue",
+        "stack",
+        "set",
+        "multiset",
+        "map",
+        "multimap",
+        "unordered_set",
+        "unordered_multiset",
+        "unordered_map",
+        "unordered_multimap",
+
+        // Types
+        "string",
+        "string_view",
+        "wstring",
+        "u16string",
+        "u32string",
+        "pair",
+        "tuple",
+        "complex",
+        "random_device",
+        "mt19937",
+        "source_location",
+        "any",
+        "optional",
+        "variant",
+        "function",
+        "regex",
+        "smatch",
+
+        // Streams
+        "cin",
+        "cout",
+        "cerr",
+        "ifstream",
+        "ofstream",
+        "fstream",
+        "istringstream",
+        "ostringstream",
+        "stringstream",
+
+        // Managed pointers
+        "unique_ptr",
+        "shared_ptr",
+        "weak_ptr",
+
+        // Threading
+        "thread",
+        "mutex",
+        "lock_guard",
+        "unique_lock",
+        "condition_variable",
+        "future",
+        "promise",
+        "async",
+
+        // Chrono library
+        "time_point",
+        "duration",
+        "system_clock",
+        "high_resolution_clock",
+
+        // Exceptions
+        "exception",
+        "runtime_error",
+        "logic_error",
+        "domain_error",
+        "invalid_argument",
+        "out_of_range",
+
+        // Iterators
+        "iterator",
+        "const_iterator",
+
+        "type" // Support for ::type to be registered as a class
+    ];
+
+    for (let line = 0; line < lines.length; ++line) {
+        for (let token of lines[line]) {
+            if (token.types.includes("class-name") && !classNames.includes(token.content)) {
+                classNames.push(token.content);
+            }
+        }
+    }
+
+    // Apply class name syntax highlighting
+    for (let line = 0; line < lines.length; ++line) {
+        for (let i = 0; i < lines[line].length; ++i) {
+            const current = lines[line][i];
+
+            if (i > 0) {
+                const previous = lines[line][i - 1];
+
+                if (classNames.includes(current.content)) {
+                    if (previous.content === "::") {
+                        // Invoking a constructor, should be highlighted as a type
+                        // example: my_namespace::MyType(...)
+                        current.types = ["class-name"];
+                    }
+                    else if (current.types.includes("plain")) {
+                        current.types = ["class-name"];
+                    }
+                }
+            }
+        }
+    }
+}
+
 // cpp-specific processing
 export default function processLanguageCpp(tokens) {
-    for (let i = 0; i < tokens.length; ++i) {
-        tokens[i] = updateSyntaxHighlighting(tokens[i]);
-    }
+    applyNamespaceNames(tokens);
+    applyClassNames(tokens);
 
     return tokens;
 }

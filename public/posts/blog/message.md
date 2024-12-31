@@ -73,6 +73,14 @@ T MyClass::value() const {
     return m_value;
 }
 
+namespace outer::inner {
+}
+
+enum class State {
+    IDLE,
+    ALERT
+};
+
 namespace utility {
 
     namespace detail {
@@ -80,7 +88,8 @@ namespace utility {
         
         struct Animal {
             enum class State {
-                
+                IDLE,
+                ALERT
             };
         };
     
@@ -107,7 +116,7 @@ namespace utility {
         (std::cout << ... << args) << '\n';
     }
     
-    template <Container T>
+    template <typename T, template <typename> class G>
     void print(const T& container) {
         std::cout << "[ ";
         

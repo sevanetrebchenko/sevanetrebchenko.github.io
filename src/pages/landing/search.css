@@ -23,9 +23,6 @@
     transition: 0.15s;
     color: gainsboro;
 }
-.search .search-button:hover {
-    color: gray;
-}
 
 .search .clear-button {
     transition: 0.15s;

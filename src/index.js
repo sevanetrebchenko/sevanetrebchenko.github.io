@@ -149,7 +149,7 @@ function App() {
 
     // Configure routes for main site pages
     const landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
-    routes.push(<Route path={'/'} element={landing}></Route>);
+    // routes.push(<Route path={'/'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
     routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
 
@@ -157,6 +157,7 @@ function App() {
     for (const post of content.posts) {
         routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
     }
+    routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
 
     return (
         <Router>

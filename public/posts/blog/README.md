@@ -42,7 +42,8 @@ namespace utility {
         
         struct Animal {
             enum class State {
-                
+                IDLE,
+                ALERT
             };
         };
     

@@ -196,12 +196,11 @@ div[class*="language-"] {
     color: rgb(106, 135, 89);
 }
 
-.language-cpp .macro-directive-hash,
-.language-cpp .macro-directive,
-.language-cpp .macro-expression {
+.language-cpp .macro.directive-hash,
+.language-cpp .macro.directive {
     color: rgb(187, 181, 41);
 }
-.language-cpp .macro-name {
+.language-cpp .macro.macro-name {
     color: 	rgb(144, 139, 37);
 }
 
@@ -210,8 +209,13 @@ div[class*="language-"] {
 }
 
 .language-cpp .class-name,
-.language-cpp .namespace-name {
+.language-cpp .namespace-name,
+.language-cpp .enum-name {
     color: rgb(181, 182, 227);
+}
+
+.language-cpp .double-colon {
+    color: rgb(169, 183, 198);
 }
 
 .language-cpp .number,
