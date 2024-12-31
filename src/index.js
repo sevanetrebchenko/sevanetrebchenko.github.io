@@ -157,7 +157,6 @@ function App() {
     for (const post of content.posts) {
         routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
     }
-    routes.push(<Route path={'/'} element={<Post post={content.posts[0]} />}></Route>);
 
     return (
         <Router>

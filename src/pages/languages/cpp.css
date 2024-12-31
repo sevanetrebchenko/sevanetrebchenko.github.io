@@ -139,22 +139,25 @@ div[class*="language-"] {
 }
 
 .metadata .padding {
-    padding-left: 0.5em;
-    padding-right: 0.5em;
+    /* Needs to match .code padding */
+    padding-left: 9px;
+    padding-right: 9px;
 }
 
 .code {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+
+    padding-left: 18px;
+    padding-right: 18px;
 }
 
-.code div {
+.code code {
     display: flex;
     flex-direction: row;
 }
 
-/* diff */
 .diff {
     padding: 0 1em 0 1em;
 }
@@ -221,5 +224,5 @@ div[class*="language-"] {
 }
 
 .language-cpp .undefined {
-    color: 	rgb(104, 106, 78);
+    color: rgb(104, 106, 78);
 }

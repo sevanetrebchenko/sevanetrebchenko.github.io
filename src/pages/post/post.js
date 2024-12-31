@@ -3,17 +3,75 @@ import ReactMarkdown from "react-markdown";
 import RehypeRaw from "rehype-raw";
 import RemarkGFM from "remark-gfm";
 import rangeParser from "parse-numeric-range";
-import processLanguageCpp from "../../old/languages/cpp";
+import processLanguageCpp from "../languages/cpp";
 import {Prism} from "prism-react-renderer";
+import {useNavigate} from "react-router-dom";
 
 // Stylesheet
 import "./post.css"
+
+function Header(props) {
+    const {title, tags, publishedDate, lastModifiedDate} = props;
+    const navigateTo = useNavigate();
+
+    const onClick = (e) => {
+        e.preventDefault();
+        navigateTo("/");
+    }
+
+    return (
+        <div className="header">
+            <div className="back">
+                <i className="fa-solid fa-chevron-left"></i>
+                <span onClick={onClick}>BACK</span>
+            </div>
+            <div className="title">
+                {title}
+            </div>
+            <div className="metadata">
+                <span>
+                    {
+                        `Published ${publishedDate.toLocaleString('default', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric'
+                        })}`
+                    }
+                </span>
+                <div className="separator"></div>
+                <span>
+                    {
+                        `Last revised ${lastModifiedDate.toLocaleString('default', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true, // Use 12-hour format with AM/PM
+                        })}`
+                    }
+                </span>
+            </div>
+        </div>
+    );
+}
 
 function MarkdownFile(props) {
     const {filepath, content} = props;
 
     const MarkdownComponents = {
         code({node, inline, className, children, ...args}) {
+            if (inline) {
+                // Inline code block
+                return (
+                    <span className="inline">
+                        {children}
+                    </span>
+                );
+            }
+
+            // Code block
+
             // Helper functions to transform results from Prism syntax highlighting
             const processToken = function (token, parentTypes = []) {
                 let tokenized = [];
@@ -69,7 +127,6 @@ function MarkdownFile(props) {
 
                     if (token.content instanceof Array) {
                         // Macro definitions are wrapped into Token arrays
-                        console.log(token)
                         for (let element of token.content) {
                             tokenized = tokenized.concat(processToken(element, types));
                         }
@@ -196,14 +253,12 @@ function MarkdownFile(props) {
                 }
             }
 
-            // remove hidden lines
+            // remove hidden lines from final output
             for (let i = tokens.length - 1; i >= 0; --i) {
                 if (hidden.includes(i + 1)) {
                     tokens.splice(i, 1);
                 }
             }
-
-            let containers = [];
 
             let metadataContainer = [];
             let codeContainer = [];
@@ -224,7 +279,7 @@ function MarkdownFile(props) {
                 }
 
                 // diff
-                let override = '';
+                let override = null;
                 if (added.length > 0 || removed.length > 0) {
                     let symbol = ' ';
 
@@ -245,15 +300,10 @@ function MarkdownFile(props) {
                         override = 'highlighted';
                     }
 
-                    if (override.length > 0) {
+                    if (override?.length > 0) {
                         metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
                         metadataBlock.push(<div className={override}>{symbol}</div>);
                         metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
-                    }
-                    else {
-                        metadataBlock.push(<div className='padding'></div>);
-                        metadataBlock.push(<div>{symbol}</div>);
-                        metadataBlock.push(<div className='padding'></div>);
                     }
                 }
                 else {
@@ -264,25 +314,25 @@ function MarkdownFile(props) {
                         override = 'highlighted';
                     }
 
-                    metadataBlock.push(<div className={('padding' + ' ' + override).trim()}></div>);
+                    if (override) {
+                        metadataBlock.push(<div className={('padding' + ' ' + override).trim()}></div>);
+                    }
+                }
+                if (metadataBlock.length > 0) {
+                    metadataContainer.push(
+                        <div>
+                            {
+                                metadataBlock.map((element, index) => (
+                                    <React.Fragment key={index}>
+                                        {element}
+                                    </React.Fragment>
+                                ))
+                            }
+                        </div>
+                    );
                 }
 
-                metadataContainer.push(
-                    <div className='meta-block'>
-                        {
-                            metadataBlock.map((element, index) => (
-                                <React.Fragment key={index}>
-                                    {element}
-                                </React.Fragment>
-                            ))
-                        }
-                    </div>
-                );
-
-
-                // code block
                 let codeBlock = [];
-
                 codeBlock.push(
                     <div className={'block'}>
                         {
@@ -295,10 +345,12 @@ function MarkdownFile(props) {
                     </div>
                 );
 
-                codeBlock.push(<div className={'padding'}></div>);
+                if (metadataBlock.length > 0) {
+                    codeBlock.push(<div className={'padding'}></div>);
+                }
 
                 codeContainer.push(
-                    <div className={('code-block' + ' ' + override).trim()}>
+                    <div className={override ? override : null}>
                         {
                             codeBlock.map((element, index) => (
                                 <Fragment key={index}>
@@ -312,7 +364,7 @@ function MarkdownFile(props) {
 
             return (
                 <div className={className}>
-                    <div className='meta-container'>
+                    {metadataContainer.length > 0 ? <div className='metadata'>
                         {
                             metadataContainer.map((element, index) => (
                                 <Fragment key={index}>
@@ -320,8 +372,8 @@ function MarkdownFile(props) {
                                 </Fragment>
                             ))
                         }
-                    </div>
-                    <div className='code-container'>
+                    </div> : null }
+                    <div className='code'>
                         {
                             codeContainer.map((element, index) => (
                                 <Fragment key={index}>
@@ -345,49 +397,51 @@ function MarkdownFile(props) {
 export default function Post(props) {
     const {post} = props;
     const [content, setContent] = useState("");
+    const [lastModified, setLastModified] = useState(null);
 
     // load post content
     useEffect(() => {
-        const request = new Request(post.filepath, {
-            method: "GET",
-            mode: "same-origin",
-            cache: "reload",
-            credentials: "same-origin",
-            headers: {
-                'Accept': "text/plain",
-                'Content-Type': "text/plain",
+        async function loadFile(url) {
+            const response = await fetch(url, {
+                method: "GET",
+                mode: "same-origin",
+                cache: "reload",
+                credentials: "same-origin",
+                headers: {
+                    'Accept': "text/plain",
+                    'Content-Type': "text/plain",
+                }
+            });
+
+            if (!response.ok) {
+                console.error(`Error loading file ${url}: ${response.statusText}`);
+                return null;
             }
+
+            const text = await response.text();
+            const lastModified = response.headers.get("Last-Modified");
+
+            return {
+                text: text,
+                lastModified: lastModified
+            };
+        }
+
+        loadFile(post.filepath).then(({ text, lastModified }) => {
+            setContent(text);
+            setLastModified(new Date(lastModified));
         });
-
-        const getFile = () => {
-            fetch(request)
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            return "File not found.";
-                        }
-
-                        throw new Error('fetch() response was not ok');
-                    }
-
-                    return response.text();
-                })
-                .then(text => {
-                    setContent(text);
-                });
-        };
-
-        getFile();
     }, []);
+
+    if (!lastModified) {
+        return <span>{"Loading..."}</span>
+    }
 
     return (
         <div className="post">
-            <div className="header">
-                <span className="title">{post.title}</span>
-            </div>
-            <div className="content">
-                <MarkdownFile filepath={post.filepath} content={content}/>
-            </div>
+            <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={lastModified}/>
+            <MarkdownFile filepath={post.filepath} content={content}/>
+            <div className="footer"></div>
         </div>
     );
 }
