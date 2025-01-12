@@ -193,7 +193,7 @@ div[class*="language-"] {
 
 .language-cpp .string,
 .language-cpp .char {
-    color: rgb(106, 135, 89);
+    color: rgb(106, 171, 115);
 }
 
 .language-cpp .macro.directive-hash,
@@ -214,17 +214,25 @@ div[class*="language-"] {
     color: rgb(181, 182, 227);
 }
 
+.language-cpp .enum-value {
+    color: rgb(199, 125, 187);
+}
+
 .language-cpp .double-colon {
     color: rgb(169, 183, 198);
 }
 
 .language-cpp .number,
 .language-cpp .symbol {
-    color: rgb(104, 151, 187);
+    color: rgb(42, 172, 184);
 }
 
 .language-cpp .member-variable {
     color: rgb(152, 118, 170);
+}
+
+.language-cpp .function-operator {
+    color: rgb(95, 140, 138);
 }
 
 .language-cpp .undefined {

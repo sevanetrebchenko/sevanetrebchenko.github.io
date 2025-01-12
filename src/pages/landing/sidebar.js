@@ -23,7 +23,7 @@ function Header() {
 
     return (
         <div className="header" onClick={onClick}>
-            <span className="title">Title</span>
+            <span className="title">Seva Netrebchenko</span>
             <span className="description">Software engineer and graphics enthusiast</span>
         </div>
     );

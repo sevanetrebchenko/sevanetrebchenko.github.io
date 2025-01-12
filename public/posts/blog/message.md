@@ -13,187 +13,201 @@ The concept of a format string is pretty simple. You have a set of placeholders 
 The main interface of the library is as follows:
 
 ```cpp
-struct FormatString {
-    FormatString(const std::string& format, std::source_location source = std::source_location::current());
-    FormatString(std::string_view format, std::source_location source = std::source_location::current());
-    FormatString(const char* format, std::source_location source = std::source_location::current());
-    ~FormatString();
-    
-    std::string_view format;
-    std::source_location source;
-};
 
-template <typename T>
-struct NamedArgument {
-    using type = T;
-    
-    NamedArgument(std::string_view name, const T& value);
-    ~NamedArgument();
 
-    std::string_view name;
-    const T& value;
-};
+//#pragma once
 
-template <typename ...Ts>
-std::string format(FormatString fmt, const Ts&... args);
-```
-
-This is just a test
-```cpp added:{} removed:{} modified:{} highlighted:{} hidden:{} line-numbers:{enable}
-#pragma once
-
-#include <stdexcept> // std::runtime_error
-#include <string> // std::string
+# include <stdexcept> // std::runtime_error
 #include <iostream> // std::cout
 #include <concepts> // std::same_as
+#include <vector> // std::vector
+#include <cmath> // std::sqrt
 
 #define ASSERT(EXPRESSION, MESSAGE)        \
     if (!(EXPRESSION)) {                   \
-        throw std::runtime_error(MESSAGE); \
+        throw [[namespace-name,std]]::[[class-name,runtime_error]](MESSAGE); \
     }
 
-template <typename T>
-class MyClass {
+#define TEST 15
+#define MyTYPE [[class-name,MyClass]]<float>
+
+#if defined TEST
+#endif
+
+template <typename [[class-name,T]]>
+class [[class-name,MyClass]] {
     public:
-        MyClass(T value) : m_value(value) {
+        static int [[member-variable,my_static]];
+
+        static void build();
+
+        MyClass([[class-name,T]] value)
+         : [[member-variable,m_value]](value) {
             ASSERT(value > 0, "value must be greater than 0");
+            [[member-variable,m_value]];
+            [[member-variable,my_static]];
         }
-        
+
         ~MyClass() {
             // Complex destructor logic
         }
-    
-        T value() const;
-    
+
+        [[class-name,T]] value() const;
+
     private:
-        T m_value;
+        [[class-name,T]] [[member-variable,m_value]];
 };
 
-T MyClass::value() const {
-    return m_value;
+template <typename [[class-name,T]]>
+[[class-name,T]] [[class-name,MyClass]]<[[class-name,T]]>::value() const {
+    return [[member-variable,m_value]];
 }
 
-namespace outer::inner {
-}
+using namespace [[namespace-name,std]];
 
-enum class State {
-    IDLE,
-    ALERT
-};
+namespace [[namespace-name,utility]] {
 
-namespace utility {
-
-    namespace detail {
+    namespace [[namespace-name,detail]] {
         // Nested namespaces
-        
-        struct Animal {
-            enum class State {
-                IDLE,
-                ALERT
+
+        struct [[class-name,Animal]] {
+            enum class [[enum-name,State]] {
+                [[enum-value,AWAKE]],
+                [[enum-value,ASLEEP]] = 4
             };
         };
-    
-        template <typename T>
-        concept Container = requires(T container) {
+
+        template <typename [[class-name,T]]>
+        concept Container = requires([[class-name,T]] container) {
             // 1. container must have valid begin() / end()
-            { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
-            
+            { [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<decltype([[namespace-name,std]]::end(container))>;
+
             // 2. container iterator must be incrementable
-            { ++std::begin(container) };
-            
+            { ++[[namespace-name,std]]::begin(container) };
+
             // 3. container iterator must support comparison operators
-            { std::begin(container) == std::begin(container) } -> std::same_as<bool>;
-            { std::begin(container) != std::begin(container) } -> std::same_as<bool>;
-            
+            { [[namespace-name,std]]::begin(container) == [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<bool>;
+            { [[namespace-name,std]]::begin(container) != [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<bool>;
+
             // 4. container iterator must be deferenceable
-            { *std::begin(container) };
+            { *[[namespace-name,std]]::begin(container) };
         };
-    
+
     }
-    
+
     template <typename ...Ts>
     void print(const Ts&... args) {
-        (std::cout << ... << args) << '\n';
+         ([[namespace-name,std]]::[[class-name,cout]] << ... << args) << '\n';
     }
-    
-    template <typename T, template <typename> class G>
-    void print(const T& container) {
-        std::cout << "[ ";
-        
-        std::vector<int>::const_iterator end = std::end(c);
-        for (auto iter = std::begin(c); iter != end; ++iter) {
-            std::cout << *iter;
+
+    template <[[namespace-name,detail]]::[[class-name,Container]] C>
+    void print(const C& c) {
+        [[namespace-name,std]]::[[class-name,cout]] << "[ ";
+
+        [[namespace-name,std]]::[[class-name,vector]]<int>::[[class-name,const_iterator]] end = [[namespace-name,std]]::end(c);
+        for (auto iter = [[namespace-name,std]]::begin(c); iter != end; [[function-operator,++iter) {]]
+            [[namespace-name,std]]::[[class-name,cout]] << *iter;
             if (iter + 1 != end) {
-                std::cout << ", ";
+                [[namespace-name,std]]::[[class-name,cout]] << ", ";
             }
         }
-        
-        std::cout << " ]" << '\n';
+
+        [[namespace-name,std]]::[[class-name,cout]] << " ]" << '\n';
     }
 
 }
 
-namespace math {
+template <typename [[class-name,T]]>
+class [[class-name,Test]] {
+                public:
+                    using [[class-name,type]] = [[class-name,T]];
+            };
 
-    struct Vector3 {
-        Vector3() : x(0.0f), y(0.0f), z(0.0f) {
+namespace [[namespace-name,outer]]::[[namespace-name,inner]] {
+}
+
+namespace [[namespace-name,math]] {
+
+    int test(const [[class-name,Test]]<[[class-name,Test]]<int>>& a) {
+        auto b = []() {
+            [[namespace-name,std]]::[[class-name,cout]];
         }
-    
-        Vector3(float x, float y, float z) : x(x), y(y), z(z) {
+    }
+
+    struct [[class-name,Vector3]] {
+        Vector3();
+
+        Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) {
         }
-        
+
+        Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) {
+        }
+
         ~Vector3() = default;
-    
-        Vector3 operator+(const Vector3& other) const {
-            return { x + other.x, y + other.y, z + other.z };
+
+        [[class-name,Vector3]] operator[[function-operator,<<=]](const [[class-name,Vector3]]& other) const {
+            return { [[member-variable,x]] + other.[[member-variable,x]], [[member-variable,y]] + other.[[member-variable,y]], [[member-variable,z]] + other.[[member-variable,z]] };
         }
-    
-        Vector3 operator-(const Vector3& other) const {
-            return { x - other.x, y - other.y, z - other.z };
+
+        [[class-name,Vector3]] operator [[function-operator,+]](const [[class-name,Vector3]]& other) const {
+            return { [[member-variable,x]] + other.[[member-variable,x]], [[member-variable,y]] + other.[[member-variable,y]], [[member-variable,z]] + other.[[member-variable,z]] };
         }
-    
-        Vector3 operator*(float s) const {
-            return { x * s, y * s, z * s };
+
+        [[class-name,Vector3]] operator[[function-operator,-]](const [[class-name,Vector3]]& other) const {
+            return { [[member-variable,x]] - other.[[member-variable,x]], [[member-variable,y]] - other.[[member-variable,y]], [[member-variable,z]] - other.[[member-variable,z]] };
         }
-    
-        Vector3 operator/(float s) const {
-            return { x / s, y / s, z / s };
+
+        [[class-name,Vector3]] operator[[function-operator,*]](float s) const {
+            return { [[member-variable,x]] * s, [[member-variable,y]] * s, [[member-variable,z]] * s };
         }
-    
+
+        // Overloading the dereference operator
+        int& operator[[function-operator,*]]() {
+            return &[[member-variable,x]];
+        }
+
+        [[class-name,Vector3]] operator[[function-operator,/]](float s) const {
+            return { [[member-variable,x]] / s, [[member-variable,y]] / s, [[member-variable,z]] / s };
+        }
+
         // Returns the magnitude of the vector
         float length() const {
-            return std::sqrt(x * x + y * y + z * z);
+            return [[namespace-name,std]]::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
         }
-        
+
         void print() const {
-            using namespace utility;
-            print("(", x, ", ", y, ", ", z, ")");
+            namespace [[namespace-name,u]] = [[namespace-name,utility]]::[[namespace-name,detail]];
+            [[namespace-name,utility]]::[[namespace-name,detail]]::print("(", [[member-variable,x]], ", ", [[member-variable,y]], ", ", [[member-variable,z]], ")");
+            asdf::print("");
         }
-        
-        float x;
-        float y;
-        float z;
+
+        float [[member-variable,x]];
+        float [[member-variable,y]];
+        float [[member-variable,z]];
     };
 
     // Dot product
-    float dot(Vector3 a, Vector3 b) {
-        return a.x * b.x + a.y * b.y + a.z * b.z;
+    float dot([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
+        return a.[[member-variable,x]] * b.[[member-variable,x]] + a.[[member-variable,y]] * b.[[member-variable,y]] + a.[[member-variable,z]] * b.[[member-variable,z]];
     }
-    
+
     // Cross product
-    Vector3 cross(Vector3 a, Vector3 b) {
-        return { 
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x
+    [[class-name,Vector3]] cross([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
+        return {
+            a.[[member-variable,y]] * b.[[member-variable,z]] - a.[[member-variable,z]] * b.[[member-variable,y]],
+            a.[[member-variable,z]] * b.[[member-variable,x]] - a.[[member-variable,x]] * b.[[member-variable,z]],
+            a.[[member-variable,x]] * b.[[member-variable,y]] - a.[[member-variable,y]] * b.[[member-variable,x]]
         };
     }
-    
+
     // Returns a unit vector oriented in the same direction as 'v'
-    Vector3 normalize(const Vector3& v) {
+    [[class-name,Vector3]] normalize(const [[class-name,Vector3]]& v) {
+        Vector* ve = new Vector();
+        [[function-operator,*ve = 2;]]
+
         float length = v.length();
         if (length > 0.0f) {
-            return v / length;
+            return ([[function-operator,v]] / length);
         }
         return { };
     }
@@ -201,18 +215,54 @@ namespace math {
 }
 
 
+template <typename [[class-name,T]]>
+struct [[class-name,K]] {
+    struct [[class-name,ASDF]] {
+        using namespace [[namespace-name,utility]];
+        static int [[member-variable,a]];
+    };
+
+    static int [[member-variable,b]];
+};
 
 int main() {
-    // Prints "Hello, world!"
-    utility::print("Hello", ",", " ", "world", "!");
-    
-    // Prints "[ 0, 1, 2, 3, 4, 5 ]"
-    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
-    utility::print(vec);
+//    // Prints "Hello, world!"
+//    utility::print("Hello", ",", " ", "world", "!");
+//
+//    MyTYPE a { 0.0f };
+
+    using [[class-name,T]] = [[class-name,K]]<int>;
+    using [[class-name,F]] = [[class-name,T]];
+
+    int a = [[class-name,F]]::[[class-name,ASDF]]::a;
+    int b = [[class-name,S]]<int>::[[member-variable,b]];
+
+
+    [[enum-name,State]] state = [[enum-name,State]]::[[enum-value,ASLEEP]];
+//
+//    // Prints "[ 0, 1, 2, 3, 4, 5 ]"
+//    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
+//    utility::print(vec);
 
     return 0;
 }
 
+namespace [[namespace-name,utility]] {
+    namespace [[namespace-name,detail]] {
+        void print(const char* format, float x, float y, float z);
+    }
+}
+
+
+void example() {
+    using namespace [[namespace-name,utility]]::[[namespace-name,detail]];
+
+    [[class-name,MyClass]]<int, float>::MyMethod<int, float, ...>();
+    [[class-name,AnotherClass]]<int, [[class-name,T]], [[namespace-name,std]]::[[class-name,string]]>::Method<...>();
+    [[class-name,MyClass]]<[[class-name,T]], [[class-name,U]]>::[[class-name,Nested]]<[[class-name,T]], [[class-name,U]]> myVar;
+
+    print("(", 1.0f, 2.0f, 3.0f);
+}
 ```
 
 The `FormatString` struct is a wrapper around a string, and serves one important purpose: capturing a `source_location` object at the call site to `format(...)` (no more `__LINE__` and `__filename__` macros!) This is used by the implementation to provide more meaningful error messages for debugging in the case of a syntax error, and can be used by derivative systems (like a logging module) to report the location of a call to `format` in a log message.

@@ -143,10 +143,6 @@ function MarkdownFile(props) {
                 return tokenized;
             }
 
-
-
-
-
             // Section start: syntax highlighting
             // Parse code block metadata
 
@@ -231,84 +227,20 @@ function MarkdownFile(props) {
                 }
             }
 
-            // Custom namespace parsing
-            Prism.languages.cpp["namespace-name"] = {
-                pattern: /(\bnamespace\s+)([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)/g,
-                lookbehind: true,
-                greedy: true,
-                inside: {
-                    keyword: {
-                        pattern: /\bnamespace\b/,
-                    },
-                    "namespace-name": {
-                        pattern: /[A-Za-z_][A-Za-z0-9_]*/,
-                    },
-                    "double-colon": {
-                        pattern: /::/,
-                    },
-                },
-            };
-
-            Prism.languages.insertBefore("cpp", "class-name", {
-                "enum-name": {
-                    pattern: /\benum\s+(class\s+)?([A-Za-z_][A-Za-z0-9_]*)(\s*\{[\s\S]*?\})/g,
-                    greedy: true,
-                    inside: {
-                        // Capture 'enum' and optional 'class' as keywords
-                        keyword: {
-                            pattern: /\b(enum|class)\b/,
-                            alias: "keyword",
-                        },
-                        // Capture the enum name (e.g., 'State') here
-                        "enum-name": {
-                            pattern: /[A-Za-z_][A-Za-z0-9_]*/,
-                            inside: {
-                                // This is only capturing the enum name, e.g. 'State'
-                            }
-                        },
-                        // Match the content inside the braces '{}'
-                        braces: {
-                            pattern: /\{[\s\S]*?\}/,
-                            inside: {
-                                punctuation: {
-                                    pattern: /\{|\}/,
-                                    alias: "punctuation",
-                                },
-                                // Match enum values inside the braces (e.g., 'IDLE', 'ALERT')
-                                "enum-value": {
-                                    pattern: /[A-Za-z_][A-Za-z0-9_]*/,
-                                    alias: "variable",
-                                },
-                            },
-                        },
-                    },
-                },
-            });
-
-            const tokenize = function (source, language) {
-                // Array of arrays
-                // Lines of tokens
-                let tokens = []; // Token[][]
-                let line = [];
-
-                for (let token of Prism.tokenize(source.toString(), Prism.languages[language])) {
-                    for (let element of processToken(token)) {
-                        line.push(element);
-                        if (element.content === "\n") {
-                            tokens.push(line);
-                            line = [];
-                        }
-                    }
-                }
-
-                return tokens;
-            }
-
             // Tokenize source code using detected language
-            let tokens = tokenize(children.toString(), language);
-            switch (language) {
-                case "cpp": {
-                    tokens = processLanguageCpp(tokens);
+            let tokens = [];
+            let line = [];
+            for (let token of Prism.tokenize(children.toString(), Prism.languages[language])) {
+                for (let element of processToken(token)) {
+                    line.push(element);
+                    if (element.content === "\n") {
+                        switch (language) {
+                            case "cpp": {
+                                tokens.push(processLanguageCpp(line))
+                            }
+                        }
+                        line = [];
+                    }
                 }
             }
 
