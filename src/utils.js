@@ -8,4 +8,22 @@ function sortByName(list) {
     return list.sort((a, b) => a.localeCompare(b))
 }
 
-export { getPostUrl, sortByName }
+async function get(url) {
+    return fetch(url, {
+        method: "GET",
+        cache: "reload",
+        headers: {
+            'Accept': "text/plain",
+            'Content-Type': "text/plain",
+        }
+    }).then(response => {
+        if (!response.ok) {
+            console.error(`Error loading URL ${url}: ${response.statusText}`);
+            return null;
+        }
+
+        return response.text();
+    });
+}
+
+export { getPostUrl, sortByName, get }

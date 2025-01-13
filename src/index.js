@@ -7,7 +7,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 // Components
 import Landing from "./pages/landing/landing.js";
 import Post from "./pages/post/post"
-import { getPostUrl } from "./utils.js";
+import {get, getPostUrl} from "./utils.js";
 
 // Stylesheets
 import "./index.css"
@@ -49,46 +49,30 @@ function loadContent() {
     const [content, setContent] = useState(null);
     const filepath = 'site_content.json';
 
-    // Load blog configuration.
+    // Load blog configuration
     useEffect(() => {
-        const request = new Request(filepath, {
-            method: "GET",
-            mode: "same-origin",
-            cache: "reload",
-            credentials: "same-origin",
-            headers: {
-                'Accept': "application/json",
-                'Content-Type': "application/json",
+        async function load() {
+            return await get("site_content.json");
+        }
+        load().then(response => {
+            if (!response) {
+                return;
             }
+
+            const data = JSON.parse(response);
+
+            // Parse post dates into JavaScript Date objects
+            const parsed = data.posts.map(post => ({
+                ...post,
+                tags: post.tags.map(category => category.toLowerCase()),
+                date: parseDate(post.date),
+                lastModifiedTime: parseLastModifiedTime(post.last_modified_time),
+            }));
+
+            // Sort by publish date
+            parsed.sort((a, b) => b.date - a.date)
+            setContent({...data, posts: parsed});
         });
-
-        fetch(request)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        return null;
-                    }
-
-                    throw new Error('fetch() response was not ok');
-                }
-
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    // Parse post dates into JavaScript Date objects
-                    const parsed = data.posts.map(post => ({
-                        ...post,
-                        tags: post.tags.map(category => category.toLowerCase()),
-                        date: parseDate(post.date),
-                        lastModifiedTime: parseLastModifiedTime(post.last_modified_time),
-                    }));
-
-                    // Sort by publish date
-                    parsed.sort((a, b) => b.date - a.date)
-                    setContent({ ...data, posts: parsed });
-                }
-            });
     }, []);
 
     return content;
