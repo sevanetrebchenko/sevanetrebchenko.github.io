@@ -2,7 +2,7 @@
 import React, { createContext, useContext } from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Components
 import Landing from "./pages/landing/landing.js";
