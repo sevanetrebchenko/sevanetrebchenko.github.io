@@ -1,6 +1,7 @@
 
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const GenerateMetadataPlugin = require('./modules/generate-metadata');
 
 module.exports = (env) => {
   const isProduction = env === 'production';
@@ -52,6 +53,9 @@ module.exports = (env) => {
       new HtmlWebpackPlugin({
         // use index.html in the public directory as the base template for the generated html page
         template: path.join(__dirname, 'public', 'index.html')
+      }),
+      new GenerateMetadataPlugin({
+        root: path.join(__dirname, 'public')
       }),
     ]
   }

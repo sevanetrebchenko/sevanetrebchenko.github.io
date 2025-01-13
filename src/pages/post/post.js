@@ -214,6 +214,7 @@ function MarkdownFile(props) {
                 const match = regexp.exec(metadata);
                 if (match) {
                     highlighted.push(...rangeParser(match[1]));
+
                 }
             }
 
@@ -388,7 +389,6 @@ function MarkdownFile(props) {
 export default function Post(props) {
     const {post} = props;
     const [content, setContent] = useState("");
-    const [lastModified, setLastModified] = useState(null);
 
     // load post content
     useEffect(() => {
@@ -409,28 +409,21 @@ export default function Post(props) {
                 return null;
             }
 
-            const text = await response.text();
-            const lastModified = response.headers.get("Last-Modified");
-
-            return {
-                text: text,
-                lastModified: lastModified
-            };
+            return await response.text();
         }
 
-        loadFile(post.filepath).then(({ text, lastModified }) => {
+        loadFile(post.filepath).then(text => {
             setContent(text);
-            setLastModified(new Date(lastModified));
         });
     }, []);
 
-    if (!lastModified) {
+    if (!content) {
         return <span>{"Loading..."}</span>
     }
 
     return (
         <div className="post">
-            <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={lastModified}/>
+            <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
             <MarkdownFile filepath={post.filepath} content={content}/>
             <div className="footer"></div>
         </div>

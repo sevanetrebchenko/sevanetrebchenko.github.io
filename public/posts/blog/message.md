@@ -23,127 +23,37 @@ The main interface of the library is as follows:
 #include <vector> // std::vector
 #include <cmath> // std::sqrt
 
-#define ASSERT(EXPRESSION, MESSAGE)        \
+#define [[macro.macro-name,ASSERT]](EXPRESSION, MESSAGE)        \
     if (!(EXPRESSION)) {                   \
         throw [[namespace-name,std]]::[[class-name,runtime_error]](MESSAGE); \
     }
 
-#define TEST 15
-#define MyTYPE [[class-name,MyClass]]<float>
-
-#if defined TEST
-#endif
-
-template <typename [[class-name,T]]>
-class [[class-name,MyClass]] {
-    public:
-        static int [[member-variable,my_static]];
-
-        static void build();
-
-        MyClass([[class-name,T]] value)
-         : [[member-variable,m_value]](value) {
-            ASSERT(value > 0, "value must be greater than 0");
-            [[member-variable,m_value]];
-            [[member-variable,my_static]];
-        }
-
-        ~MyClass() {
-            // Complex destructor logic
-        }
-
-        [[class-name,T]] value() const;
-
-    private:
-        [[class-name,T]] [[member-variable,m_value]];
-};
-
-template <typename [[class-name,T]]>
-[[class-name,T]] [[class-name,MyClass]]<[[class-name,T]]>::value() const {
-    return [[member-variable,m_value]];
-}
-
-using namespace [[namespace-name,std]];
-
 namespace [[namespace-name,utility]] {
-
-    namespace [[namespace-name,detail]] {
-        // Nested namespaces
-
-        struct [[class-name,Animal]] {
-            enum class [[enum-name,State]] {
-                [[enum-value,AWAKE]],
-                [[enum-value,ASLEEP]] = 4
-            };
-        };
-
-        template <typename [[class-name,T]]>
-        concept Container = requires([[class-name,T]] container) {
-            // 1. container must have valid begin() / end()
-            { [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<decltype([[namespace-name,std]]::end(container))>;
-
-            // 2. container iterator must be incrementable
-            { ++[[namespace-name,std]]::begin(container) };
-
-            // 3. container iterator must support comparison operators
-            { [[namespace-name,std]]::begin(container) == [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<bool>;
-            { [[namespace-name,std]]::begin(container) != [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[class-name,same_as]]<bool>;
-
-            // 4. container iterator must be deferenceable
-            { *[[namespace-name,std]]::begin(container) };
-        };
-
-    }
-
-    template <typename ...Ts>
-    void print(const Ts&... args) {
-         ([[namespace-name,std]]::[[class-name,cout]] << ... << args) << '\n';
-    }
-
-    template <[[namespace-name,detail]]::[[class-name,Container]] C>
-    void print(const C& c) {
-        [[namespace-name,std]]::[[class-name,cout]] << "[ ";
-
-        [[namespace-name,std]]::[[class-name,vector]]<int>::[[class-name,const_iterator]] end = [[namespace-name,std]]::end(c);
-        for (auto iter = [[namespace-name,std]]::begin(c); iter != end; [[function-operator,++iter) {]]
-            [[namespace-name,std]]::[[class-name,cout]] << *iter;
-            if (iter + 1 != end) {
-                [[namespace-name,std]]::[[class-name,cout]] << ", ";
-            }
-        }
-
-        [[namespace-name,std]]::[[class-name,cout]] << " ]" << '\n';
-    }
-
-}
-
-template <typename [[class-name,T]]>
-class [[class-name,Test]] {
-                public:
-                    using [[class-name,type]] = [[class-name,T]];
-            };
-
-namespace [[namespace-name,outer]]::[[namespace-name,inner]] {
+    namespace [[namespace-name,detail]] {}
 }
 
 namespace [[namespace-name,math]] {
 
-    int test(const [[class-name,Test]]<[[class-name,Test]]<int>>& a) {
-        auto b = []() {
-            [[namespace-name,std]]::[[class-name,cout]];
-        }
-    }
-
     struct [[class-name,Vector3]] {
+        static int [[member-variable,k]];
+
         Vector3();
 
         Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) {
+            [[macro.macro-name,ASSERT]](false, "haha std::vector");
+            [[namespace-name,std]]::[[class-name,string]] r = R"delim(Some raw content)delim";
         }
 
         Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) {
         }
 
         ~Vector3() = default;
+
+        Vector3(const [[class-name,Vector3]]& other) {
+        }
+
+        [[class-name,Vector3]] operator[[function-operator,=]](const [[class-name,Vector3]]& other) const {
+        }
 
         [[class-name,Vector3]] operator[[function-operator,<<=]](const [[class-name,Vector3]]& other) const {
             return { [[member-variable,x]] + other.[[member-variable,x]], [[member-variable,y]] + other.[[member-variable,y]], [[member-variable,z]] + other.[[member-variable,z]] };
@@ -176,6 +86,11 @@ namespace [[namespace-name,math]] {
         }
 
         void print() const {
+            auto lambda = []() {
+                [[member-variable,x]];
+                [[member-variable,y]];
+            };
+
             namespace [[namespace-name,u]] = [[namespace-name,utility]]::[[namespace-name,detail]];
             [[namespace-name,utility]]::[[namespace-name,detail]]::print("(", [[member-variable,x]], ", ", [[member-variable,y]], ", ", [[member-variable,z]], ")");
             asdf::print("");
@@ -191,8 +106,13 @@ namespace [[namespace-name,math]] {
         return a.[[member-variable,x]] * b.[[member-variable,x]] + a.[[member-variable,y]] * b.[[member-variable,y]] + a.[[member-variable,z]] * b.[[member-variable,z]];
     }
 
+    float dot([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
+        return a.[[member-variable,x]] * b.[[member-variable,x]] + a.[[member-variable,y]] * b.[[member-variable,y]] + a.[[member-variable,z]] * b.[[member-variable,z]];
+    }
+
     // Cross product
     [[class-name,Vector3]] cross([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
+
         return {
             a.[[member-variable,y]] * b.[[member-variable,z]] - a.[[member-variable,z]] * b.[[member-variable,y]],
             a.[[member-variable,z]] * b.[[member-variable,x]] - a.[[member-variable,x]] * b.[[member-variable,z]],
@@ -202,66 +122,16 @@ namespace [[namespace-name,math]] {
 
     // Returns a unit vector oriented in the same direction as 'v'
     [[class-name,Vector3]] normalize(const [[class-name,Vector3]]& v) {
-        Vector* ve = new Vector();
-        [[function-operator,*ve = 2;]]
+        [[class-name,Vector3]]* ve = new [[class-name,Vector3]]();
+        *ve = 2;
 
         float length = v.length();
         if (length > 0.0f) {
-            return ([[function-operator,v]] / length);
+            return (v / length);
         }
         return { };
     }
 
-}
-
-
-template <typename [[class-name,T]]>
-struct [[class-name,K]] {
-    struct [[class-name,ASDF]] {
-        using namespace [[namespace-name,utility]];
-        static int [[member-variable,a]];
-    };
-
-    static int [[member-variable,b]];
-};
-
-int main() {
-//    // Prints "Hello, world!"
-//    utility::print("Hello", ",", " ", "world", "!");
-//
-//    MyTYPE a { 0.0f };
-
-    using [[class-name,T]] = [[class-name,K]]<int>;
-    using [[class-name,F]] = [[class-name,T]];
-
-    int a = [[class-name,F]]::[[class-name,ASDF]]::a;
-    int b = [[class-name,S]]<int>::[[member-variable,b]];
-
-
-    [[enum-name,State]] state = [[enum-name,State]]::[[enum-value,ASLEEP]];
-//
-//    // Prints "[ 0, 1, 2, 3, 4, 5 ]"
-//    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
-//    utility::print(vec);
-
-    return 0;
-}
-
-namespace [[namespace-name,utility]] {
-    namespace [[namespace-name,detail]] {
-        void print(const char* format, float x, float y, float z);
-    }
-}
-
-
-void example() {
-    using namespace [[namespace-name,utility]]::[[namespace-name,detail]];
-
-    [[class-name,MyClass]]<int, float>::MyMethod<int, float, ...>();
-    [[class-name,AnotherClass]]<int, [[class-name,T]], [[namespace-name,std]]::[[class-name,string]]>::Method<...>();
-    [[class-name,MyClass]]<[[class-name,T]], [[class-name,U]]>::[[class-name,Nested]]<[[class-name,T]], [[class-name,U]]> myVar;
-
-    print("(", 1.0f, 2.0f, 3.0f);
 }
 ```
 

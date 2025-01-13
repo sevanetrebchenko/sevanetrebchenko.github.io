@@ -41,9 +41,13 @@ function parseDate(date) {
     return new Date(year, month - 1, day); // month is 0-indexed in JavaScript
 }
 
+function parseLastModifiedTime(time) {
+    return new Date(time)
+}
+
 function loadContent() {
     const [content, setContent] = useState(null);
-    const filepath = 'content.json';
+    const filepath = 'site_content.json';
 
     // Load blog configuration.
     useEffect(() => {
@@ -76,7 +80,8 @@ function loadContent() {
                     const parsed = data.posts.map(post => ({
                         ...post,
                         tags: post.tags.map(category => category.toLowerCase()),
-                        date: parseDate(post.date)
+                        date: parseDate(post.date),
+                        lastModifiedTime: parseLastModifiedTime(post.last_modified_time),
                     }));
 
                     // Sort by publish date
