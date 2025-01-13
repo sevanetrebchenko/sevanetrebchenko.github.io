@@ -17,19 +17,19 @@ export default function processLanguageCpp(tokens) {
             ++j; // Skip to the end of the annotation block ']]'
 
             const components = annotation.split(",");
-            const type = components[0];
+            const types = components[0].split(".");
 
             const validAnnotationTypes = [
                 "class-name",
                 "namespace-name",
                 "member-variable",
                 "function-operator",
-                "define",
+                "macro", "macro-name",
                 "enum-name",
                 "enum-value",
             ];
 
-            if (!validAnnotationTypes.includes(type)) {
+            if (!types.every(type => validAnnotationTypes.includes(type))) {
                 // C++ attributes follow the same pattern (for example, [[nodiscard]] or [[noreturn]]
                 // Instead of throwing an error for unknown annotation, assume this is not an annotation and leave the tokens unmodified
 
@@ -47,7 +47,7 @@ export default function processLanguageCpp(tokens) {
             // Leave only the 'value' token, annotated with 'type' as the type
             parsed.push({
                 content: value,
-                types: [ type ]
+                types: types
             });
             i = j;  // Adjust indexing to the end of the annotation block for subsequent tokens
         }
