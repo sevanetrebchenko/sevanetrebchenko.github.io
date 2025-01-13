@@ -1,23 +1,53 @@
 
-import React from 'react'
+import React, { createContext, useContext } from 'react'
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { getDateObject } from './utility.js'
 
-// Pages.
-import Landing from './pages/landing/landing.js'
-import Projects from './pages/projects/projects.js'
-import Blog from './pages/blog.js'
-import AOS from 'aos';
+// Components
+import Landing from "./pages/landing/landing.js";
+import Post from "./pages/post/post"
+import { getPostUrl } from "./utils.js";
 
-// Stylesheets.
-import './index.scss'
-import Search from './pages/search.js'
+// Stylesheets
+import "./index.css"
+
+// Global application state
+const initialState = {
+    selectedTags: [],
+    unselectedTags: [],
+};
+const GlobalStateContext = createContext(null);
+
+export function GlobalStateProvider(props) {
+    const {children} = props;
+    const [state, setState] = useState(initialState);
+
+    return (
+        <GlobalStateContext.Provider value={[state, setState]}>
+            {children}
+        </GlobalStateContext.Provider>
+    );
+}
+
+// Custom hook to use the global state
+export const useGlobalState = () => {
+    return useContext(GlobalStateContext);
+};
+
+
+function parseDate(date) {
+    const [month, day, year] = date.split('-');
+    return new Date(year, month - 1, day); // month is 0-indexed in JavaScript
+}
+
+function parseLastModifiedTime(time) {
+    return new Date(time)
+}
 
 function loadContent() {
-    const [content, setContent] = useState('');
-    const filepath = 'content.json';
+    const [content, setContent] = useState(null);
+    const filepath = 'site_content.json';
 
     // Load blog configuration.
     useEffect(() => {
@@ -36,8 +66,7 @@ function loadContent() {
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
-                        // TODO: 404 page.
-                        return "File not found.";
+                        return null;
                     }
 
                     throw new Error('fetch() response was not ok');
@@ -45,116 +74,93 @@ function loadContent() {
 
                 return response.json();
             })
-            .then(text => {
-                setContent(text);
+            .then(data => {
+                if (data) {
+                    // Parse post dates into JavaScript Date objects
+                    const parsed = data.posts.map(post => ({
+                        ...post,
+                        tags: post.tags.map(category => category.toLowerCase()),
+                        date: parseDate(post.date),
+                        lastModifiedTime: parseLastModifiedTime(post.last_modified_time),
+                    }));
+
+                    // Sort by publish date
+                    parsed.sort((a, b) => b.date - a.date)
+                    setContent({ ...data, posts: parsed });
+                }
             });
     }, []);
 
     return content;
 }
 
-// Entry point.
-function Application() {
-    const raw = loadContent();
-    AOS.init({
-        mirror: false,
-        once: true
-    });
-
-    if (!raw) {
-        console.debug('Loading website content...');
-        return;
-    }
-
-
-    let content = [];
-    content.posts = [];
-
-    for (const post of raw.blog) {
-        let copy = {...post};
-
-        // Replace date string with object.
-        copy.date = getDateObject(post.date);
-        content.posts.push(copy);
-    }
-
-    for (let post of raw.projects) {
-        let copy = {...post};
-
-        // Replace date string with object.
-        copy.date = getDateObject(post.date);
-        content.posts.push(copy);
-    }
-    
-    // Sort posts by date published.
-    content.posts.sort((first, second) => {
-        // Comparator: 
-        // if a > b:  1, else
-        // if a < b: -1, else
-        // 0
-        if (first.date.year == second.date.year) {
-            if (first.date.month == second.date.month) {
-                if (first.date.day == second.date.day) {
-                    return 0; // Equal.
-                }
-
-                return first.date.day > second.date.day ? -1 : 1;
-            }
-            
-            return first.date.month > second.date.month ? -1 : 1;
-        }
-
-        return first.date.year > second.date.year ? -1 : 1;
-    });
-
-    // Generate archive.
-    let archives = new Map(); // Mapping of year to an array of posts published in that year.
-    for (let i = 0; i < content.posts.length; ++i) {
-        const post = content.posts[i];
-
-        if (!archives.has(post.date.year)) {
-            archives.set(post.date.year, []);
-        }
-
-        archives.get(post.date.year).push(i); // Save index of post, referenced later by content.posts[i].
-    }
-
-    content.archives = archives;
-
-    // Generate category list.
-    let categories = new Map();
-    for (const post of content.posts) {
-        if (!post.categories) {
+function getTags(posts) {
+    let tags = new Map();
+    for (const post of posts) {
+        if (!post.tags) {
+            // Post has no tags
             continue;
         }
 
-        for (const category of post.categories) {
-            if (!categories.has(category)) {
-                categories.set(category, 0);
+        // Get the number of posts that have a given tag
+        for (const tag of post.tags) {
+            if (!tags.has(tag)) {
+                tags.set(tag, 0);
             }
-
-            categories.set(category, categories.get(category) + 1);
+            tags.set(tag, tags.get(tag) + 1);
         }
     }
 
-    console.log(categories);
+    // Sort tag names alphabetically
+    return new Map(
+        Array.from(tags.entries()).sort((a, b) => {
+            return a[0].localeCompare(b[0]);
+        })
+    );
+}
 
-    content.categories = Array.from(categories).sort(function(a, b) {
-        return a[0].localeCompare(b[0]);
-    });
+function generateArchive(posts) {
+    // Generate archive of all post dates
+    let archive = new Map();
+    for (const post of posts) {
+        const date = post.date;
+        if (!date) {
+            // Skip post if no publish date was set
+            continue;
+        }
 
-    let routes = [];
+        if (!archive.has(date)) {
+            archive.set(date, 0);
+        }
+        archive.set(date, archive.get(date) + 1);
+    }
 
-    // Set up routes for main site pages.
-    routes.push(<Route exact path={'/'} element={<Landing content={content}/>}></Route>);
-    routes.push(<Route exact path={'/projects'} element={<Projects content={content}/>}></Route>);
-    routes.push(<Route exact path={'/journal'} element={<Blog content={content}/>}></Route>);
-    routes.push(<Route path={'/search/*'} element={<Search/>}/>);
-    // routes.push(<Route exact path={'/archives'} element={<Landing content={content}/>}/>);
-    // routes.push(<Route exact path={'search'} element={<Search />}/>);
+    // Sort posts by date published, most recent first
+    return new Map(Array.from(archive.entries()).sort((a, b) => {
+        return new Date(b[0]) - new Date(a[0]);
+    }));
+}
 
-    // Set up routes to website post pages.
+function App() {
+    const content = loadContent();
+    if (!content) {
+        return null;
+    }
+
+    const tags = getTags(content.posts);
+    const archive = generateArchive(content.posts);
+
+    const routes = [];
+
+    // Configure routes for main site pages
+    const landing = <Landing posts={content.posts} tags={tags} archive={archive}></Landing>;
+    routes.push(<Route path={'/'} element={landing}></Route>);
+    routes.push(<Route path={'/archive/:year'} element={landing}></Route>);
+    routes.push(<Route path={'/archive/:year/:month'} element={landing}></Route>);
+
+    // Configure routes for post pages
     for (const post of content.posts) {
+        routes.push(<Route path={getPostUrl(post.title)} element={<Post post={post} />}></Route>);
     }
 
     return (
@@ -173,4 +179,8 @@ function Application() {
 }
 
 // main
-createRoot(document.getElementsByClassName('root')[0]).render(<Application />)
+createRoot(document.getElementsByClassName('root')[0]).render(
+    <GlobalStateProvider>
+        <App />
+    </GlobalStateProvider>
+);

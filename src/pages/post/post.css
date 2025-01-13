@@ -1,0 +1,88 @@
+
+.post {
+    margin: 0 auto;
+    min-width: 1080px;
+    max-width: 1080px;
+
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+}
+
+.post .header {
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 40px;
+
+    min-width: 1080px;
+    max-width: 1080px;
+}
+
+.post .header .back i {
+    color: gray;
+    transition: color 0.15s;
+}
+.post .header .back span {
+    color: gray;
+    transition: color 0.15s;
+
+    font-family: "JetBrains Mono", monospace;
+    font-size: 18px;
+    font-weight: 200;
+
+    padding: 5px 15px;
+}
+
+.post .header .back:hover {
+    cursor: pointer;
+}
+.post .header .back:hover i,
+.post .header .back:hover span {
+    color: gainsboro;
+}
+
+.post .header .title {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.post .header .metadata {
+    display: flex;
+    flex-direction: row;
+
+    margin: 10px auto;
+    column-gap: 40px;
+
+    font-size: 0.85em;
+}
+
+.post .header .metadata .separator {
+    border-color: gray;
+}
+
+.post p,
+.post > pre,
+.post > h1,
+.post > h2,
+.post > h3,
+.post > h4,
+.post > h5,
+.post > h6 {
+    margin: 0;
+}
+.post > pre {
+    margin: 0;
+}
+
+.post .inline {
+    color: rgb(73, 73, 73);
+
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+}

@@ -1,0 +1,35 @@
+
+.landing {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color: white;
+
+    height: 100vh;
+}
+.landing::before,
+.landing::after {
+    content: "";
+    flex: 1;
+}
+.landing::before {
+}
+.landing::after {
+    background-color: #eeeeee;
+}
+
+.landing > .posts {
+    display: flex;
+    flex-direction: column;
+    background-color: #eeeeee;
+
+    padding: 80px;
+    min-width: 1080px;
+    max-width: 1080px;
+}
+
+.landing > .posts .content {
+    display: flex;
+    flex-direction: column;
+    row-gap: 40px;
+}

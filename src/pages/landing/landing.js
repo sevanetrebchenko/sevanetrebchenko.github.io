@@ -1,27 +1,78 @@
 
-import React from 'react';
-import Navbar from '../../components/navbar.js'
-import './landing.scss'
+import React from "react";
+import {useLocation, useParams} from "react-router-dom";
 
-export default function Landing(props) {
-    // const { title, description, coverImageUrl } = props;
-    const title = 'seva netrebchenko'
-    const description = 'software engineer by profession, graphics programmer at heart'
-    const coverImageUrl = 'images/render.png'
+// Components
+import Sidebar from "./sidebar"
+import Postcard from "./postcard";
+import Search from "./search";
 
-    const style = {
-        backgroundImage: `url(\'${coverImageUrl}\')`
+// Stylesheets
+import "./landing.css"
+
+function Posts(props) {
+    const {posts} = props;
+    const {year, month} = useParams();
+    const location = useLocation();
+
+    let filtered = posts;
+    if (year) {
+        filtered = filtered.filter(post => {
+            return post.date.getFullYear() === Number(year);
+        });
+
+        if (month) {
+            filtered = filtered.filter(post => {
+                return post.date.getMonth() === Number(month - 1); // Months in JavaScript are zero-based
+            });
+        }
     }
 
+    // Get the search query from the URL
+    const queryParams = new URLSearchParams(location.search);
+    const searchQuery = queryParams.get("q") || "";
+    const tags = queryParams.get("tags") || "";
+
+    // Filter posts based on the search query
+    filtered = filtered.filter(post => {
+        // Filter by query params
+        if (searchQuery) {
+            if (!post.title.toLowerCase().includes(searchQuery.toLowerCase()) && !post.abstract.toLowerCase().includes(searchQuery.toLowerCase())) {
+                return false;
+            }
+        }
+
+        // Filter by post categories
+        if (tags.length > 0) {
+            if (!tags.split(",").some(tag => post.tags.includes(tag))) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
     return (
-        <React.Fragment>
-            <Navbar></Navbar>
-            <div className='landing-page' style={style}>
-                <span className='page-title'>{title}</span>
-                <span className='page-description'>{description}</span>
+        <div className="posts">
+            <Search></Search>
+            <div className="content">
+                {
+                    filtered.map((post, id) => (
+                        <Postcard post={post} key={id} />
+                    ))
+                }
             </div>
-            <div className='landing-page-overlay'>
-            </div>
-        </React.Fragment>
+        </div>
+    );
+}
+
+export default function Landing(props) {
+    const {posts, tags, archive} = props;
+
+    return (
+        <div className="landing">
+            <Sidebar tags={tags} archive={archive} />
+            <Posts posts={posts} />
+        </div>
     );
 }

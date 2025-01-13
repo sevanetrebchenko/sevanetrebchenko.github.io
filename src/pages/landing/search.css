@@ -1,0 +1,55 @@
+
+.search {
+    display: flex;
+    flex-direction: row;
+    border-bottom: gainsboro solid 1px;
+    margin-bottom: 40px;
+}
+
+.search .query {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    background: none;
+    font-size: 18px;
+    border: none;
+    font-family: "Noto Serif", sans-serif;
+    font-weight: 300;
+    padding: 15px;
+    padding-left: 10px;
+}
+
+.search .search-button {
+    transition: 0.15s;
+    color: gainsboro;
+}
+
+.search .clear-button {
+    transition: 0.15s;
+}
+.search .clear-button:hover {
+    cursor: pointer;
+    color: red;
+}
+
+.search .query:focus {
+    outline: none;
+}
+
+.search .query input:hover {
+    content: "";
+}
+
+.search i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: transparent;
+    border: none;
+    color: black;
+
+    padding: 15px;
+
+    font-size: 20px;
+}

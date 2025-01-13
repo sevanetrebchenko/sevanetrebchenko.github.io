@@ -1,0 +1,184 @@
+
+.sidebar {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: right;
+
+    padding: 80px;
+
+    row-gap: 30px;
+
+    min-width: 360px;
+    max-width: 360px;
+}
+
+.sidebar > .header {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    font-family: "Noto Serif", serif;
+    color: black;
+}
+.sidebar > .header:hover {
+    cursor: pointer;
+}
+
+.sidebar > .header > .title {
+    margin: 0;
+    font-weight: 400;
+    font-size: 36px;
+}
+
+.sidebar > .header > .description {
+    font-size: 18px;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    margin: 0;
+    width: 100%;
+}
+
+.sidebar > .content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    row-gap: 30px;
+}
+
+.sidebar > .content > .section {
+    display: flex;
+    flex-direction: column;
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    row-gap: 10px;
+    align-items: baseline;
+
+    column-gap: 20px;
+}
+
+.sidebar > .content > .section > .header {
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    column-gap: 20px;
+
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    font-size: 24px;
+}
+
+.sidebar > .content > .section > .header > .title {
+    font-size: 24px;
+}
+
+.sidebar > .content > .section > .header > .clear-button {
+    display: flex;
+    flex-direction: row;
+
+    column-gap: 10px;
+
+    align-items: center;
+
+    color: gray;
+
+    font-family: "JetBrains Mono", monospace;
+    font-size: 16px;
+    font-weight: 200;
+
+    cursor: pointer;
+
+    transition: color 0.15s;
+}
+.sidebar > .content > .section > .header > .clear-button:hover {
+    color: gainsboro;
+}
+.sidebar > .content > .section > .header > .clear-button > i {
+    color: gainsboro;
+    transition: color 0.15s;
+}
+.sidebar > .content > .section > .header > .clear-button:hover > i {
+    color: red;
+}
+
+.sidebar > .content > .section > .elements,
+.sidebar > .content > .section > .selected-elements {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+
+    flex-wrap: wrap;
+    column-gap: 15px;
+
+    color: gray;
+}
+
+.sidebar > .content > .section .element {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    font-size: 16px;
+
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    padding: 5px;
+    column-gap: 5px;
+
+    color: gray;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.sidebar > .content > .section .element > i {
+    transition: color 0.15s;
+    color: gainsboro;
+}
+.sidebar > .content > .section .element.selected {
+    color: orange;
+}
+.sidebar > .content > .section .element.selected > i {
+    color: gainsboro;
+}
+.sidebar > .content > .section .element:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+.sidebar > .content > .section .element:hover > i {
+    color: red;
+}
+
+/* The Archive section should have one element per row */
+.sidebar > .content > .section > .elements.archive {
+    flex-direction: column;
+}
+
+.sidebar > .footer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+}
+
+.sidebar > .footer > .socials {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    column-gap: 40px;
+}
+.sidebar > .footer > .socials i {
+    font-size: 25px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    transition: 0.15s;
+    color: gray;
+}
+.sidebar > .footer > .socials i:hover {
+    cursor: pointer;
+    color: #9c9c9c;
+}
+.sidebar > .footer > .copyright {
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 12px;
+    color: gray;
+    margin: 0;
+    text-align: center;
+}

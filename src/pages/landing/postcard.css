@@ -1,0 +1,84 @@
+
+.postcard {
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+
+    background-color: white;
+
+    box-shadow: none;
+    transition: box-shadow 0.15s;
+    padding: 50px;
+    border-radius: 5px;
+}
+.postcard:hover {
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.postcard > .abstract {
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+}
+
+.postcard > .abstract .title {
+    font-weight: 400;
+    font-size: 32px;
+    color: black;
+    transition: color 0.15s;
+}
+
+.postcard > .abstract .description {
+
+}
+
+.postcard > .metadata {
+    display: flex;
+    flex-direction: row;
+    column-gap: 40px;
+    align-items: baseline;
+
+    color: gray;
+}
+
+.postcard > .metadata .date {
+    font-family: "Noto Serif", serif;
+    font-size: 19px;
+    font-weight: 300;
+    color: black;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    column-gap: 10px;
+}
+
+.postcard > .metadata .tags {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+}
+
+.postcard > .metadata .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    transition: color 0.15s;
+
+    /* Visually align text baseline with the date */
+    transform: translateY(-2.5%);
+}
+.postcard > .metadata .tag.selected {
+    color: orange;
+}
+.postcard > .metadata .tag:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+.postcard > .metadata .tag.selected:hover {
+    cursor: pointer;
+    color: orange;
+}
