@@ -9,7 +9,7 @@
                 "reinventing-the-wheel"
             ],
             "date": "10-10-2020",
-            "filepath": "posts/blog/message.md",
+            "filepath": "/posts/blog/message.md",
             "last_modified_time": "2025-01-13T00:02:57.687Z"
         },
         {
@@ -21,7 +21,7 @@
                 "cpp"
             ],
             "date": "9-11-2020",
-            "filepath": "posts/blog/README.md",
+            "filepath": "/posts/blog/README.md",
             "last_modified_time": "2025-01-08T06:38:14.421Z"
         }
     ]
