@@ -17,10 +17,10 @@
     "remark-gfm": "^3.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "pre": "node ./scripts/generate-metadata.js public",
+    "start": "npm run pre && react-scripts start",
+    "build": "npm run pre && react-scripts build",
+    "deploy": "npm run build && gh-pages -d build --cname sevanetrebchenko.com"
   },
   "browserslist": {
     "production": [
