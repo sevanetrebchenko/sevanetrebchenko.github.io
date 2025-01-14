@@ -6,6 +6,7 @@ import rangeParser from "parse-numeric-range";
 import processLanguageCpp from "../languages/cpp";
 import {Prism} from "prism-react-renderer";
 import {useNavigate} from "react-router-dom";
+import {get} from "../../utils";
 
 // Stylesheet
 import "./post.css"
@@ -409,32 +410,20 @@ export default function Post(props) {
 
     // load post content
     useEffect(() => {
-        async function loadFile(url) {
-            const response = await fetch(url, {
-                method: "GET",
-                mode: "same-origin",
-                cache: "reload",
-                credentials: "same-origin",
-                headers: {
-                    'Accept': "text/plain",
-                    'Content-Type': "text/plain",
-                }
-            });
-
-            if (!response.ok) {
-                console.error(`Error loading file ${url}: ${response.statusText}`);
-                return null;
+        async function load(url) {
+            return await get(url);
+        }
+        load(post.filepath).then(response => {
+            if (!response) {
+                return;
             }
 
-            return await response.text();
-        }
-
-        loadFile(post.filepath).then(text => {
-            setContent(text);
+            setContent(response);
         });
     }, []);
 
     if (!content) {
+        // TODO: styling
         return <span>{"Loading..."}</span>
     }
 
