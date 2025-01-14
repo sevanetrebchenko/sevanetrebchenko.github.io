@@ -1,16 +1,14 @@
 {
     "posts": [
         {
-            "title": "Reinventing the Wheel - C++ Format Strings",
-            "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+            "title": "Better C++ Syntax Highlighting",
+            "abstract": "",
             "tags": [
-                "vulkan",
-                "Raytracing",
-                "reinventing-the-wheel"
+                "python"
             ],
-            "date": "10-10-2020",
-            "filepath": "/posts/blog/message.md",
-            "last_modified_time": "2025-01-13T00:02:57.687Z"
+            "date": "01-14-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting.md",
+            "last_modified_time": "2025-01-14T10:10:20.759Z"
         },
         {
             "title": "Sample post",
@@ -22,7 +20,7 @@
             ],
             "date": "9-11-2020",
             "filepath": "/posts/blog/README.md",
-            "last_modified_time": "2025-01-08T06:38:14.421Z"
+            "last_modified_time": "2025-01-13T09:16:53.763Z"
         }
     ]
 }

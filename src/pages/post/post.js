@@ -61,7 +61,7 @@ function MarkdownFile(props) {
     const {filepath, content} = props;
 
     const MarkdownComponents = {
-        code({node, inline, className, children, ...args}) {
+        code({node, inline, className, children, ...rest}) {
             if (inline) {
                 // Inline code block
                 return (
@@ -232,15 +232,32 @@ function MarkdownFile(props) {
             let tokens = [];
             let line = [];
             for (let token of Prism.tokenize(children.toString(), Prism.languages[language])) {
-                for (let element of processToken(token)) {
-                    line.push(element);
-                    if (element.content === "\n") {
-                        switch (language) {
-                            case "cpp": {
-                                tokens.push(processLanguageCpp(line))
-                            }
+                if (language === "cpp") {
+                    for (let element of processToken(token)) {
+                        line.push(element);
+                        if (element.content === "\n") {
+                            tokens.push(processLanguageCpp(line))
+                            line = [];
                         }
-                        line = [];
+                    }
+                }
+                else {
+                    if (token.content === undefined) {
+                        line.push({
+                            content: token,
+                            types: []
+                        });
+
+                        if (token.includes("\n")) {
+                            tokens.push(line)
+                            line = [];
+                        }
+                    }
+                    else {
+                        line.push({
+                            content: token.content,
+                            types: [token.type]
+                        });
                     }
                 }
             }
