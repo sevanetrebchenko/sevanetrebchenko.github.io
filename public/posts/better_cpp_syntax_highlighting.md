@@ -64,6 +64,8 @@ Or constructors, where parameters and class members may share the same name but 
 Furthermore, a distinction needs be made for function calls, which use a similar syntax to member access but should be annotated differently.
 A regular expression to capture all of these cases would already be needlessly complex.
 
+## Abstract Syntax Trees
+
 A more effective approach would be to parse the **A**bstract **S**yntax **T**ree (AST) that is generated during compilation and add annotations to tokens based on the exposed symbols.
 The Clang C/C++ compiler exposes [`libclang`](https://clang.llvm.org/doxygen/group__CINDEX.html), an API for parsing and traversing ASTs (which conveniently means I don't need to go through the trouble of [writing one from scratch]()).
 Many IDEs also use this for syntax highlighting.
@@ -147,6 +149,12 @@ We can do this by specifying the `-Xclang -ast-dump=json` flags during compilati
   ]
 }
 ```
+
+The structure of an AST resembles a pyramid.
+The first (and only) node is the translation unit, which serves as the root of the AST and represents the entire compiled C++ file.
+In the JSON snippet above, only the first level of symbols is included - symbols defined in the `<cmath>` header have been omitted for brevity.
+There are two main entries: a `CXXRecordDecl`, which represents the `struct Vector3` definition, and a `FunctionDecl`, which represents the `dot` function definition.
+
 
 `libclang` comes with Python bindings, found in the module [`clang.cindex`](https://libclang.readthedocs.io/en/latest/index.html).
 I decided to create a small project that leverages `clang.cindex` to enhance code snippet highlighting by parsing data from the generated AST.
