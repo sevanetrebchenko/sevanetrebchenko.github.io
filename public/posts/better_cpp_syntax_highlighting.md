@@ -67,7 +67,9 @@ A regular expression to capture all of these cases (+more!) would already be nee
 A more effective approach is to parse the **A**bstract **S**yntax **T**ree (AST) generated during compilation, as it provided a much more detailed view of the symbols in the source code.
 Note that it is possible to see the generated AST by specifying the `-Xclang -ast-dump=json` flags during compilation.
 ```json
-
+{
+  "name": 0.0
+}
 ```
 
 The Clang C/C++ compiler offers [`libclang`](https://clang.llvm.org/doxygen/group__CINDEX.html), an API for parsing and traversing ASTs (which also means I don't need to go through the trouble of [writing one from scratch]()).
