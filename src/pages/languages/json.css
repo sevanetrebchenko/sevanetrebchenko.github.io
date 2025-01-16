@@ -1,0 +1,20 @@
+
+.language-json .property {
+    color: rgb(199, 125, 187);
+}
+
+.language-json .number {
+    color: rgb(42, 172, 184);
+}
+
+.language-cpp .boolean {
+    color: rgb(206, 136, 70);
+}
+
+.language-json .string {
+    color: rgb(106, 171, 115);
+}
+
+.language-json .comment {
+    color: rgb(128, 128, 128);
+}
