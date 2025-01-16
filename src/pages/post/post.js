@@ -427,31 +427,33 @@ function parseCodeBlockMetadata() {
 
 export default function Post(props) {
     const {post} = props;
-    const [MarkdownFile, setMarkdownFileComponent] = useState(null);
+    const [Content, setContent] = useState(null);
 
     // load post content
     useEffect(() => {
-        async function load(url) {
-            return await get(url);
+        async function loadPostContent(url) {
+            try {
+                const source = await get(url);
+
+                // Compile file content (.mdx)
+                const code = await compile(source, {
+                    outputFormat: 'function-body',
+                    remarkPlugins: [parseCodeBlockMetadata]
+                }).then(response => response.toString());
+
+                // Execute compiled source to get MDX content
+                const { default: MDXContent } = await run(code, { ...runtime });
+                setContent(() => MDXContent);
+            }
+            catch (error) {
+                console.error("Error loading post content: ", error);
+            }
         }
-        load(post.filepath).then(async source => {
-            const code = await compile(source, {
-                outputFormat: 'function-body',
-                remarkPlugins: [parseCodeBlockMetadata]
-            }).then(response => {
-                return response.toString("utf-8");
-            });
 
-            const { default: MDXContent } = await run(code, {
-                ...runtime,
-                // baseUrl: import.meta.url,
-            });
+        loadPostContent(post.filepath);
+    }, [post.filepath]);
 
-            await setMarkdownFileComponent(() => MDXContent);
-        });
-    }, []);
-
-    if (MarkdownFile == null) {
+    if (Content == null) {
         console.log("Loading...");
         return;
     }
@@ -464,7 +466,7 @@ export default function Post(props) {
     return (
         <div className="post">
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-            <MarkdownFile components={components}></MarkdownFile>
+            <Content components={components}></Content>
             <div className="footer"></div>
         </div>
     );
