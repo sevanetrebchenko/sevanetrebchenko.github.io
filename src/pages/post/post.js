@@ -7,6 +7,9 @@ import processLanguageCpp from "../languages/cpp";
 import {Prism} from "prism-react-renderer";
 import {useNavigate} from "react-router-dom";
 import {get} from "../../utils";
+import {compile, run} from "@mdx-js/mdx";
+import * as runtime from 'react/jsx-runtime'
+import { visit } from 'unist-util-visit';
 
 // Stylesheet
 import "./post.css"
@@ -62,17 +65,18 @@ function MarkdownFile(props) {
     const {filepath, content} = props;
 
     const MarkdownComponents = {
-        code({node, inline, className, children, ...rest}) {
+        code({node, inline, className, children: source}) {
             if (inline) {
                 // Inline code block
                 return (
                     <span className="inline">
-                        {children}
+                        {source}
                     </span>
                 );
             }
 
             // Code block
+
 
             // Helper functions to transform results from Prism syntax highlighting
             const processToken = function (token, parentTypes = []) {
@@ -161,7 +165,7 @@ function MarkdownFile(props) {
 
             // Language is provided by the ReactMarkdown plugin through the className parameter
             {
-                const regexp = /language-(\w+)/;
+                const regexp = /language-([\w-]+)/;
                 if (regexp.test(className)) {
                     language = regexp.exec(className)[1];
                 }
@@ -229,10 +233,21 @@ function MarkdownFile(props) {
                 }
             }
 
+            if (language === "react-carousel") {
+                const data = source.toString().split("\n")
+
+                for (const line of data) {
+                    const components = line.split(/\s+/);
+                    console.log(components)
+                }
+
+                return;
+            }
+
             // Tokenize source code using detected language
             let tokens = [];
             let line = [];
-            for (let token of Prism.tokenize(children.toString(), Prism.languages[language])) {
+            for (let token of Prism.tokenize(source.toString(), Prism.languages[language])) {
                 if (language === "cpp") {
                     for (let element of processToken(token)) {
                         line.push(element);
@@ -397,41 +412,95 @@ function MarkdownFile(props) {
         }
     }
 
+
+
+    if (code) {
+        return;
+    }
+    // const {default: MDXContent} = evaluate(content, runtime);
+    //
+    // if (!MDXContent) {
+    //     return <></>
+    // }
+    // console.log(MDXContent)
+
+    return;
+}
+
+function IC(props) {
     return (
-        <ReactMarkdown components={MarkdownComponents} rehypePlugins={[RehypeRaw]} remarkPlugins={[RemarkGFM]}>
-            {content}
-        </ReactMarkdown>
-    );
+        <div className="image-carousel">
+        </div>
+    )
+}
+
+function CodeBlock(props) {
+    console.log(props)
+    const inline = "className" in props;
+    return <></>
+}
+
+
+function parseCodeBlockMetadata() {
+    return (tree) => {
+        // Traverse the generated AST
+        visit(tree, "code", (node) => {
+            // Code blocks can have optional metadata that influence how the code block is rendered
+            const meta = node.meta || '';
+            const lineNumbers = /line-numbers:\{enable|enabled\}/.test(meta);
+            node.data = {
+                ...node.data,
+                hProperties: {
+                    ...(node.data?.hProperties || {}),
+                    lineNumbers,
+                },
+            };
+        });
+    };
 }
 
 export default function Post(props) {
     const {post} = props;
-    const [content, setContent] = useState("");
+    const [MarkdownFile, setMarkdownFileComponent] = useState(null);
 
     // load post content
     useEffect(() => {
         async function load(url) {
             return await get(url);
         }
-        load(post.filepath).then(response => {
-            if (!response) {
-                return;
-            }
+        load(post.filepath).then(async source => {
+            const code = await compile(source, {
+                outputFormat: 'function-body',
+                remarkPlugins: [parseCodeBlockMetadata]
+            }).then(response => {
+                return response.toString("utf-8");
+            });
 
-            setContent(response);
+            const { default: MDXContent } = await run(code, {
+                ...runtime,
+                // baseUrl: import.meta.url,
+            });
+
+            await setMarkdownFileComponent(() => MDXContent);
         });
     }, []);
 
-    if (!content) {
-        // TODO: styling
-        return <span>{"Loading..."}</span>
+    if (MarkdownFile == null) {
+        console.log("Loading...");
+        return;
+    }
+
+    const components = {
+        IC: IC,
+        code: CodeBlock
     }
 
     return (
         <div className="post">
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-            <MarkdownFile filepath={post.filepath} content={content}/>
+            <MarkdownFile components={components}></MarkdownFile>
             <div className="footer"></div>
         </div>
     );
 }
+

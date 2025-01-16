@@ -12,7 +12,7 @@ Once tokenized, PrismJS applies a set of CSS classes to each token, which can th
 However, syntax highlighting for C++ requires a more nuanced approach.
 For example, PrismJS only highlights the declaration of `struct` and `class` types, treating subsequent uses as plain tokens.
 This likely stems from the difficulty of distinguishing whether a token represents the name of a class or a variable, as it's perfectly valid to have a variable with the same name as a class (provided the class is properly scoped).
-```cpp line-numbers:{enable}
+```cpp line-numbers:{enabled}
 namespace detail {
     struct MyStruct {
         // ...
@@ -31,7 +31,7 @@ Syntax highlighting based on tokenization alone is not a viable solution for thi
 A similar issue arises with syntax highlighting for class members and static member variables.
 While tokenization or regular expressions can provide a partially working solution, they fall short when parsing definitions of class member variables and inline member functions.
 For example, one possible "solution" could be to annotate any tokens following a class access operator (`.` or `->`) as class members.
-```cpp line-numbers:{enable}
+```cpp
 #include <cmath> // std::sqrt
 
 struct Vector3 {
@@ -80,7 +80,7 @@ This approach allows for much more accurate annotation of class names, member va
 
 Below is a sample C++ code snippet showcasing a variety of language features, with syntax highlighting handled exclusively by PrismJS.
 
-```cpp line-numbers:{enable}
+```cpp
 #pragma once
 
 #include <stdexcept> // std::runtime_error, std::out_of_range
