@@ -23,6 +23,7 @@ await import("prismjs/components/prism-glsl")
 // Stylesheet
 import "./post.css"
 import "../languages/cpp.css"
+import "../languages/json.css"
 
 function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;

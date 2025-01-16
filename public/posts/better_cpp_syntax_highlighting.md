@@ -62,25 +62,100 @@ However, this solution quickly breaks down.
 What about inline member function definitions, where the access operator `this->` isn't required (such as the `length` function on line 10)?
 Or constructors, where parameters and class members may share the same name but should not be annotated as the same type?
 Furthermore, a distinction needs be made for function calls, which use a similar syntax to member access but should be annotated differently.
-A regular expression to capture all of these cases (+more!) would already be needlessly complex.
+A regular expression to capture all of these cases would already be needlessly complex.
 
-A more effective approach is to parse the **A**bstract **S**yntax **T**ree (AST) generated during compilation, as it provided a much more detailed view of the symbols in the source code.
-Note that it is possible to see the generated AST by specifying the `-Xclang -ast-dump=json` flags during compilation.
+A more effective approach would be to parse the **A**bstract **S**yntax **T**ree (AST) that is generated during compilation and add annotations to tokens based on the exposed symbols.
+The Clang C/C++ compiler exposes [`libclang`](https://clang.llvm.org/doxygen/group__CINDEX.html), an API for parsing and traversing ASTs (which conveniently means I don't need to go through the trouble of [writing one from scratch]()).
+Many IDEs also use this for syntax highlighting.
+
+To better understand the structure of an AST, let's examine the one generated for the code snippet above.
+We can do this by specifying the `-Xclang -ast-dump=json` flags during compilation:
+
+
 ```json
+> clang++ -Xclang -ast-dump=json example.cpp
+        
 {
-  "name": 0.0
+  "id": "0x11bbd5c4890",
+  "kind": "TranslationUnitDecl",
+  "loc": {},
+  "range": {
+    "begin": {},
+    "end": {}
+  },
+  "inner": [
+    {
+      "id": "0x2a7eb991100",
+      "kind": "CXXRecordDecl",
+      "loc": {
+        "offset": 27,
+        "file": "example.cpp",
+        "line": 3,
+        "col": 8,
+        "tokLen": 7
+      },
+      "range": {
+        "begin": {
+          "offset": 20,
+          "col": 1,
+          "tokLen": 6
+        },
+        "end": {
+          "offset": 447,
+          "line": 18,
+          "col": 1,
+          "tokLen": 1
+        }
+      },
+      "name": "Vector3",
+      "tagUsed": "struct",
+      // Is this a declaration or definition?
+      "completeDefinition": true,
+      // Type traits (trivially copy / move constructible?, has default destructor?, etc.)
+      "definitionData": { ... },
+      "inner": [ ... ]
+    },
+    {
+      "id": "0x2a7eb9ad248",
+      "kind": "FunctionDecl",
+      "loc": {
+        "offset": 475,
+        "line": 21,
+        "col": 7,
+        "tokLen": 3
+      },
+      "range": {
+        "begin": {
+          "offset": 469,
+          "col": 1,
+          "tokLen": 5
+        },
+        "end": {
+          "offset": 696,
+          "line": 25,
+          "col": 1,
+          "tokLen": 1
+        }
+      },
+      "name": "dot",
+      "mangledName": "?dot@@YAMAEBUVector3@@0@Z",
+      "type": {
+        "qualType": "float (const Vector3 &, const Vector3 &)"
+      },
+      "inner": [ ... ]
+    }
+  ]
 }
 ```
 
-The Clang C/C++ compiler offers [`libclang`](https://clang.llvm.org/doxygen/group__CINDEX.html), an API for parsing and traversing ASTs (which also means I don't need to go through the trouble of [writing one from scratch]()).
-Its primary use is for enabling syntax highlighting in IDEs.
-`libclang` also comes with Python bindings, found in the module [`clang.cindex`](https://libclang.readthedocs.io/en/latest/index.html).
-Rather than relying solely on tokenization or regular expressions for syntax highlighting, I decided to create a small project that leverages `clang.cindex` to enhance code snippet highlighting by parsing data from the generated AST.
-This approach allows for much more accurate annotation of class names, member variables, and functions, as well as proper highlighting of other tokens such as preprocessor defines, enums, and unions. 
+`libclang` comes with Python bindings, found in the module [`clang.cindex`](https://libclang.readthedocs.io/en/latest/index.html).
+I decided to create a small project that leverages `clang.cindex` to enhance code snippet highlighting by parsing data from the generated AST.
+I wrote a small project that leverages `clang.cindex` for much more accurate annotation of class names, member variables, and functions, as well as proper highlighting of other tokens such as preprocessor defines, enums, and unions. 
 
 ## Python
 
-Below is a sample C++ code snippet showcasing a variety of language features, with syntax highlighting handled exclusively by PrismJS.
+Below is a sample C++ code snippet showcasing a variety of language features.
+Syntax highlighting is handled exclusively by PrismJS.
 
 ```cpp
 #pragma once
@@ -343,7 +418,7 @@ int main() {
 }
 ```
 Several areas of the current syntax highlighting are either incorrect or could be improved.
-Let's start simple and gradually build up towards more complex cases.
+Let's start simple and gradually build up more complex cases.
 
 ### Keywords
 There are a few different ways to perform syntax highlighting on keywords.
