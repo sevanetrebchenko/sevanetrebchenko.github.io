@@ -24,6 +24,7 @@ await import("prismjs/components/prism-glsl")
 import "./post.css"
 import "../languages/cpp.css"
 import "../languages/json.css"
+import "../languages/yaml.css"
 
 function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;
@@ -170,6 +171,20 @@ function CodeBlock(props) {
     if (regexp.test(className)) {
         language = regexp.exec(className)[1];
     }
+
+    // Language extensions
+    Prism.languages.yaml = Prism.languages.extend("yaml", {
+        comment: [
+            {
+                pattern: /\/\/.*/,
+                greedy: true,
+            },
+            {
+                pattern: /\/\*[\s\S]*?\*\//,
+                greedy: true,
+            },
+        ],
+    });
 
     // Tokenize source
     let tokens = [];

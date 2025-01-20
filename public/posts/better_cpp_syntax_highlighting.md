@@ -26,35 +26,44 @@ int main() {
     // ...
 }
 ```
-Syntax highlighting based on tokenization alone is not a viable solution for this case. 
+Syntax highlighting based on tokenization alone is not a viable solution for this case.
 
 A similar issue arises with syntax highlighting for class members and static member variables.
 While tokenization or regular expressions can provide a partially working solution, they fall short when parsing definitions of class member variables and inline member functions.
 For example, one possible "solution" could be to annotate any tokens following a class access operator (`.` or `->`) as class members.
-```cpp
+```cpp line-numbers:{enabled}
 #include <cmath> // std::sqrt
 
 struct Vector3 {
-    Vector3(float x, float y, float z) {
-        // Constructor parameters share their name with class members,
-        // meaning we run the risk of incorrectly annotating these tokens
-        // ...
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) {
+        // Constructor parameters have the same name as class member values, 
+        // which poses a challenge for syntax highlighting based on tokenization alone
     }
     
+    // No syntax highlighting for class members and/or their use in member function definitions...
+    
     float length() const {
-        // No syntax highlighting here...
         return std::sqrt(x * x + y * y + z * z);
     }
-
+    
+    void normalize() {
+        float len = length();
+        if (len == 0.0f) {
+            return;
+        }
+        x /= len;
+        y /= len;
+        z /= len;
+    }
+    
     float x;
     float y;
     float z;
 };
 
-// Dot product
 float dot(const Vector3& a, const Vector3& b) {
-    // We can cheat here by highlighting any tokens after the . as member variables
-    // Need to account for function calls...
+    // Idea: highlight the first identifier token after the access operator . as a member variable
+    // However, this approach does not properly distinguish member variables from member functions
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 ```
@@ -72,93 +81,210 @@ Many IDEs also use this for syntax highlighting.
 
 To better understand the structure of an AST, let's examine the one generated for the code snippet above.
 We can do this by specifying the `-Xclang -ast-dump=json` flags during compilation:
-
-
 ```json
-> clang++ -Xclang -ast-dump=json example.cpp
+> clang -Xclang -ast-dump=json -fsyntax-only src/example.cpp > out.json
         
 {
-  "id": "0x11bbd5c4890",
-  "kind": "TranslationUnitDecl",
-  "loc": {},
-  "range": {
-    "begin": {},
-    "end": {}
-  },
-  "inner": [
-    {
-      "id": "0x2a7eb991100",
-      "kind": "CXXRecordDecl",
-      "loc": {
-        "offset": 27,
-        "file": "example.cpp",
-        "line": 3,
-        "col": 8,
-        "tokLen": 7
-      },
-      "range": {
-        "begin": {
-          "offset": 20,
-          "col": 1,
-          "tokLen": 6
-        },
-        "end": {
-          "offset": 447,
-          "line": 18,
-          "col": 1,
-          "tokLen": 1
-        }
-      },
-      "name": "Vector3",
-      "tagUsed": "struct",
-      // Is this a declaration or definition?
-      "completeDefinition": true,
-      // Type traits (trivially copy / move constructible?, has default destructor?, etc.)
-      "definitionData": { ... },
-      "inner": [ ... ]
+    "id": "0x11bbd5c4890",
+    "kind": "TranslationUnitDecl",
+    "loc": {},
+    "range": {
+        "begin": {},
+        "end": {}
     },
-    {
-      "id": "0x2a7eb9ad248",
-      "kind": "FunctionDecl",
-      "loc": {
-        "offset": 475,
-        "line": 21,
-        "col": 7,
-        "tokLen": 3
-      },
-      "range": {
-        "begin": {
-          "offset": 469,
-          "col": 1,
-          "tokLen": 5
+    "inner": [
+        ...
+        {
+            "id": "0x24accda1100",
+            "kind": "CXXRecordDecl",
+            "loc": {
+                "offset": 40,
+                "file": "example.cpp",
+                "line": 3,
+                "col": 8,
+                "tokLen": 7
+            },
+            "range": {
+                "begin": {
+                    "offset": 33,
+                    "col": 1,
+                    "tokLen": 6
+                },
+                "end": {
+                    "offset": 711,
+                    "line": 28,
+                    "col": 1,
+                    "tokLen": 1
+                }
+            },
+          "isReferenced": true,
+          "name": "Vector3",
+          "tagUsed": "struct",
+          // Is this a declaration or definition?
+          "completeDefinition": true,
+          // Type traits (trivially copy / move constructible?, has default destructor?, etc.)
+          "definitionData": { ... },
+          "inner": [ ... ]
         },
-        "end": {
-          "offset": 696,
-          "line": 25,
-          "col": 1,
-          "tokLen": 1
+        {
+            "id": "0x24accdbdc18",
+            "kind": "FunctionDecl",
+            "loc": {
+                "offset": 739,
+                "line": 31,
+                "col": 7,
+                "tokLen": 3
+            },
+            "range": {
+                "begin": {
+                    "offset": 733,
+                    "col": 1,
+                    "tokLen": 5
+                },
+                "end": {
+                    "offset": 982,
+                    "line": 35,
+                    "col": 1,
+                    "tokLen": 1
+                }
+            },
+            "name": "dot",
+            "mangledName": "?dot@@YAMAEBUVector3@@0@Z",
+            "type": {
+                "qualType": "float (const Vector3 &, const Vector3 &)"
+            },
+            "inner": [ ... ]
         }
-      },
-      "name": "dot",
-      "mangledName": "?dot@@YAMAEBUVector3@@0@Z",
-      "type": {
-        "qualType": "float (const Vector3 &, const Vector3 &)"
-      },
-      "inner": [ ... ]
-    }
-  ]
+    ]
 }
 ```
+The top-level node is always the translation unit, which serves as the root of the AST and represents the entire compiled C++ file.
+In the JSON snippet above, only the first level of symbols is shown, with symbols from the `<cmath>` header omitted entirely for brevity.
+Including all symbols expands the AST to 248,249 lines, out of which only 2,586 (~1%) are relevant to this example: 1,894 for `Vector3` and 692 for `dot`.
 
-The structure of an AST resembles a pyramid.
-The first (and only) node is the translation unit, which serves as the root of the AST and represents the entire compiled C++ file.
-In the JSON snippet above, only the first level of symbols is included - symbols defined in the `<cmath>` header have been omitted for brevity.
-There are two main entries: a `CXXRecordDecl`, which represents the `struct Vector3` definition, and a `FunctionDecl`, which represents the `dot` function definition.
+As expected, there are two nodes: a `CXXRecordDecl` node representing the definition of the `Vector3` struct and a `FunctionDecl` node representing the definition of the `dot` function.
+The `inner` element of each node contains a list of its child nodes.
+For the `Vector3` definition, this list includes:
+1. A `CXXConstructorDecl` node for the constructor,
+2. `CXXMethodDecl` nodes for the `length` and `normalize` member functions, and
+3. `FieldDecl` nodes for the `x`, `y`, and `z` class member variables
 
+Depending on their specific structure, each of these nodes may also contain child nodes of their own, highlighting the hierarchical tree structure of ASTs.
+Below is a (greatly simplified) view of the full AST for the code snippet above, displaying the kind, name, and extent of each node:
+```yaml
+TranslationUnit: src/example.cpp
+    inclusion directive: cmath   // line 1, columns 1 - 17
+    
+    StructDecl: Vector3   // line 3, column 1 - line 28, column 2
+        CXXConstructor: Vector3   // line 4, column 5 - line 7, column 6
+            ParmDecl: x   // line 4, columns 13 - 20
+            ParmDecl: y   // line 4, columns 22 - 29
+            ParmDecl: z   // line 4, columns 31 - 38
+            MemberRef: x   // line 4, columns 42 - 43
+            UnexposedExpr:
+                DeclRefExpr: x   // line 4, columns 44 - 45
+            MemberRef: y   // line 4, columns 48 - 49
+            UnexposedExpr:
+                DeclRefExpr: y   // line 4, columns 50 - 51
+            MemberRef: z   // line 4, columns 54 - 55
+            UnexposedExpr:
+                DeclRefExpr: z   // line 4, columns 56 - 57
+            CompoundStmt:
+        CXXMethod: length   // line 9, column 5 - line 12, column 6
+            CompoundStmt:
+                ReturnStmt:    // line 11, columns 9 - 48
+                    CallExpr: sqrt   // line 11, columns 16 - 48
+                        UnexposedExpr:
+                            DeclRefExpr: sqrt   // line 11, columns 16 - 25
+                                NamespaceRef: std   // line 11, columns 16 - 19
+                        BinaryOperator: +   // line 11, columns 26 - 47
+                            BinaryOperator: +   // line 11, columns 26 - 39
+                                BinaryOperator: *   // line 11, columns 26 - 31
+                                    UnexposedExpr:
+                                        MemberRefExpr: x   // line 11, columns 26 - 27
+                                    UnexposedExpr:
+                                        MemberRefExpr: x   // line 11, columns 30 - 31
+                                BinaryOperator: *   // line 11, columns 34 - 39
+                                    UnexposedExpr:
+                                        MemberRefExpr: y   // line 11, columns 34 - 35
+                                    UnexposedExpr:
+                                        MemberRefExpr: y   // line 11, columns 38 - 39
+                            BinaryOperator: *   // line 11, columns 42 - 47
+                                UnexposedExpr:
+                                    MemberRefExpr: z   // line 11, columns 42 - 43
+                                UnexposedExpr:
+                                    MemberRefExpr: z   // line 11, columns 46 - 47
+        CXXMethod: normalize   // line 14, column 5 - line 23, column 6
+            CompoundStmt:
+                DeclStmt:    // line 15, columns 9 - 30
+                    VarDecl: len   // line 15, columns 9 - 29
+                        CallExpr: length   // line 15, columns 21 - 29
+                            MemberRefExpr: length   // line 15, columns 21 - 27
+                IfStmt:    // line 16, column 9 - line 19, column 10
+                    BinaryOperator: ==   // line 16, columns 13 - 24
+                        UnexposedExpr:
+                            DeclRefExpr: len   // line 16, columns 13 - 16
+                        FloatingLiteral:    // line 16, columns 20 - 24
+                    CompoundStmt:
+                        ReturnStmt:    // line 18, columns 13 - 19
+                CompoundAssignOperator: /=   // line 20, columns 9 - 17
+                    MemberRefExpr: x   // line 20, columns 9 - 10
+                    UnexposedExpr:
+                        DeclRefExpr: len   // line 20, columns 14 - 17
+                CompoundAssignOperator: /=   // line 21, columns 9 - 17
+                    MemberRefExpr: y   // line 21, columns 9 - 10
+                    UnexposedExpr:
+                        DeclRefExpr: len   // line 21, columns 14 - 17
+                CompoundAssignOperator: /=   // line 22, columns 9 - 17
+                    MemberRefExpr: z   // line 22, columns 9 - 10
+                    UnexposedExpr:
+                        DeclRefExpr: len   // line 22, columns 14 - 17
+        FieldDecl: x   // line 25, columns 5 - 12
+        FieldDecl: y   // line 26, columns 5 - 12
+        FieldDecl: z   // line 27, columns 5 - 12
+        
+    FunctionDecl: dot   // line 31, column 1 - line 35, column 2
+        ParmDecl: a   // line 31, columns 11 - 27
+            TypeRef: struct Vector3   // line 31, columns 17 - 24
+        ParmDecl: b   // line 31, columns 29 - 45
+            TypeRef: struct Vector3   // line 31, columns 35 - 42
+        CompoundStmt:
+            ReturnStmt:    // line 34, columns 5 - 45
+                BinaryOperator: +   // line 34, columns 12 - 45
+                    BinaryOperator: +   // line 34, columns 12 - 33
+                        BinaryOperator: *   // line 34, columns 12 - 21
+                            UnexposedExpr:
+                                MemberRefExpr: x   // line 34, columns 12 - 15
+                                    DeclRefExpr: a   // line 34, columns 12 - 13
+                            UnexposedExpr:
+                                MemberRefExpr: x   // line 34, columns 18 - 21
+                                    DeclRefExpr: b   // line 34, columns 18 - 19
+                        BinaryOperator: *   // line 34, columns 24 - 33
+                            UnexposedExpr:
+                                MemberRefExpr: y   // line 34, columns 24 - 27
+                                    DeclRefExpr: a   // line 34, columns 24 - 25
+                            UnexposedExpr:
+                                MemberRefExpr: y   // line 34, columns 30 - 33
+                                    DeclRefExpr: b   // line 34, columns 30 - 31
+                    BinaryOperator: *   // line 34, columns 36 - 45
+                        UnexposedExpr:
+                            MemberRefExpr: z   // line 34, columns 36 - 39
+                                DeclRefExpr: a   // line 34, columns 36 - 37
+                        UnexposedExpr:
+                            MemberRefExpr: z   // line 34, columns 42 - 45
+                                DeclRefExpr: b   // line 34, columns 42 - 43
+```
+Most node kinds are self-explanatory, except for two: `CompoundStmt` and `UnexposedRef`. Here is a brief overview of what these nodes represent:
+- `CompoundStmt`: This node corresponds the body of a function, containing all symbols within the function body in its `inner` element.
+- `UnexposedRef`: This node appears when an expression cannot be directly classified, is incomplete, or lacks enough context for precise classification by Clang.
+
+For the purposes of this project, these nodes can safely be ignored. 
+References to `CompoundStmt` and `UnexposedRef` nodes in the AST above were retained to maintain consistency, but all relevant information for syntax highlighting can be extracted from their children.
+The code to traverse and print the AST can be found [here]().
 
 `libclang` comes with Python bindings, found in the module [`clang.cindex`](https://libclang.readthedocs.io/en/latest/index.html).
 I decided to create a small project that leverages `clang.cindex` to enhance code snippet highlighting by parsing data from the generated AST.
-I wrote a small project that leverages `clang.cindex` for much more accurate annotation of class names, member variables, and functions, as well as proper highlighting of other tokens such as preprocessor defines, enums, and unions. 
+I wrote a small project that leverages `clang.cindex` for much more accurate annotation of class names, member variables, and functions, as well as proper highlighting of other tokens such as preprocessor defines, enums, and unions.
 
 ## Python
 
@@ -291,7 +417,7 @@ namespace math {
     
         float operator[](std::size_t index) const {
             // Temporarily cast away the const qualifier to avoid duplicating logic
-            // This is safe because the non-const Vector3::operator[] does not modify the value
+            // Safe as non-const Vector3::operator[] does not modify the value
             return const_cast<Vector3*>(this)->operator[](index);
         }
         
@@ -426,10 +552,43 @@ int main() {
 }
 ```
 Several areas of the current syntax highlighting are either incorrect or could be improved.
+The solution I developed involves adding extra annotations to the source code to hint the rendering engine what color to use.
+
+```python
+from dataclass import dataclass
+
+@dataclass
+class Annotation:
+    start: int
+    end: int
+    type: str
+
+class Parser:
+    def __init__(self):
+        # Mapping of line number : annotations on that line
+        self.annotations = {}
+        ...
+
+    def markup(self):
+        self.annotate(...)
+
+        # Sort annotation insertion positions in decreasing order
+        # Annotations are inserted in reverse order to avoid having to deal with insertion position offsets
+        for line in self.annotations:
+            self.annotations[line] = sorted(self.annotations[line], key=lambda x: x["start"], reverse=True)
+
+        for line in self.annotations:
+            for annotation in self.annotations[line]:
+                start = annotation["start"]
+                end = annotation["end"]
+                self.lines[line] = f"{self.lines[line][:start]}[[{annotation['type']},{self.lines[line][start:end]}]]{self.lines[line][end:]}"
+        self.content = "\n".join(self.lines)
+```
 Let's start simple and gradually build up more complex cases.
 
 ### Keywords
 There are a few different ways to perform syntax highlighting on keywords.
+
 
 
 Keywords are the easiest tokens to parse, and there are a few different wa
