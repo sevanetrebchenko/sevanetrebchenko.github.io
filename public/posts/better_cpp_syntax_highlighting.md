@@ -31,6 +31,7 @@ Syntax highlighting based on tokenization alone is not a viable solution for thi
 A similar issue arises with syntax highlighting for class members and static member variables.
 While tokenization or regular expressions can provide a partially working solution, they fall short when parsing definitions of class member variables and inline member functions.
 For example, one possible "solution" could be to annotate any tokens following a class access operator (`.` or `->`) as class members.
+
 ```cpp line-numbers:{enabled}
 #include <cmath> // std::sqrt
 
@@ -173,8 +174,8 @@ Depending on their specific structure, each of these nodes may also contain chil
 Below is a (greatly simplified) view of the full AST for the code snippet above, displaying the kind and name, and extent of each node:
 ```yaml
 TranslationUnitDecl:
-	CXXRecordDecl: Vector3
-		CXXRecordDecl: Vector3
+	CXXRecordDecl: Vector3  // line 3, column 8
+		CXXRecordDecl:
 		CXXConstructorDecl: Vector3
 			ParmVarDecl: x
 			ParmVarDecl: y
@@ -524,90 +525,47 @@ int main() {
 ```
 
 Several areas of the current syntax highlighting are either incorrect or could be improved.
-The solution I developed involves adding extra annotations to the source code to hint the rendering engine what color to use.
+The solution I developed involves adding extra annotations to the source code to give the rendering engine hints on what color to highlight tokens with.
 
-```python
-from dataclass import dataclass
-
-@dataclass
-class Annotation:
-    start: int
-    end: int
-    type: str
-
-class Parser:
-    def __init__(self):
-        # Mapping of line number : annotations on that line
-        self.annotations = {}
-        ...
-
-    def markup(self):
-        self.annotate(...)
-
-        # Sort annotation insertion positions in decreasing order
-        # Annotations are inserted in reverse order to avoid having to deal with insertion position offsets
-        for line in self.annotations:
-            self.annotations[line] = sorted(self.annotations[line], key=lambda x: x["start"], reverse=True)
-
-        for line in self.annotations:
-            for annotation in self.annotations[line]:
-                start = annotation["start"]
-                end = annotation["end"]
-                self.lines[line] = f"{self.lines[line][:start]}[[{annotation['type']},{self.lines[line][start:end]}]]{self.lines[line][end:]}"
-        self.content = "\n".join(self.lines)
-```
 Let's start simple and gradually build up more complex cases.
 
 ### Keywords
-Prism is generally accurate when annotating keywords, but struggles with C++-style casts: `static_cast`, `reinterpret_cast`, `dynamic_cast`, and `const_cast`.
-These tokens are incorrectly highlighted as functions.
-This likely occurs because Prism identifies functions based on the presence of parentheses `()`.
-As C++-style casts are always followed by parentheses (which enclose the expression being cast), Prism misinterprets these tokens as function names.
-
-One alternative approach would be to use a regular expression to isolate individual keywords.
+Prism is generally pretty accurate when annotating keywords.
+However, it struggles with C++ style casts: 
 ```cpp
-\[[plain,b]](alignas|break|catch|const|continue|else|false|float|namespace|new|nullptr|struct|throw|try|while|...)\b
+// static_cast: for type conversions between related types
+int i = 42;
+double d = static_cast<double>(i);
+
+// reinterpret_cast: for (re)interpreting the low-level bitwise representation as a different type
+const char* cc = reinterpret_cast<const char*>(&i);
+
+// const_cast: for adding / removing the const qualifier from a variable
+char* c = const_cast<char*>(cc);
+
+// dynamic_cast: for traversing up / down class hierarchies
+struct [[class-name,Base]] { };
+struct [[class-name,Derived]] : public [[class-name,Base]] { };
+
+[[class-name,Base]]* b = new [[class-name,Derived]]();
+[[class-name,Derived]]* d = dynamic_cast<[[class-name,Derived]]*>(b);
 ```
-While this method is viable, the [large number of keywords](https://en.cppreference.com/w/cpp/keyword) in the C++ language makes this approach cumbersome.
-Additionally, this regular expression would need to be further augmented to ignore keywords within comments and strings, ensuring that only keywords in the code are highlighted.
+These tokens are highlighted as functions, when they should be highlighted as language keywords.
+This likely occurs because Prism identifies functions based on the presence of parentheses `()`.
+As C++ style casts are always followed by parentheses, which enclose the expression being cast, Prism misinterprets these tokens and automatically annotates them as names of functions.
 
-Fortunately, the Clang C API simplifies this process by exposing a `CXToken_Keyword` kind from the `CXTokenKind` enum for identifying language keywords.
-Annotating keywords is as simple as iterating over the tokens of a cursor and focusing only on the tokens that are recognized as keywords by Clang's lexer.
+One viable solution would be to use a regular expression to match directly against C++ style casts:
+```cpp
+\[[plain,b]](const_cast|dynamic_cast|reinterpret_cast|static_cast)\b
+```
+The regular expression would need to be modified to ignore keywords within comments and strings, to ensure that only keywords in the code are highlighted.
 
-```cpp line-numbers:{enable} hidden:{1-30,85-92}
-#include <clang-c/Index.h>
-#include <stack>
-#include <string>
-#include <cstring>
-
-[[keyword,struct]] [[class-name,String]] {
-    String([[class-name,CXString]] str) : [[member-variable,str]](str) {
-    }
-
-    ~String() {
-        clang_disposeString([[member-variable,str]]);
-    }
-
-    [[nodiscard]] [[namespace-name,std]]::[[class-name,size_t]] length() [[keyword,const]] {
-        [[keyword,return]] [[namespace-name,std]]::strlen(clang_getCString([[member-variable,str]]));
-    }
-
-    [[nodiscard]] [[keyword,bool]] [[keyword,operator]]==([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& [[class-name,other]]) [[keyword,const]] {
-        [[keyword,return]] [[namespace-name,std]]::strcmp(clang_getCString([[member-variable,str]]), [[class-name,other]].c_str()) == 0;
-    }
-
-    [[nodiscard]] [[keyword,bool]] [[keyword,operator]]!=([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& [[class-name,other]]) [[keyword,const]] {
-        [[keyword,return]] [[namespace-name,std]]::strcmp(clang_getCString([[member-variable,str]]), [[class-name,other]].c_str()) == 0;
-    }
-
-    [[class-name,CXString]] [[member-variable,str]];
-};
-
-[[keyword,struct]] [[class-name,Parser]] {
-
+Fortunately, the use of regular expressions can be avoided altogether.
+With the help of the `CXTokenKind` enum, annotating keywords becomes a matter of iterating over a cursor's tokens and filtering those identified by Clang's lexer as having the `CXToken_Keyword` kind.
+```cpp line-numbers:{enable}
 [[keyword,void]] parse_keywords() {
     // Use a stack for a DFS traversal of the AST
-    std::stack<[[class-name,CXCursor]]> cursors;
+    [[namespace-name,std]]::[[class-name,stack]]<[[class-name,CXCursor]]> cursors;
     [[member-variable,]]cursors.push(clang_getTranslationUnitCursor([[member-variable,m_translation_unit]]));
     
     [[keyword,while]] (![[member-variable,]]cursors.empty()) {
@@ -620,8 +578,8 @@ Annotating keywords is as simple as iterating over the tokens of a cursor and fo
         [[class-name,CXFile]] file;
         clang_getSpellingLocation(location, &file, [[keyword,nullptr]], [[keyword,nullptr]], [[keyword,nullptr]]);
         [[class-name,String]] filepath = clang_getFileName(file);
-        [[keyword,if]] (filepath != m_filepath) {
-            // There is no point in annotating tokens for cursors that come from included files
+        [[keyword,if]] (filepath != [[member-variable,m_filepath]]) {
+            // There is no point in annotating tokens for cursors that come from included files,
             // so skip these entirely
             [[keyword,continue]];
         }
@@ -653,23 +611,89 @@ Annotating keywords is as simple as iterating over the tokens of a cursor and fo
         clang_disposeTokens([[member-variable,m_translation_unit]], tokens, num_tokens);
         
         // Visit children
-        clang_visitChildren(cursor, []([[class-name,CXCursor]] child, [[class-name,CXCursor]] /* parent */, [[class-name,CXClientData]] user_data) -> [[class-name,CXChildVisitResult]] {
-            [[keyword,static_cast]]<std::stack<[[class-name,CXCursor]]>*>(user_data)->push(child);
-            [[keyword,return]] CXChildVisit_Continue;
-        }, &cursors);
+        clang_visitChildren(cursor, 
+            []([[class-name,CXCursor]] child, [[class-name,CXCursor]] /* parent */, [[class-name,CXClientData]] user_data) -> [[class-name,CXChildVisitResult]] {
+                [[keyword,static_cast]]<[[namespace-name,std]]::[[class-name,stack]]<[[class-name,CXCursor]]>*>(user_data)->push(child);
+                [[keyword,return]] [[enum-value,CXChildVisit_Continue]];
+            }, &cursors);
     }
 }
-
-[[keyword,void]] add_annotation([[keyword,const]] [[keyword,char]]* name, [[keyword,unsigned]] line, [[keyword,unsigned]] column, [[keyword,unsigned]] length) {}
-
-// Member variables (hidden from public view, for syntax highlighting purposes)
-[[class-name,CXTranslationUnit]] [[member-variable,m_translation_unit]];
-[[namespace-name,std]]::[[class-name,string]] [[member-variable,m_filepath]];
-};
 ```
 
 ### Namespaces
 
+By default, namespace declarations (including `using namespace`) and aliases are not annotated.
+```cpp
+namespace math {
+    struct [[class-name,Vector3]] {
+        float x;
+        float y;
+        float z;
+    };
+}
+
+namespace inner {
+    namespace detail {
+    }
+}
+
+int main() {
+    using namespace inner::detail;
+    ...
+    
+    math::[[class-name,Vector3]] up { 0.0f, 1.0f, 0.0f };
+}
+```
+However, annotating namespace names is similar to annotating keywords.
+Instead of iterating over each cursor's tokens, namespaces can be identified by iterating directly over the cursors themselves.
+
+```cpp
+[[keyword,void]] parse_namespaces() {
+    [[namespace-name,std]]::[[class-name,stack]]<[[class-name,CXCursor]]> cursors;
+    cursors.push(clang_getTranslationUnitCursor(m_translation_unit));
+    
+    [[keyword,while]] (!cursors.empty()) {
+        [[class-name,CXCursor]] cursor = cursors.top();
+        cursors.pop();
+        
+        // Retrieve the filepath in which this cursor is defined
+        [[class-name,CXFile]] file;
+        clang_getSpellingLocation(location, &file, [[keyword,nullptr]], [[keyword,nullptr]], [[keyword,nullptr]]);
+        [[class-name,String]] filepath = clang_getFileName(file);
+        [[keyword,if]] (filepath != [[member-variable,m_filepath]]) {
+            // There is no point in annotating tokens for cursors that come from included files,
+            // so skip these entirely
+            [[keyword,continue]];
+        }
+
+        [[class-name,CXCursorKind]] kind = clang_getCursorKind(cursor);
+        
+        [[keyword,if]] (kind == [[enum-value,CXCursor_Namespace]] ||
+            kind == [[enum-value,CXCursor_NamespaceAlias]] ||
+            kind == [[enum-value,CXCursor_NamespaceRef]]) {
+            [[class-name,CXSourceLocation]] location = clang_getCursorLocation(cursor);
+            [[class-name,CXFile]] file;
+            [[keyword,unsigned]] line, column, offset;
+            clang_getSpellingLocation(location, &file, &line, &column, &offset);
+            
+            [[class-name,String]] name = clang_getCursorSpelling(cursor);
+            
+            // Do not annotate tokens that are outside the file being parsed (header)
+            [[class-name,String]] filepath = clang_getFileName(file);
+            [[keyword,if]] (filepath == [[member-variable,m_filepath]]) {
+                add_annotation("namespace-name", line, column, name.length());
+            }
+        }
+        
+        // Visit children
+        clang_visitChildren(cursor, 
+            []([[class-name,CXCursor]] child, [[class-name,CXCursor]] /* parent */, [[class-name,CXClientData]] user_data) -> [[class-name,CXChildVisitResult]] {
+                [[keyword,static_cast]]<[[namespace-name,std]]::[[class-name,stack]]<[[class-name,CXCursor]]>*>(user_data)->push(child);
+                [[keyword,return]] [[enum-value,CXChildVisit_Continue]];
+            }, &cursors);
+    }
+}
+```
 ### Enums
 
 ### Unions
