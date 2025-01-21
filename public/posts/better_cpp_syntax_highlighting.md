@@ -170,109 +170,85 @@ For the `Vector3` definition, this list includes:
 3. `FieldDecl` nodes for the `x`, `y`, and `z` class member variables
 
 Depending on their specific structure, each of these nodes may also contain child nodes of their own, highlighting the hierarchical tree structure of ASTs.
-Below is a (greatly simplified) view of the full AST for the code snippet above, displaying the kind, name, and extent of each node:
+Below is a (greatly simplified) view of the full AST for the code snippet above, displaying the kind and name, and extent of each node:
 ```yaml
-TranslationUnit: src/example.cpp
-    inclusion directive: cmath   // line 1, columns 1 - 17
-    
-    StructDecl: Vector3   // line 3, column 1 - line 28, column 2
-        CXXConstructor: Vector3   // line 4, column 5 - line 7, column 6
-            ParmDecl: x   // line 4, columns 13 - 20
-            ParmDecl: y   // line 4, columns 22 - 29
-            ParmDecl: z   // line 4, columns 31 - 38
-            MemberRef: x   // line 4, columns 42 - 43
-            UnexposedExpr:
-                DeclRefExpr: x   // line 4, columns 44 - 45
-            MemberRef: y   // line 4, columns 48 - 49
-            UnexposedExpr:
-                DeclRefExpr: y   // line 4, columns 50 - 51
-            MemberRef: z   // line 4, columns 54 - 55
-            UnexposedExpr:
-                DeclRefExpr: z   // line 4, columns 56 - 57
-            CompoundStmt:
-        CXXMethod: length   // line 9, column 5 - line 12, column 6
-            CompoundStmt:
-                ReturnStmt:    // line 11, columns 9 - 48
-                    CallExpr: sqrt   // line 11, columns 16 - 48
-                        UnexposedExpr:
-                            DeclRefExpr: sqrt   // line 11, columns 16 - 25
-                                NamespaceRef: std   // line 11, columns 16 - 19
-                        BinaryOperator: +   // line 11, columns 26 - 47
-                            BinaryOperator: +   // line 11, columns 26 - 39
-                                BinaryOperator: *   // line 11, columns 26 - 31
-                                    UnexposedExpr:
-                                        MemberRefExpr: x   // line 11, columns 26 - 27
-                                    UnexposedExpr:
-                                        MemberRefExpr: x   // line 11, columns 30 - 31
-                                BinaryOperator: *   // line 11, columns 34 - 39
-                                    UnexposedExpr:
-                                        MemberRefExpr: y   // line 11, columns 34 - 35
-                                    UnexposedExpr:
-                                        MemberRefExpr: y   // line 11, columns 38 - 39
-                            BinaryOperator: *   // line 11, columns 42 - 47
-                                UnexposedExpr:
-                                    MemberRefExpr: z   // line 11, columns 42 - 43
-                                UnexposedExpr:
-                                    MemberRefExpr: z   // line 11, columns 46 - 47
-        CXXMethod: normalize   // line 14, column 5 - line 23, column 6
-            CompoundStmt:
-                DeclStmt:    // line 15, columns 9 - 30
-                    VarDecl: len   // line 15, columns 9 - 29
-                        CallExpr: length   // line 15, columns 21 - 29
-                            MemberRefExpr: length   // line 15, columns 21 - 27
-                IfStmt:    // line 16, column 9 - line 19, column 10
-                    BinaryOperator: ==   // line 16, columns 13 - 24
-                        UnexposedExpr:
-                            DeclRefExpr: len   // line 16, columns 13 - 16
-                        FloatingLiteral:    // line 16, columns 20 - 24
-                    CompoundStmt:
-                        ReturnStmt:    // line 18, columns 13 - 19
-                CompoundAssignOperator: /=   // line 20, columns 9 - 17
-                    MemberRefExpr: x   // line 20, columns 9 - 10
-                    UnexposedExpr:
-                        DeclRefExpr: len   // line 20, columns 14 - 17
-                CompoundAssignOperator: /=   // line 21, columns 9 - 17
-                    MemberRefExpr: y   // line 21, columns 9 - 10
-                    UnexposedExpr:
-                        DeclRefExpr: len   // line 21, columns 14 - 17
-                CompoundAssignOperator: /=   // line 22, columns 9 - 17
-                    MemberRefExpr: z   // line 22, columns 9 - 10
-                    UnexposedExpr:
-                        DeclRefExpr: len   // line 22, columns 14 - 17
-        FieldDecl: x   // line 25, columns 5 - 12
-        FieldDecl: y   // line 26, columns 5 - 12
-        FieldDecl: z   // line 27, columns 5 - 12
-        
-    FunctionDecl: dot   // line 31, column 1 - line 35, column 2
-        ParmDecl: a   // line 31, columns 11 - 27
-            TypeRef: struct Vector3   // line 31, columns 17 - 24
-        ParmDecl: b   // line 31, columns 29 - 45
-            TypeRef: struct Vector3   // line 31, columns 35 - 42
-        CompoundStmt:
-            ReturnStmt:    // line 34, columns 5 - 45
-                BinaryOperator: +   // line 34, columns 12 - 45
-                    BinaryOperator: +   // line 34, columns 12 - 33
-                        BinaryOperator: *   // line 34, columns 12 - 21
-                            UnexposedExpr:
-                                MemberRefExpr: x   // line 34, columns 12 - 15
-                                    DeclRefExpr: a   // line 34, columns 12 - 13
-                            UnexposedExpr:
-                                MemberRefExpr: x   // line 34, columns 18 - 21
-                                    DeclRefExpr: b   // line 34, columns 18 - 19
-                        BinaryOperator: *   // line 34, columns 24 - 33
-                            UnexposedExpr:
-                                MemberRefExpr: y   // line 34, columns 24 - 27
-                                    DeclRefExpr: a   // line 34, columns 24 - 25
-                            UnexposedExpr:
-                                MemberRefExpr: y   // line 34, columns 30 - 33
-                                    DeclRefExpr: b   // line 34, columns 30 - 31
-                    BinaryOperator: *   // line 34, columns 36 - 45
-                        UnexposedExpr:
-                            MemberRefExpr: z   // line 34, columns 36 - 39
-                                DeclRefExpr: a   // line 34, columns 36 - 37
-                        UnexposedExpr:
-                            MemberRefExpr: z   // line 34, columns 42 - 45
-                                DeclRefExpr: b   // line 34, columns 42 - 43
+TranslationUnitDecl:
+	CXXRecordDecl: Vector3
+		CXXRecordDecl: Vector3
+		CXXConstructorDecl: Vector3
+			ParmVarDecl: x
+			ParmVarDecl: y
+			ParmVarDecl: z
+			CXXCtorInitializer:
+				ImplicitCastExpr:
+					DeclRefExpr: x
+			CXXCtorInitializer:
+				ImplicitCastExpr:
+					DeclRefExpr: y
+			CXXCtorInitializer:
+				ImplicitCastExpr:
+					DeclRefExpr: z
+			CompoundStmt:
+		CXXMethodDecl: length
+			CompoundStmt:
+				ReturnStmt:
+					CallExpr:
+						ImplicitCastExpr:
+							DeclRefExpr: sqrt
+						BinaryOperator: +
+							BinaryOperator: +
+								BinaryOperator: *
+									ImplicitCastExpr:
+										MemberExpr: x
+											CXXThisExpr:
+									ImplicitCastExpr:
+										MemberExpr: x
+											CXXThisExpr:
+								BinaryOperator: *
+									ImplicitCastExpr:
+										MemberExpr: y
+											CXXThisExpr:
+									ImplicitCastExpr:
+										MemberExpr: y
+											CXXThisExpr:
+							BinaryOperator: *
+								ImplicitCastExpr:
+									MemberExpr: z
+										CXXThisExpr:
+								ImplicitCastExpr:
+									MemberExpr: z
+										CXXThisExpr:
+		FieldDecl: x
+		FieldDecl: y
+		FieldDecl: z
+	FunctionDecl: dot
+		ParmVarDecl: a
+		ParmVarDecl: b
+		CompoundStmt:
+			ReturnStmt:
+				BinaryOperator: +
+					BinaryOperator: +
+						BinaryOperator: *
+							ImplicitCastExpr:
+								MemberExpr: x
+									DeclRefExpr: a
+							ImplicitCastExpr:
+								MemberExpr: x
+									DeclRefExpr: b
+						BinaryOperator: *
+							ImplicitCastExpr:
+								MemberExpr: y
+									DeclRefExpr: a
+							ImplicitCastExpr:
+								MemberExpr: y
+									DeclRefExpr: b
+					BinaryOperator: *
+						ImplicitCastExpr:
+							MemberExpr: z
+								DeclRefExpr: a
+						ImplicitCastExpr:
+							MemberExpr: z
+								DeclRefExpr: b
 ```
 Most node kinds are self-explanatory, except for two: `CompoundStmt` and `UnexposedRef`. Here is a brief overview of what these nodes represent:
 - `CompoundStmt`: This node corresponds the body of a function, containing all symbols within the function body in its `inner` element.
@@ -280,12 +256,7 @@ Most node kinds are self-explanatory, except for two: `CompoundStmt` and `Unexpo
 
 For the purposes of this project, these nodes can safely be ignored. 
 References to `CompoundStmt` and `UnexposedRef` nodes in the AST above were retained to maintain consistency, but all relevant information for syntax highlighting can be extracted from their children.
-The code to traverse and print the AST can be found [here]().
-
-`libclang` comes with Python bindings, found in the module [`clang.cindex`](https://libclang.readthedocs.io/en/latest/index.html).
-I decided to create a small project that leverages `clang.cindex` to enhance code snippet highlighting by parsing data from the generated AST.
-I wrote a small project that leverages `clang.cindex` for much more accurate annotation of class names, member variables, and functions, as well as proper highlighting of other tokens such as preprocessor defines, enums, and unions.
-
+ 
 ## Python
 
 Below is a sample C++ code snippet showcasing a variety of language features.
@@ -551,6 +522,7 @@ int main() {
     return 0;
 }
 ```
+
 Several areas of the current syntax highlighting are either incorrect or could be improved.
 The solution I developed involves adding extra annotations to the source code to hint the rendering engine what color to use.
 
@@ -587,19 +559,116 @@ class Parser:
 Let's start simple and gradually build up more complex cases.
 
 ### Keywords
-There are a few different ways to perform syntax highlighting on keywords.
+Prism is generally accurate when annotating keywords, but struggles with C++-style casts: `static_cast`, `reinterpret_cast`, `dynamic_cast`, and `const_cast`.
+These tokens are incorrectly highlighted as functions.
+This likely occurs because Prism identifies functions based on the presence of parentheses `()`.
+As C++-style casts are always followed by parentheses (which enclose the expression being cast), Prism misinterprets these tokens as function names.
 
+One alternative approach would be to use a regular expression to isolate individual keywords.
+```cpp
+\[[plain,b]](alignas|break|catch|const|continue|else|false|float|namespace|new|nullptr|struct|throw|try|while|...)\b
+```
+While this method is viable, the [large number of keywords](https://en.cppreference.com/w/cpp/keyword) in the C++ language makes this approach cumbersome.
+Additionally, this regular expression would need to be further augmented to ignore keywords within comments and strings, ensuring that only keywords in the code are highlighted.
 
+Fortunately, the Clang C API simplifies this process by exposing a `CXToken_Keyword` kind from the `CXTokenKind` enum for identifying language keywords.
+Annotating keywords is as simple as iterating over the tokens of a cursor and focusing only on the tokens that are recognized as keywords by Clang's lexer.
 
-Keywords are the easiest tokens to parse, and there are a few different wa
+```cpp line-numbers:{enable} hidden:{1-30,85-92}
+#include <clang-c/Index.h>
+#include <stack>
+#include <string>
+#include <cstring>
 
-### Comments
+[[keyword,struct]] [[class-name,String]] {
+    String([[class-name,CXString]] str) : [[member-variable,str]](str) {
+    }
 
-### Literals
+    ~String() {
+        clang_disposeString([[member-variable,str]]);
+    }
+
+    [[nodiscard]] [[namespace-name,std]]::[[class-name,size_t]] length() [[keyword,const]] {
+        [[keyword,return]] [[namespace-name,std]]::strlen(clang_getCString([[member-variable,str]]));
+    }
+
+    [[nodiscard]] [[keyword,bool]] [[keyword,operator]]==([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& [[class-name,other]]) [[keyword,const]] {
+        [[keyword,return]] [[namespace-name,std]]::strcmp(clang_getCString([[member-variable,str]]), [[class-name,other]].c_str()) == 0;
+    }
+
+    [[nodiscard]] [[keyword,bool]] [[keyword,operator]]!=([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& [[class-name,other]]) [[keyword,const]] {
+        [[keyword,return]] [[namespace-name,std]]::strcmp(clang_getCString([[member-variable,str]]), [[class-name,other]].c_str()) == 0;
+    }
+
+    [[class-name,CXString]] [[member-variable,str]];
+};
+
+[[keyword,struct]] [[class-name,Parser]] {
+
+[[keyword,void]] parse_keywords() {
+    // Use a stack for a DFS traversal of the AST
+    std::stack<[[class-name,CXCursor]]> cursors;
+    [[member-variable,]]cursors.push(clang_getTranslationUnitCursor([[member-variable,m_translation_unit]]));
+    
+    [[keyword,while]] (![[member-variable,]]cursors.empty()) {
+        [[class-name,CXCursor]] cursor = [[member-variable,]]cursors.top();
+        [[member-variable,]]cursors.pop();
+
+        [[class-name,CXSourceLocation]] location = clang_getCursorLocation(cursor);
+
+        // Retrieve the filepath in which this cursor is defined
+        [[class-name,CXFile]] file;
+        clang_getSpellingLocation(location, &file, [[keyword,nullptr]], [[keyword,nullptr]], [[keyword,nullptr]]);
+        [[class-name,String]] filepath = clang_getFileName(file);
+        [[keyword,if]] (filepath != m_filepath) {
+            // There is no point in annotating tokens for cursors that come from included files
+            // so skip these entirely
+            [[keyword,continue]];
+        }
+
+        [[class-name,CXSourceRange]] extent = clang_getCursorExtent(cursor);
+
+        // Retrieve tokens for this cursor
+        [[keyword,unsigned]] num_tokens;
+        [[class-name,CXToken]]* tokens;
+        clang_tokenize([[member-variable,m_translation_unit]], extent, &tokens, &num_tokens);
+        
+        [[keyword,for]] ([[keyword,unsigned]] i = 0; i < num_tokens; ++i) {
+            [[keyword,const]] [[class-name,CXToken]]& token = tokens[i];
+            [[class-name,CXTokenKind]] kind = clang_getTokenKind(tokens[i]);
+            [[class-name,String]] name = clang_getTokenSpelling([[member-variable,m_translation_unit]], token);
+            
+            // Retrieve the source location of the token
+            [[class-name,CXSourceLocation]] location = clang_getTokenLocation([[member-variable,m_translation_unit]], token);
+            [[keyword,unsigned]] line, column, offset;
+            clang_getSpellingLocation(location, &file, &line, &column, &offset);
+
+            [[keyword,if]] (kind == CXToken_Keyword) {
+                // Found a language keyword
+                add_annotation("keyword", line, column, name.length());
+            }
+        }
+        
+        // Cleanup
+        clang_disposeTokens([[member-variable,m_translation_unit]], tokens, num_tokens);
+        
+        // Visit children
+        clang_visitChildren(cursor, []([[class-name,CXCursor]] child, [[class-name,CXCursor]] /* parent */, [[class-name,CXClientData]] user_data) -> [[class-name,CXChildVisitResult]] {
+            [[keyword,static_cast]]<std::stack<[[class-name,CXCursor]]>*>(user_data)->push(child);
+            [[keyword,return]] CXChildVisit_Continue;
+        }, &cursors);
+    }
+}
+
+[[keyword,void]] add_annotation([[keyword,const]] [[keyword,char]]* name, [[keyword,unsigned]] line, [[keyword,unsigned]] column, [[keyword,unsigned]] length) {}
+
+// Member variables (hidden from public view, for syntax highlighting purposes)
+[[class-name,CXTranslationUnit]] [[member-variable,m_translation_unit]];
+[[namespace-name,std]]::[[class-name,string]] [[member-variable,m_filepath]];
+};
+```
 
 ### Namespaces
-
-### Functions
 
 ### Enums
 

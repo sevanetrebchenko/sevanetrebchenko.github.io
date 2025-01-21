@@ -27,6 +27,8 @@ export default function processLanguageCpp(tokens) {
                 "macro", "macro-name",
                 "enum-name",
                 "enum-value",
+                "plain",
+                "keyword"
             ];
 
             if (!types.every(type => validAnnotationTypes.includes(type))) {

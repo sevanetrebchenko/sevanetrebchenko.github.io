@@ -217,7 +217,7 @@ function CodeBlock(props) {
     // remove hidden lines from final output
     for (let i = lines.length - 1; i >= 0; --i) {
         if (hidden.includes(i + 1)) {
-            tokens.splice(i, 1);
+            lines.splice(i, 1);
         }
     }
 
