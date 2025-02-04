@@ -264,7 +264,6 @@ Below is a sample C++ code snippet showcasing a variety of language features.
 Syntax highlighting is handled exclusively by PrismJS.
 
 ```cpp
-#pragma once
 
 #include <stdexcept> // std::runtime_error, std::out_of_range
 #include <vector> // std::vector
@@ -275,32 +274,33 @@ Syntax highlighting is handled exclusively by PrismJS.
 #include <cmath> // std::sqrt
 #include <concepts> // std::input_or_output_iterator, std::sentinel_for,
                     // std::incrementable, std::same_as, std::convertible_to
-                    
+#include <chrono> // std::chrono::high_resolution_clock
+
 #define ASSERT(EXPRESSION, MESSAGE)        \
-    if (!(EXPRESSION)) {                   \
-        throw std::runtime_error(MESSAGE); \
+    if ([[operator,!]](EXPRESSION)) {                   \
+        throw std::[[class-name,runtime_error]](MESSAGE); \
     }
 
-namespace utility {
+namespace [[namespace-name,utility]] {
 
-    template <typename ...Ts>
-    [[nodiscard]] std::string concat(const Ts&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
+    template <typename ...[[class-name,Ts]]>
+    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] concat(const [[class-name,Ts]]&... args) {
+        [[namespace-name,std]]::[[class-name,stringstream]] ss;
+        (ss [[operator,<<]] ... [[operator,<<]] args);
         return ss.str();
     }
 
-    template <typename T>
-    concept Container = requires(T container) {
+    template <typename [[class-name,T]]>
+    concept Container = requires([[class-name,T]] container) {
         // 1. container must have valid begin() / end()
-        { std::begin(container) } -> std::input_or_output_iterator;
-        { std::end(container) } -> std::sentinel_for<decltype(std::begin(container))>;
+        { [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,input_or_output_iterator]];
+        { [[namespace-name,std]]::end(container) } -> [[namespace-name,std]]::[[concept,sentinel_for]]<decltype([[namespace-name,std]]::begin(container))>;
     
         // 2. container iterator must support equality comparison and be incrementable
-        { std::begin(container) } -> std::incrementable;
+        { [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,incrementable]];
     
         // 3. container iterator must be dereferenceable
-        { *std::begin(container) } -> std::same_as<typename T::value_type&>;
+        { [[operator,*]][[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,same_as]]<typename [[class-name,T]]::[[class-name,value_type]]&>;
         
         // Optional checks for other common container properties
         // { container.empty() } -> std::convertible_to<bool>;
@@ -308,220 +308,228 @@ namespace utility {
         // { container.clear() };
     };
     
-    template <Container C>
-    [[nodiscard]] std::string to_string(const C& container) {
-        std::stringstream ss;
-        ss << "[ ";
+    template <[[concept,Container]] [[class-name,C]]>
+    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] to_string(const [[class-name,C]]& container) {
+        [[namespace-name,std]]::[[class-name,stringstream]] ss;
+        ss [[operator,<<]] "[ ";
         
-        typename C::const_iterator end = std::end(container);
-        for (typename C::const_iterator iter = std::begin(container); iter != end; ++iter) {
-            ss << *iter;
-            if (iter + 1 != end) {
-                ss << ", ";
+        typename [[class-name,C]]::[[class-name,const_iterator]] end = [[namespace-name,std]]::end(container);
+        for (typename [[class-name,C]]::[[class-name,const_iterator]] iter = [[namespace-name,std]]::begin(container); iter [[operator,!=]] end; [[operator,++]]iter) {
+            ss [[operator,<<]] [[operator,*]]iter;
+            if (iter [[operator,+]] 1 [[operator,!=]] end) {
+                ss [[operator,<<]] ", ";
             }
         }
         
-        ss << " ]";
+        ss [[operator,<<]] " ]";
         return ss.str();
     }
     
-    enum class Month : unsigned {
-        January = 1,
-        February,
-        March,
-        April,
-        May,
-        June,
-        July,
-        August,
-        September,
-        October,
-        November,
-        December
+    enum class [[enum-name,Month]] : unsigned {
+        [[enum-value,January]] = 1,
+        [[enum-value,February]],
+        [[enum-value,March]],
+        [[enum-value,April]],
+        [[enum-value,May]],
+        [[enum-value,June]],
+        [[enum-value,July]],
+        [[enum-value,August]],
+        [[enum-value,September]],
+        [[enum-value,October]],
+        [[enum-value,November]],
+        [[enum-value,December]]
     };
     
-    std::string to_string(Month month) {
-        static const std::string names[12] = {
+    [[namespace-name,std]]::[[class-name,string]] to_string([[class-name,Month]] month) {
+        static const [[namespace-name,std]]::[[class-name,string]] names[12] = {
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         };
         
         // Month indices start with 1
-        return names[static_cast<std::underlying_type<Month>::type>(month) - 1];
+        return names[static_cast<[[namespace-name,std]]::[[class-name,underlying_type]]<[[class-name,Month]]>::[[class-name,type]]>(month) [[operator,-]] 1];
     }
     
 }
 
-namespace math {
+namespace [[namespace-name,math]] {
 
     struct Vector3 {
         // Constants
-        static const Vector3 zero;
-        static const Vector3 up;
-        static const Vector3 forward;
+        static const [[class-name,Vector3]] zero;
+        static const [[class-name,Vector3]] up;
+        static const [[class-name,Vector3]] forward;
     
-        Vector3() : x(0.0f), y(0.0f), z(0.0f) {
+        Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) {
         }
     
-        Vector3(float value) : x(value), y(value), z(value) {
+        Vector3(float value) : [[member-variable,x]](value), [[member-variable,y]](value), [[member-variable,z]](value) {
         }
     
-        Vector3(float x, float y, float z) : x(x), y(y), z(z) {
+        Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) {
         }
         
-        ~Vector3() = default;
+        ~[[class-name,Vector3]]() = default;
     
-        Vector3 operator+(const Vector3& other) const {
-            return { x + other.x, y + other.y, z + other.z };
+        [[class-name,Vector3]] operator[[operator,+]](const [[class-name,Vector3]]& other) const {
+            return { [[member-variable,x]] [[operator,+]] other.[[member-variable,x]], [[member-variable,y]] [[operator,+]] other.[[member-variable,y]], [[member-variable,z]] [[operator,+]] other.[[member-variable,z]] };
         }
     
-        Vector3 operator-(const Vector3& other) const {
-            return { x - other.x, y - other.y, z - other.z };
+        [[class-name,Vector3]] operator[[operator,-]](const [[class-name,Vector3]]& other) const {
+            return { [[member-variable,x]] [[operator,-]] other.[[member-variable,x]], [[member-variable,y]] [[operator,-]] other.[[member-variable,y]], [[member-variable,z]] [[operator,-]] other.[[member-variable,z]] };
         }
     
-        Vector3 operator*(float s) const {
-            return { x * s, y * s, z * s };
+        [[class-name,Vector3]] operator[[operator,*]](float s) const {
+            return { [[member-variable,x]] [[operator,*]] s, [[member-variable,y]] [[operator,*]] s, [[member-variable,z]] [[operator,*]] s };
         }
     
-        Vector3 operator/(float s) const {
-            return { x / s, y / s, z / s };
+        [[class-name,Vector3]] operator[[operator,/]](float s) const {
+            return { [[member-variable,x]] [[operator,/]] s, [[member-variable,y]] [[operator,/]] s, [[member-variable,z]] [[operator,/]] s };
         }
     
-        float operator[](std::size_t index) const {
+        float operator[[operator,[]]]([[namespace-name,std]]::[[class-name,size_t]] index) const {
             // Temporarily cast away the const qualifier to avoid duplicating logic
             // Safe as non-const Vector3::operator[] does not modify the value
-            return const_cast<Vector3*>(this)->operator[](index);
+            return const_cast<[[class-name,Vector3]]*>(this)->operator[](index);
         }
         
-        float& operator[](std::size_t index) {
-            if (index == 0) {
-                return x;
+        float& operator[[operator,[]]]([[namespace-name,std]]::[[class-name,size_t]] index) {
+            if (index [[operator,==]] 0) {
+                return [[member-variable,x]];
             }
-            else if (index == 1) {
-                return y;
+            else if (index [[operator,==]] 1) {
+                return [[member-variable,y]];
             }
-            else if (index == 2) {
-                return z;
+            else if (index [[operator,==]] 2) {
+                return [[member-variable,z]];
             }
             else {
-                throw std::out_of_range("index provided to Vector3::operator[] is out of bounds");
+                throw [[namespace-name,std]]::[[class-name,out_of_range]]("index provided to Vector3::operator[] is out of bounds");
             }
         }
     
         // Returns the magnitude of the vector
         float length() const {
-            return std::sqrt(x * x + y * y + z * z);
+            return [[namespace-name,std]]::sqrt([[member-variable,x]] [[operator,*]] [[member-variable,x]] [[operator,+]] [[member-variable,y]] [[operator,*]] [[member-variable,y]] [[operator,+]] [[member-variable,z]] [[operator,*]] [[member-variable,z]]);
         }
         
-        union {
+        [[member-variable,]]union {
             // For access as coordinates
-            struct {
-                float x;
-                float y;
-                float z;
+            [[member-variable,]]struct {
+                float [[member-variable,x]];
+                float [[member-variable,y]];
+                float [[member-variable,z]];
             };
             
             // For access as color components
-            struct {
-                float r;
-                float g;
-                float b;
+            [[member-variable,]]struct {
+                float [[member-variable,r]];
+                float [[member-variable,g]];
+                float [[member-variable,b]];
             };
         };
     };
 
     // Const class static members must be initialized out of line
-    const Vector3 Vector3::zero = Vector3();
+    const [[class-name,Vector3]] [[class-name,Vector3]]::zero = [[class-name,Vector3]]();
     
     // Depends on your coordinate system
-    const Vector3 Vector3::up = Vector3(0.0f, 1.0f, 0.0f);
-    const Vector3 Vector3::forward = Vector3(0.0f, 0.0f, -1.0f);
+    const [[class-name,Vector3]] [[class-name,Vector3]]::up = [[class-name,Vector3]](0.0f, 1.0f, 0.0f);
+    const [[class-name,Vector3]] [[class-name,Vector3]]::forward = [[class-name,Vector3]](0.0f, 0.0f, [[operator,-]]1.0f);
     
     
     // Stream insertion operator
-    std::ostream& operator<<(std::ostream& os, const Vector3& vec) {
-        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+    [[namespace-name,std]]::[[class-name,ostream]]& operator<<([[namespace-name,std]]::[[class-name,ostream]]& os, const [[class-name,Vector3]]& vec) {
+        os [[operator,<<]] "(" [[operator,<<]] vec.[[member-variable,x]] [[operator,<<]] ", " [[operator,<<]] vec.[[member-variable,y]] [[operator,<<]] ", " [[operator,<<]] vec.[[member-variable,z]] [[operator,<<]] ")";
         return os;
     }
 
     // Dot product
-    float dot(Vector3 a, Vector3 b) {
-        return a.x * b.x + a.y * b.y + a.z * b.z;
+    float dot([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
+        return a.[[member-variable,x]] [[operator,*]] b.[[member-variable,x]] [[operator,+]] a.[[member-variable,y]] [[operator,*]] b.[[member-variable,y]] [[operator,+]] a.[[member-variable,z]] [[operator,*]] b.[[member-variable,z]];
     }
     
     // Cross product
-    Vector3 cross(Vector3 a, Vector3 b) {
+    [[class-name,Vector3]] cross([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
         return {
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x
+            a.[[member-variable,y]] [[operator,*]] b.[[member-variable,z]] [[operator,-]] a.[[member-variable,z]] [[operator,*]] b.[[member-variable,y]],
+            a.[[member-variable,z]] [[operator,*]] b.[[member-variable,x]] [[operator,-]] a.[[member-variable,x]] [[operator,*]] b.[[member-variable,z]],
+            a.[[member-variable,x]] [[operator,*]] b.[[member-variable,y]] [[operator,-]] a.[[member-variable,y]] [[operator,*]] b.[[member-variable,x]]
         };
     }
     
     // Returns a unit vector oriented in the same direction as 'v'
-    Vector3 normalize(const Vector3& v) {
+    [[class-name,Vector3]] normalize(const [[class-name,Vector3]]& v) {
         float length = v.length();
-        ASSERT(length > 0.0f, "Vector3::normalize() called on vector of zero length");
-        return v / length;
+        ASSERT(length [[operator,>]] 0.0f, "Vector3::normalize() called on vector of zero length");
+        return v [[operator,/]] length;
     }
 
 }
 
 int main() {
-    std::string str;
+    [[namespace-name,std]]::[[class-name,string]] str;
 
 
     // Prints "Hello, world!"
-    str = utility::concat("Hello", ",", " ", "world", "!");
-    std::cout << str << '\n';
+    str [[operator,=]] [[namespace-name,utility]]::concat("Hello", ",", " ", "world", "!");
+    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
 
 
     // Prints "[ 0, 1, 2, 3, 4, 5 ]"
-    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
-    str = utility::to_string(vec);
-    std::cout << str << '\n';
+    [[namespace-name,std]]::[[class-name,vector]]<int> vec = { 0, 1, 2, 3, 4, 5 };
+    str [[operator,=]] [[namespace-name,utility]]::to_string(vec);
+    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
 
 
     // Prints today's date
     // For C++20 and above, use std::system_clock::now() and std::year_month_day
-    std::time_t time = std::time(nullptr);
-    std::tm* local_time = std::localtime(&time);
+    [[namespace-name,std]]::[[class-name,time_t]] t = time(nullptr);
+    [[namespace-name,std]]::[[class-name,tm]]* local = localtime([[operator,&]]t);
 
-    int year = 1900 + local_time->tm_year;
-    utility::Month month = static_cast<utility::Month>(1 + local_time->tm_mon);
-    int day = local_time->tm_mday;
+    int year = 1900 [[operator,+]] local->[[member-variable,tm_year]];
+    [[namespace-name,utility]]::[[class-name,Month]] month = static_cast<[[namespace-name,utility]]::[[class-name,Month]]>(1 [[operator,+]] local->[[member-variable,tm_mon]]);
+    int day = local->[[member-variable,tm_mday]];
     
-    std::string suffix;
+    [[namespace-name,std]]::[[class-name,string]] suffix;
     switch (day) {
         case 1:
-            suffix = "st";
+            suffix [[operator,=]] "st";
             break;
         case 2:
-            suffix = "nd";
+            suffix [[operator,=]] "nd";
             break;
         case 3:
-            suffix = "rd";
+            suffix [[operator,=]] "rd";
             break;
         default:
-            suffix = "th";
+            suffix [[operator,=]] "th";
             break;
     }
 
-    str = utility::concat("Today is ", utility::to_string(month), " ", day, suffix, ", ", year);
-    std::cout << str << '\n';
+    str [[operator,=]] [[namespace-name,utility]]::concat("Today is ", [[namespace-name,utility]]::to_string(month), " ", day, suffix, ", ", year);
+    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
 
     
     // Determine the orthonormal basis for the given forward vector (assuming (0, 1, 0) is up)
-    math::Vector3 up = math::Vector3::up;
-    math::Vector3 forward = math::normalize(math::Vector3(0.75f, 0.12f, 3.49f)); // Arbitrary
-    math::Vector3 right = math::cross(forward, up);
+    [[namespace-name,math]]::[[class-name,Vector3]] up = [[namespace-name,math]]::[[class-name,Vector3]]::[[member-variable,up]];
+    [[namespace-name,math]]::[[class-name,Vector3]] forward = [[namespace-name,math]]::normalize([[namespace-name,math]]::[[class-name,Vector3]](0.75f, 0.12f, 3.49f)); // Arbitrary
+    [[namespace-name,math]]::[[class-name,Vector3]] right = [[namespace-name,math]]::cross(forward, up);
     
-    str = utility::concat("The cross product of vectors ", up, " and ", forward, " is ", right);
-    std::cout << str << '\n';
+    str [[operator,=]] [[namespace-name,utility]]::concat("The cross product of vectors ", up, " and ", forward, " is ", right);
+    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
     
+    [[namespace-name,std]]::[[namespace-name,chrono]]::[[class-name,time_point]] now = [[namespace-name,std]]::[[namespace-name,chrono]]::[[class-name,high_resolution_clock]]::now();
+    
+    using namespace [[namespace-name,utility]];
+    
+    using [[class-name,VecVec]] = [[namespace-name,std]]::[[class-name,vector]]<[[namespace-name,math]]::[[class-name,Vector3]]>;
+    using [[class-name,Integer]] = int;
+    typedef int [[class-name,MyInteger]];
     
     return 0;
 }
+
 ```
 
 Several areas of the current syntax highlighting are either incorrect or could be improved.

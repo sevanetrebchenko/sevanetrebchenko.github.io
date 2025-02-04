@@ -23,12 +23,13 @@ export default function processLanguageCpp(tokens) {
                 "class-name",
                 "namespace-name",
                 "member-variable",
-                "function-operator",
                 "macro", "macro-name",
                 "enum-name",
                 "enum-value",
                 "plain",
-                "keyword"
+                "keyword",
+                "operator",
+                "concept",
             ];
 
             if (!types.every(type => validAnnotationTypes.includes(type))) {

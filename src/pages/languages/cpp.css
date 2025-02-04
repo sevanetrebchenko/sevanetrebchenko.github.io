@@ -210,7 +210,8 @@ div[class*="language-"] {
 
 .language-cpp .class-name,
 .language-cpp .namespace-name,
-.language-cpp .enum-name {
+.language-cpp .enum-name,
+.language-cpp .concept {
     color: rgb(181, 182, 227);
 }
 
@@ -231,7 +232,7 @@ div[class*="language-"] {
     color: rgb(152, 118, 170);
 }
 
-.language-cpp .function-operator {
+.language-cpp .operator {
     color: rgb(95, 140, 138);
 }
 
