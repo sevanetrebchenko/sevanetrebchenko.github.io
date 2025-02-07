@@ -9,12 +9,19 @@ export default function processLanguageCpp(tokens) {
             // Found start of annotation block '[['
             let annotation = "";
 
-            let j = i + 2;
-            while (tokens[j].content !== "]") {
+            let j = i;
+            while (true) {
                 annotation += tokens[j].content;
+
+                if (tokens[j].content === "]" && tokens[j + 1].content !== "]") {
+                    break;
+                }
+
                 ++j;
             }
-            ++j; // Skip to the end of the annotation block ']]'
+
+            // Strip leading and trailing braces
+            annotation = annotation.slice(2, annotation.length - 2);
 
             const components = annotation.split(",");
             const types = components[0].split(".");
@@ -23,7 +30,7 @@ export default function processLanguageCpp(tokens) {
                 "class-name",
                 "namespace-name",
                 "member-variable",
-                "macro", "macro-name",
+                "macro", "macro-name", "macro-argument",
                 "enum-name",
                 "enum-value",
                 "plain",
@@ -42,7 +49,7 @@ export default function processLanguageCpp(tokens) {
                     ++i;
                 }
 
-                continue
+                continue;
             }
 
             const value = components[1];

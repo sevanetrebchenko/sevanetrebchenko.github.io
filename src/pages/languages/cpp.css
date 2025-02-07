@@ -201,7 +201,10 @@ div[class*="language-"] {
     color: rgb(187, 181, 41);
 }
 .language-cpp .macro.macro-name {
-    color: 	rgb(144, 139, 37);
+    color: rgb(144, 139, 37);
+}
+.language-cpp .macro.macro-argument {
+    color: rgb(108, 106, 42);
 }
 
 .language-cpp .function {
