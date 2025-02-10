@@ -4,23 +4,17 @@
             "title": "Better C++ Syntax Highlighting",
             "abstract": "",
             "tags": [
-                "python"
-            ],
-            "date": "01-14-2025",
-            "filepath": "/posts/better_cpp_syntax_highlighting.md",
-            "last_modified_time": "2025-02-04T07:26:00.318Z"
-        },
-        {
-            "title": "Sample post",
-            "abstract": "This is a sample post for my website",
-            "tags": [
-                "vulkan",
+                "c",
+                "c++",
+                "python",
+                "javascript",
                 "programming",
-                "cpp"
+                "website",
+                "clang"
             ],
-            "date": "9-11-2020",
-            "filepath": "/posts/blog/README.md",
-            "last_modified_time": "2025-01-13T09:16:53.763Z"
+            "date": "02-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting.md",
+            "last_modified_time": "2025-02-10T06:20:06.522Z"
         }
     ]
 }

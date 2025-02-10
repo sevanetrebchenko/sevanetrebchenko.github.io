@@ -1,80 +1,426 @@
 
-One popular method for syntax highlighting in browsers is the [PrismJS](https://prismjs.com/) library.
-However, PrismJS struggles with proper C++ syntax highlighting, which is a problem for me as many of my projects (particularly those based around computer graphics) are written in C++.
-As the purpose of this blog is to showcase some of the technical aspects of my projects that I find interesting (meaning lots of code snippets!), I decided to invest a little more time into developing a more robust solution for C++ syntax highlighting to improve readability.
+*Reader beware: this post is actively being worked on!*
 
-## The problems of syntax highlighting with PrismJS
+
+
+I created this blog to have a place to discuss my solutions for interesting problems I encounter while working on my personal projects.
+Many of these projects, particularly those focused on computer graphics, are written in C++.
+
+One problem I wanted to tackle was syntax highlighting, as I often use code snippets in my explanations and wanted them to be easily readable.
+Initially, I integrated [PrismJS](https://prismjs.com/) - a popular library for syntax highlighting in browsers - into my Markdown renderer.
+However, I quickly discovered that PrismJS struggles with properly highlighting C++ code.
+
+This post outlines my process for developing a more robust C++ syntax highlighting solution for browsers.
+
+## Syntax highlighting with PrismJS
 PrismJS breaks the source code into tokens based on a set of predefined grammar rules specific to each language.
 These rules are essentially regular expressions that identify different types of elements in the code, such as keywords, strings, numbers, comments, etc.
-This process involves parsing the raw code snippet and categorizing the parts into distinct tokens.
-Once tokenized, PrismJS applies a set of CSS classes to each token, which can then be used to apply styling.
+Once the source code is parsed into tokens, each token is tagged with a set of CSS classes that are then used to apply styling.
 
-However, syntax highlighting for C++ requires a more nuanced approach.
-For example, PrismJS only highlights the declaration of `struct` and `class` types, treating subsequent uses as plain tokens.
-This likely stems from the difficulty of distinguishing whether a token represents the name of a class or a variable, as it's perfectly valid to have a variable with the same name as a class (provided the class is properly scoped).
+However, syntax highlighting for C++ requires more context.
+Consider the following example, which showcases a variety of C++20 features, including macros, templates, concepts, overloaded operators, user-defined classes with static members, enums, and nested namespaces (to name a few).  
+Syntax highlighting is done exclusively by PrismJS:
 ```cpp line-numbers:{enabled}
-namespace detail {
-    struct MyStruct {
-        // ...
+#include <stdexcept> // std::runtime_error, std::out_of_range
+#include <vector> // std::vector
+#include <string> // std::string, std::to_string
+#include <ctime> // std::tm, std::time_t, std::time, std::localtime
+#include <sstream> // std::stringstream
+#include <iostream> // std::cout
+#include <cmath> // std::sqrt
+#include <concepts> // std::input_or_output_iterator, std::sentinel_for,
+                    // std::incrementable, std::same_as, std::convertible_to
+#include <chrono> // std::chrono::high_resolution_clock
+
+#define ASSERT(EXPRESSION, MESSAGE)        \
+    if (!(EXPRESSION)) {                   \
+        throw std::runtime_error(MESSAGE); \
+    }
+
+namespace utility {
+    
+    template <typename ...Ts>
+    [[nodiscard]] std::string concat(const Ts&... args) {
+        std::stringstream ss;
+        (ss << ... << args);
+        return ss.str();
+    }
+    
+    template <typename T>
+    concept Container = requires(T container) {
+        // 1. container must have valid begin() / end()
+        { std::begin(container) } -> std::input_or_output_iterator;
+        { std::end(container) } -> std::sentinel_for<decltype(std::begin(container))>;
+    
+        // 2. container iterator must support equality comparison and be incrementable
+        { std::begin(container) } -> std::incrementable;
+    
+        // 3. container iterator must be dereferenceable
+        { *std::begin(container) } -> std::same_as<typename T::value_type&>;
+        
+        // Optional checks for other common container properties
+        // { container.empty() } -> std::convertible_to<bool>;
+        // { container.size() } -> std::convertible_to<std::size_t>;
+        // { container.clear() };
     };
+    
+    template <Container C>
+    [[nodiscard]] std::string to_string(const C& container) {
+        std::stringstream ss;
+        ss << "[ ";
+        
+        typename C::const_iterator end = std::end(container);
+        for (typename C::const_iterator iter = std::begin(container); iter != end; ++iter) {
+            ss << *iter;
+            if (iter + 1 != end) {
+                ss << ", ";
+            }
+        }
+        
+        ss << " ]";
+        return ss.str();
+    }
+    
+    enum class Month : unsigned {
+        January = 1,
+        February,
+        March,
+        April,
+        May,
+        June,
+        July,
+        August,
+        September,
+        October,
+        November,
+        December
+    };
+    
+    std::string to_string(Month month) {
+        static const std::string names[12] = {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        };
+        
+        // Month indices start with 1
+        return names[static_cast<std::underlying_type<Month>::type>(month) - 1];
+    }
+    
+}
+
+namespace math {
+
+    struct Vector3 {
+        // Constants
+        static const Vector3 zero;
+        static const Vector3 up;
+        static const Vector3 forward;
+    
+        Vector3() : x(0.0f), y(0.0f), z(0.0f) {
+        }
+    
+        Vector3(float value) : x(value), y(value), z(value) {
+        }
+    
+        Vector3(float x, float y, float z) : x(x), y(y), z(z) {
+        }
+        
+        ~Vector3() = default;
+    
+        Vector3 operator+(const Vector3& other) const {
+            return { x + other.x, y + other.y, z + other.z };
+        }
+    
+        Vector3 operator-(const Vector3& other) const {
+            return { x - other.x, y - other.y, z - other.z };
+        }
+    
+        Vector3 operator*(float s) const {
+            return { x * s, y * s, z * s };
+        }
+    
+        Vector3 operator/(float s) const {
+            return { x / s, y / s, z / s };
+        }
+    
+        float operator[](std::size_t index) const {
+            // Temporarily cast away the const qualifier to avoid duplicating logic
+            // Safe as non-const Vector3::operator[] does not modify the value
+            return const_cast<Vector3*>(this)->operator[](index);
+        }
+        
+        float& operator[](std::size_t index) {
+            if (index == 0) {
+                return x;
+            }
+            else if (index == 1) {
+                return y;
+            }
+            else if (index == 2) {
+                return z;
+            }
+            else {
+                throw std::out_of_range("index provided to Vector3::operator[] is out of bounds");
+            }
+        }
+    
+        // Returns the magnitude of the vector
+        float length() const {
+            return std::sqrt(x * x + y * y + z * z);
+        }
+        
+        union {
+            // For access as coordinates
+            struct {
+                float x;
+                float y;
+                float z;
+            };
+            
+            // For access as color components
+            struct {
+                float r;
+                float g;
+                float b;
+            };
+        };
+    };
+
+    // Const class static members must be initialized out of line
+    const Vector3 Vector3::zero = Vector3();
+    
+    // Depends on your coordinate system
+    const Vector3 Vector3::up = Vector3(0.0f, 1.0f, 0.0f);
+    const Vector3 Vector3::forward = Vector3(0.0f, 0.0f, -1.0f);
+    
+    
+    // Stream insertion operator
+    std::ostream& operator<<(std::ostream& os, const Vector3& vec) {
+        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+        return os;
+    }
+
+    // Dot product
+    float dot(Vector3 a, Vector3 b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+    
+    // Cross product
+    Vector3 cross(Vector3 a, Vector3 b) {
+        return {
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        };
+    }
+    
+    // Returns a unit vector oriented in the same direction as 'v'
+    Vector3 normalize(const Vector3& v) {
+        float length = v.length();
+        ASSERT(length > 0.0f, "Vector3::normalize() called on vector of zero length");
+        return v / length;
+    }
+
 }
 
 int main() {
-    // This is valid C++
-    detail::MyStruct MyStruct { };
+    std::string str;
+
+
+    // Prints "Hello, world!"
+    str = utility::concat("Hello", ",", " ", "world", "!");
+    std::cout << str << '\n';
+
+
+    // Prints "[ 0, 1, 2, 3, 4, 5 ]"
+    std::vector<int> vec = { 0, 1, 2, 3, 4, 5 };
+    str = utility::to_string(vec);
+    std::cout << str << '\n';
+
+
+    using namespace std::chrono;
+    time_point now = system_clock::now();
     
+    time_t time = system_clock::to_time_t(now);
+    tm local = *localtime(&time);
+
+    // Extract date
+    int year = 1900 + local.tm_year;
+    utility::Month month = static_cast<utility::Month>(1 + local.tm_mon);
+    int day = local.tm_mday;
+    
+    std::string suffix;
+    switch (day) {
+        case 1:
+        case 21:
+        case 31:
+            suffix = "st";
+            break;
+        case 2:
+        case 22:
+            suffix = "nd";
+            break;
+        case 3:
+        case 23:
+            suffix = "rd";
+            break;
+        default:
+            suffix = "th";
+            break;
+    }
+
+    // Print date
+    str = utility::concat("Today is ", utility::to_string(month), " ", day, suffix, ", ", year);
+    std::cout << str << '\n';
+
+    duration current_time = now.time_since_epoch();
+    hours h = duration_cast<hours>(current_time) % 24h;
+    minutes m = duration_cast<minutes>(current_time) % 60min;
+    seconds s = duration_cast<seconds>(current_time) % 60s;
+
+    int hour = h.count();
+    suffix = hour >= 12 ? "PM" : "AM";
+    if (hour == 0) {
+        // 12:00AM
+        hour = 12;
+    }
+    else if (hour > 12) {
+        hour -= 12;
+    }
+    
+    std::cout << "The current time is: " << hour << ':'
+              << std::setw(2) << std::setfill('0') << m.count() << ':'
+              << std::setw(2) << std::setfill('0') << s.count()
+              << ' ' << suffix << '\n';
+    
+    
+    // Determine the orthonormal basis for the given forward vector (assuming (0, 1, 0) is up)
+    math::Vector3 up = math::Vector3::up;
+    math::Vector3 forward = math::normalize(math::Vector3(0.75f, 0.12f, 3.49f)); // Arbitrary
+    math::Vector3 right = math::cross(forward, up);
+    
+    str = utility::concat("The cross product of vectors ", up, " and ", forward, " is ", right);
+    std::cout << str << '\n';
+    
+    
+    using Color = math::Vector3;
+    Color color = Color { 253, 164, 15 };
+
+    str = utility::concat("My favorite color is: ", color);
+    std::cout << str << '\n';
+    
+    
+    return 0;
+}
+```
+
+There are several issues with the highlighting:
+1. **Preprocessor directives**: References to preprocessor definitions, such as the `ASSERT` macro on line 197, are incorrectly highlighted as function calls
+2. **User-defined types**: Only declarations of custom types - such as the `Container` concept on line 27, the `Month` enum on line 61, and the `Vector3` struct on line 90 - are recognized as classes. Subsequent uses are treated as plain tokens. Note that this issue extends to standard library types, such as `std::runtime_error` on line 14, `std::string` on line 20, and `std::stringstream` on lines 21 and 46.
+3. **Enums**: Enum values, such as the month names in the `Month` enum on line 61, are highlighted as plain tokens.
+4. **Keywords**: Certain C++ keywords, specifically C++-style casts such as `static_cast` on lines 83 and 226 and `const_cast` on line 126, are incorrectly highlighted as function calls.
+5. **Namespaces**: namespace declarations, such as the `utility` namespace on line 17 or the `math` namespace on line 88, as well as namespace-qualified types, are all highlighted as plain tokens.
+6. **Templates**: Template type names are highlighted as plain tokens, and template angle brackets are treated as operators rather than delimiters.
+
+
+## Prerequisites
+
+## Enums
+Enums are a great starting point as their declaration is simple and usage is straightforward.
+Consider the following example:
+```cpp line-numbers:{enabled}
+enum class Level {
+    Debug = 0,
+    Info,
+    Warning,
+    Error,
+    Fatal = Error,
+};
+
+void log_message(Level level, const char* message);
+
+int main() {
+    log_message(Level::Error, "something bad happened");
     // ...
 }
 ```
-Syntax highlighting based on tokenization alone is not a viable solution for this case.
+The AST for this code snippet looks as follows:
+```text
+TranslationUnitDecl 0x1b640a48268 <<invalid sloc>> <invalid sloc>
+|-EnumDecl 0x1b640a490d8 <.\example.cpp:1:1, line:7:1> line:1:12 referenced class Level 'int'
+| |-EnumConstantDecl 0x1b640a491f8 <line:2:5, col:13> col:5 Debug 'Level'
+| | `-ConstantExpr 0x1b640a491d0 <col:13> 'int'
+| |   |-value: Int 0
+| |   `-IntegerLiteral 0x1b640a491b0 <col:13> 'int' 0
+| |-EnumConstantDecl 0x1b642245648 <line:3:5> col:5 Info 'Level'
+| |-EnumConstantDecl 0x1b6422456a8 <line:4:5> col:5 Warning 'Level'
+| |-EnumConstantDecl 0x1b642245708 <line:5:5> col:5 referenced Error 'Level'
+| `-EnumConstantDecl 0x1b6422457a8 <line:6:5, col:13> col:5 Fatal 'Level'
+|   `-ConstantExpr 0x1b642245780 <col:13> 'int'
+|     |-value: Int 3
+|     `-DeclRefExpr 0x1b642245760 <col:13> 'int' EnumConstant 0x1b642245708 'Error' 'Level'
+|-FunctionDecl 0x1b642245a28 <line:9:1, col:50> col:6 used log_message 'void (Level, const char *)'
+| |-ParmVarDecl 0x1b642245848 <col:18, col:24> col:24 level 'Level'
+| `-ParmVarDecl 0x1b6422458d0 <col:31, col:43> col:43 message 'const char *'
+`-FunctionDecl 0x1b642245bb0 <line:11:1, line:14:1> line:11:5 main 'int ()'
+  `-CompoundStmt 0x1b642245ee0 <col:12, line:14:1>
+    `-CallExpr 0x1b642245e98 <line:12:5, col:55> 'void'
+      |-ImplicitCastExpr 0x1b642245e80 <col:5> 'void (*)(Level, const char *)' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0x1b642245e00 <col:5> 'void (Level, const char *)' lvalue Function 0x1b642245a28 'log_message' 'void (Level, const char *)'
+      |-DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
+      | `-NestedNameSpecifier TypeSpec 'Level'
+      `-ImplicitCastExpr 0x1b642245ec8 <col:31> 'const char *' <ArrayToPointerDecay>
+        `-StringLiteral 0x1b642245dd0 <col:31> 'const char[23]' lvalue "something bad happened"
+```
+Enums are represented by two node types: `EnumDecl`, which corresponds to the enum declaration, and `EnumConstantDecl`, which represents the enum values.
+From the AST, we can infer that the `Level` enum is declared as an enum class, and that the underlying type is by default set to an int.
+If we had explicitly specified the underlying type, such as a `unsigned char` or `std::uint8_t` for a more compact representation, this would have also been reflected in the AST.
+
+References to enum values are captured under a `DeclRefExpr` node.
+
+### Enum Declarations
+With our AST visitor configured, we can set up functions to visit `EnumDecl` and `EnumConstantDecl` nodes:
+```cpp
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    // For visiting enum declarations
+    bool VisitEnumDecl(clang::EnumDecl* node);
+    bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
+    // ...
+};
+```
+
+The process for visiting AST nodes is largely the same.
+
+
+
+## Preprocessor Directives
+
+## Keywords
+
+
+
+
+
+
+There are many issues with this
+Notice that PrismJS only applies syntax highlighting to the declaration of `MyStruct` on line 2. 
+Subsequent uses, such as the one on line 9, are treated as plain tokens.
+Without additional context, it is unclear how the `MyStruct` variable should be highlighted when using a tokenization approach
+This likely stems from the difficulty of distinguishing whether a token represents a class name or a variable.
+As shown above, it's perfectly valid to have a variable with the same name as a class (provided the class is properly scoped).
+
 
 A similar issue arises with syntax highlighting for class members and static member variables.
 While tokenization or regular expressions can provide a partially working solution, they fall short when parsing definitions of class member variables and inline member functions.
 For example, one possible "solution" could be to annotate any tokens following a class access operator (`.` or `->`) as class members.
 
-```cpp line-numbers:{enabled}
-#include <cmath> // std::sqrt
-
-struct Vector3 {
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {
-        // Constructor parameters have the same name as class member values, 
-        // which poses a challenge for syntax highlighting based on tokenization alone
-    }
-    
-    // No syntax highlighting for class members and/or their use in member function definitions...
-    
-    float length() const {
-        return std::sqrt(x * x + y * y + z * z);
-    }
-    
-    void normalize() {
-        float len = length();
-        if (len == 0.0f) {
-            return;
-        }
-        x /= len;
-        y /= len;
-        z /= len;
-    }
-    
-    float x;
-    float y;
-    float z;
-};
-
-float dot(const Vector3& a, const Vector3& b) {
-    // Idea: highlight the first identifier token after the access operator . as a member variable
-    // However, this approach does not properly distinguish member variables from member functions
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-```
 However, this solution quickly breaks down.
 What about inline member function definitions, where the access operator `this->` isn't required (such as the `length` function on line 10)?
 Or constructors, where parameters and class members may share the same name but should not be annotated as the same type?
 Furthermore, a distinction needs be made for function calls, which use a similar syntax to member access but should be annotated differently.
 A regular expression to capture all of these cases would already be needlessly complex.
 
-## Abstract Syntax Trees
+## Contextualized Tokenization
 
 A more effective approach would be to parse the **A**bstract **S**yntax **T**ree (AST) that is generated during compilation and add annotations to tokens based on the exposed symbols.
 The Clang C/C++ compiler exposes [`libclang`](https://clang.llvm.org/doxygen/group__CINDEX.html), an API for parsing and traversing ASTs (which conveniently means I don't need to go through the trouble of [writing one from scratch]()).
@@ -82,83 +428,7 @@ Many IDEs also use this for syntax highlighting.
 
 To better understand the structure of an AST, let's examine the one generated for the code snippet above.
 We can do this by specifying the `-Xclang -ast-dump=json` flags during compilation:
-```json
-> clang -Xclang -ast-dump=json -fsyntax-only src/example.cpp > out.json
-        
-{
-    "id": "0x11bbd5c4890",
-    "kind": "TranslationUnitDecl",
-    "loc": {},
-    "range": {
-        "begin": {},
-        "end": {}
-    },
-    "inner": [
-        ...
-        {
-            "id": "0x24accda1100",
-            "kind": "CXXRecordDecl",
-            "loc": {
-                "offset": 40,
-                "file": "example.cpp",
-                "line": 3,
-                "col": 8,
-                "tokLen": 7
-            },
-            "range": {
-                "begin": {
-                    "offset": 33,
-                    "col": 1,
-                    "tokLen": 6
-                },
-                "end": {
-                    "offset": 711,
-                    "line": 28,
-                    "col": 1,
-                    "tokLen": 1
-                }
-            },
-          "isReferenced": true,
-          "name": "Vector3",
-          "tagUsed": "struct",
-          // Is this a declaration or definition?
-          "completeDefinition": true,
-          // Type traits (trivially copy / move constructible?, has default destructor?, etc.)
-          "definitionData": { ... },
-          "inner": [ ... ]
-        },
-        {
-            "id": "0x24accdbdc18",
-            "kind": "FunctionDecl",
-            "loc": {
-                "offset": 739,
-                "line": 31,
-                "col": 7,
-                "tokLen": 3
-            },
-            "range": {
-                "begin": {
-                    "offset": 733,
-                    "col": 1,
-                    "tokLen": 5
-                },
-                "end": {
-                    "offset": 982,
-                    "line": 35,
-                    "col": 1,
-                    "tokLen": 1
-                }
-            },
-            "name": "dot",
-            "mangledName": "?dot@@YAMAEBUVector3@@0@Z",
-            "type": {
-                "qualType": "float (const Vector3 &, const Vector3 &)"
-            },
-            "inner": [ ... ]
-        }
-    ]
-}
-```
+
 The top-level node is always the translation unit, which serves as the root of the AST and represents the entire compiled C++ file.
 In the JSON snippet above, only the first level of symbols is shown, with symbols from the `<cmath>` header omitted entirely for brevity.
 Including all symbols expands the AST to 248,249 lines, out of which only 2,586 (~1%) are relevant to this example: 1,894 for `Vector3` and 692 for `dot`.
@@ -172,85 +442,6 @@ For the `Vector3` definition, this list includes:
 
 Depending on their specific structure, each of these nodes may also contain child nodes of their own, highlighting the hierarchical tree structure of ASTs.
 Below is a (greatly simplified) view of the full AST for the code snippet above, displaying the kind and name, and extent of each node:
-```yaml
-TranslationUnitDecl:
-	CXXRecordDecl: Vector3  // line 3, column 8
-		CXXRecordDecl:
-		CXXConstructorDecl: Vector3
-			ParmVarDecl: x
-			ParmVarDecl: y
-			ParmVarDecl: z
-			CXXCtorInitializer:
-				ImplicitCastExpr:
-					DeclRefExpr: x
-			CXXCtorInitializer:
-				ImplicitCastExpr:
-					DeclRefExpr: y
-			CXXCtorInitializer:
-				ImplicitCastExpr:
-					DeclRefExpr: z
-			CompoundStmt:
-		CXXMethodDecl: length
-			CompoundStmt:
-				ReturnStmt:
-					CallExpr:
-						ImplicitCastExpr:
-							DeclRefExpr: sqrt
-						BinaryOperator: +
-							BinaryOperator: +
-								BinaryOperator: *
-									ImplicitCastExpr:
-										MemberExpr: x
-											CXXThisExpr:
-									ImplicitCastExpr:
-										MemberExpr: x
-											CXXThisExpr:
-								BinaryOperator: *
-									ImplicitCastExpr:
-										MemberExpr: y
-											CXXThisExpr:
-									ImplicitCastExpr:
-										MemberExpr: y
-											CXXThisExpr:
-							BinaryOperator: *
-								ImplicitCastExpr:
-									MemberExpr: z
-										CXXThisExpr:
-								ImplicitCastExpr:
-									MemberExpr: z
-										CXXThisExpr:
-		FieldDecl: x
-		FieldDecl: y
-		FieldDecl: z
-	FunctionDecl: dot
-		ParmVarDecl: a
-		ParmVarDecl: b
-		CompoundStmt:
-			ReturnStmt:
-				BinaryOperator: +
-					BinaryOperator: +
-						BinaryOperator: *
-							ImplicitCastExpr:
-								MemberExpr: x
-									DeclRefExpr: a
-							ImplicitCastExpr:
-								MemberExpr: x
-									DeclRefExpr: b
-						BinaryOperator: *
-							ImplicitCastExpr:
-								MemberExpr: y
-									DeclRefExpr: a
-							ImplicitCastExpr:
-								MemberExpr: y
-									DeclRefExpr: b
-					BinaryOperator: *
-						ImplicitCastExpr:
-							MemberExpr: z
-								DeclRefExpr: a
-						ImplicitCastExpr:
-							MemberExpr: z
-								DeclRefExpr: b
-```
 Most node kinds are self-explanatory, except for two: `CompoundStmt` and `UnexposedRef`. Here is a brief overview of what these nodes represent:
 - `CompoundStmt`: This node corresponds the body of a function, containing all symbols within the function body in its `inner` element.
 - `UnexposedRef`: This node appears when an expression cannot be directly classified, is incomplete, or lacks enough context for precise classification by Clang.
@@ -284,7 +475,7 @@ Syntax highlighting is handled exclusively by PrismJS.
 namespace [[namespace-name,utility]] {
 
     template <typename ...[[class-name,Ts]]>
-    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] concat(const [[class-name,Ts]]&... args) {
+    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] concat(const [[class-name,Ts]][[plain,&]]... args) {
         [[namespace-name,std]]::[[class-name,stringstream]] ss;
         (ss [[operator,<<]] ... [[operator,<<]] args);
         return ss.str();
@@ -300,7 +491,7 @@ namespace [[namespace-name,utility]] {
         { [[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,incrementable]];
     
         // 3. container iterator must be dereferenceable
-        { [[operator,*]][[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,same_as]]<typename [[class-name,T]]::[[class-name,value_type]]&>;
+        { [[operator,*]][[namespace-name,std]]::begin(container) } -> [[namespace-name,std]]::[[concept,same_as]]<typename [[class-name,T]]::[[class-name,value_type]][[plain,&]]>;
         
         // Optional checks for other common container properties
         // { container.empty() } -> std::convertible_to<bool>;
@@ -309,14 +500,14 @@ namespace [[namespace-name,utility]] {
     };
     
     template <[[concept,Container]] [[class-name,C]]>
-    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] to_string(const [[class-name,C]]& container) {
+    [[nodiscard]] [[namespace-name,std]]::[[class-name,string]] to_string(const [[class-name,C]][[plain,&]] container) {
         [[namespace-name,std]]::[[class-name,stringstream]] ss;
         ss [[operator,<<]] "[ ";
         
         typename [[class-name,C]]::[[class-name,const_iterator]] end = [[namespace-name,std]]::end(container);
-        for (typename [[class-name,C]]::[[class-name,const_iterator]] iter = [[namespace-name,std]]::begin(container); iter [[operator,!=]] end; [[operator,++]]iter) {
+        for (typename [[class-name,C]]::[[class-name,const_iterator]] iter = [[namespace-name,std]]::begin(container); iter [[operator,!]]= end; [[operator,++]]iter) {
             ss [[operator,<<]] [[operator,*]]iter;
-            if (iter [[operator,+]] 1 [[operator,!=]] end) {
+            if (iter [[operator,+]] 1 [[operator,!]]= end) {
                 ss [[operator,<<]] ", ";
             }
         }
@@ -347,7 +538,7 @@ namespace [[namespace-name,utility]] {
         };
         
         // Month indices start with 1
-        return names[static_cast<[[namespace-name,std]]::[[class-name,underlying_type]]<[[class-name,Month]]>::[[class-name,type]]>(month) [[operator,-]] 1];
+        return names[static_cast<[[namespace-name,std]]::[[class-name,underlying_type]]<[[class-name,Month]]>::[[class-name,type]]>(month) - 1];
     }
     
 }
@@ -356,9 +547,9 @@ namespace [[namespace-name,math]] {
 
     struct Vector3 {
         // Constants
-        static const [[class-name,Vector3]] zero;
-        static const [[class-name,Vector3]] up;
-        static const [[class-name,Vector3]] forward;
+        static const [[class-name,Vector3]] [[member-variable,zero]];
+        static const [[class-name,Vector3]] [[member-variable,up]];
+        static const [[class-name,Vector3]] [[member-variable,forward]];
     
         Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) {
         }
@@ -371,36 +562,36 @@ namespace [[namespace-name,math]] {
         
         ~[[class-name,Vector3]]() = default;
     
-        [[class-name,Vector3]] operator[[operator,+]](const [[class-name,Vector3]]& other) const {
-            return { [[member-variable,x]] [[operator,+]] other.[[member-variable,x]], [[member-variable,y]] [[operator,+]] other.[[member-variable,y]], [[member-variable,z]] [[operator,+]] other.[[member-variable,z]] };
+        [[class-name,Vector3]] operator[[operator,+]](const [[class-name,Vector3]][[plain,&]] other) const {
+            return { [[member-variable,x]] + other.[[member-variable,x]], [[member-variable,y]] + other.[[member-variable,y]], [[member-variable,z]] + other.[[member-variable,z]] };
         }
     
-        [[class-name,Vector3]] operator[[operator,-]](const [[class-name,Vector3]]& other) const {
-            return { [[member-variable,x]] [[operator,-]] other.[[member-variable,x]], [[member-variable,y]] [[operator,-]] other.[[member-variable,y]], [[member-variable,z]] [[operator,-]] other.[[member-variable,z]] };
+        [[class-name,Vector3]] operator[[operator,-]](const [[class-name,Vector3]][[plain,&]] other) const {
+            return { [[member-variable,x]] - other.[[member-variable,x]], [[member-variable,y]] - other.[[member-variable,y]], [[member-variable,z]] - other.[[member-variable,z]] };
         }
     
         [[class-name,Vector3]] operator[[operator,*]](float s) const {
-            return { [[member-variable,x]] [[operator,*]] s, [[member-variable,y]] [[operator,*]] s, [[member-variable,z]] [[operator,*]] s };
+            return { [[member-variable,x]] * s, [[member-variable,y]] * s, [[member-variable,z]] * s };
         }
     
         [[class-name,Vector3]] operator[[operator,/]](float s) const {
-            return { [[member-variable,x]] [[operator,/]] s, [[member-variable,y]] [[operator,/]] s, [[member-variable,z]] [[operator,/]] s };
+            return { [[member-variable,x]] / s, [[member-variable,y]] / s, [[member-variable,z]] / s };
         }
     
         float operator[[operator,[]]]([[namespace-name,std]]::[[class-name,size_t]] index) const {
             // Temporarily cast away the const qualifier to avoid duplicating logic
             // Safe as non-const Vector3::operator[] does not modify the value
-            return const_cast<[[class-name,Vector3]]*>(this)->operator[](index);
+            return const_cast<[[class-name,Vector3]]*>(this)->operator[[operator,[]]](index);
         }
         
-        float& operator[[operator,[]]]([[namespace-name,std]]::[[class-name,size_t]] index) {
-            if (index [[operator,==]] 0) {
+        float[[plain,&]] operator[[operator,[]]]([[namespace-name,std]]::[[class-name,size_t]] index) {
+            if (index == 0) {
                 return [[member-variable,x]];
             }
-            else if (index [[operator,==]] 1) {
+            else if (index == 1) {
                 return [[member-variable,y]];
             }
-            else if (index [[operator,==]] 2) {
+            else if (index == 2) {
                 return [[member-variable,z]];
             }
             else {
@@ -410,7 +601,7 @@ namespace [[namespace-name,math]] {
     
         // Returns the magnitude of the vector
         float length() const {
-            return [[namespace-name,std]]::sqrt([[member-variable,x]] [[operator,*]] [[member-variable,x]] [[operator,+]] [[member-variable,y]] [[operator,*]] [[member-variable,y]] [[operator,+]] [[member-variable,z]] [[operator,*]] [[member-variable,z]]);
+            return [[namespace-name,std]]::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
         }
         
         [[member-variable,]]union {
@@ -431,37 +622,37 @@ namespace [[namespace-name,math]] {
     };
 
     // Const class static members must be initialized out of line
-    const [[class-name,Vector3]] [[class-name,Vector3]]::zero = [[class-name,Vector3]]();
+    const [[class-name,Vector3]] [[class-name,Vector3]]::[[member-variable,zero]] = [[class-name,Vector3]]();
     
     // Depends on your coordinate system
-    const [[class-name,Vector3]] [[class-name,Vector3]]::up = [[class-name,Vector3]](0.0f, 1.0f, 0.0f);
-    const [[class-name,Vector3]] [[class-name,Vector3]]::forward = [[class-name,Vector3]](0.0f, 0.0f, [[operator,-]]1.0f);
+    const [[class-name,Vector3]] [[class-name,Vector3]]::[[member-variable,up]] = [[class-name,Vector3]](0.0f, 1.0f, 0.0f);
+    const [[class-name,Vector3]] [[class-name,Vector3]]::[[member-variable,forward]] = [[class-name,Vector3]](0.0f, 0.0f, [[operator,-]]1.0f);
     
     
     // Stream insertion operator
-    [[namespace-name,std]]::[[class-name,ostream]]& operator<<([[namespace-name,std]]::[[class-name,ostream]]& os, const [[class-name,Vector3]]& vec) {
+    [[namespace-name,std]]::[[class-name,ostream]][[plain,&]] operator<<([[namespace-name,std]]::[[class-name,ostream]][[plain,&]] os, const [[class-name,Vector3]][[plain,&]] vec) {
         os [[operator,<<]] "(" [[operator,<<]] vec.[[member-variable,x]] [[operator,<<]] ", " [[operator,<<]] vec.[[member-variable,y]] [[operator,<<]] ", " [[operator,<<]] vec.[[member-variable,z]] [[operator,<<]] ")";
         return os;
     }
 
     // Dot product
     float dot([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
-        return a.[[member-variable,x]] [[operator,*]] b.[[member-variable,x]] [[operator,+]] a.[[member-variable,y]] [[operator,*]] b.[[member-variable,y]] [[operator,+]] a.[[member-variable,z]] [[operator,*]] b.[[member-variable,z]];
+        return a.[[member-variable,x]] * b.[[member-variable,x]] + a.[[member-variable,y]] * b.[[member-variable,y]] + a.[[member-variable,z]] * b.[[member-variable,z]];
     }
     
     // Cross product
     [[class-name,Vector3]] cross([[class-name,Vector3]] a, [[class-name,Vector3]] b) {
         return {
-            a.[[member-variable,y]] [[operator,*]] b.[[member-variable,z]] [[operator,-]] a.[[member-variable,z]] [[operator,*]] b.[[member-variable,y]],
-            a.[[member-variable,z]] [[operator,*]] b.[[member-variable,x]] [[operator,-]] a.[[member-variable,x]] [[operator,*]] b.[[member-variable,z]],
-            a.[[member-variable,x]] [[operator,*]] b.[[member-variable,y]] [[operator,-]] a.[[member-variable,y]] [[operator,*]] b.[[member-variable,x]]
+            a.[[member-variable,y]] * b.[[member-variable,z]] - a.[[member-variable,z]] * b.[[member-variable,y]],
+            a.[[member-variable,z]] * b.[[member-variable,x]] - a.[[member-variable,x]] * b.[[member-variable,z]],
+            a.[[member-variable,x]] * b.[[member-variable,y]] - a.[[member-variable,y]] * b.[[member-variable,x]]
         };
     }
     
     // Returns a unit vector oriented in the same direction as 'v'
-    [[class-name,Vector3]] normalize(const [[class-name,Vector3]]& v) {
+    [[class-name,Vector3]] normalize(const [[class-name,Vector3]][[plain,&]] v) {
         float length = v.length();
-        ASSERT(length [[operator,>]] 0.0f, "Vector3::normalize() called on vector of zero length");
+        ASSERT(length > 0.0f, "Vector3::normalize() called on vector of zero length");
         return v [[operator,/]] length;
     }
 
@@ -473,13 +664,13 @@ int main() {
 
     // Prints "Hello, world!"
     str [[operator,=]] [[namespace-name,utility]]::concat("Hello", ",", " ", "world", "!");
-    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
+    [[namespace-name,std]]::[[class-name,cout]] [[operator,<<]] str [[operator,<<]] '\n';
 
 
     // Prints "[ 0, 1, 2, 3, 4, 5 ]"
     [[namespace-name,std]]::[[class-name,vector]]<int> vec = { 0, 1, 2, 3, 4, 5 };
     str [[operator,=]] [[namespace-name,utility]]::to_string(vec);
-    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
+    [[namespace-name,std]]::[[class-name,cout]] [[operator,<<]] str [[operator,<<]] '\n';
 
 
     // Prints today's date
@@ -487,8 +678,8 @@ int main() {
     [[namespace-name,std]]::[[class-name,time_t]] t = time(nullptr);
     [[namespace-name,std]]::[[class-name,tm]]* local = localtime([[operator,&]]t);
 
-    int year = 1900 [[operator,+]] local->[[member-variable,tm_year]];
-    [[namespace-name,utility]]::[[class-name,Month]] month = static_cast<[[namespace-name,utility]]::[[class-name,Month]]>(1 [[operator,+]] local->[[member-variable,tm_mon]]);
+    int year = 1900 + local->[[member-variable,tm_year]];
+    [[namespace-name,utility]]::[[class-name,Month]] month = static_cast<[[namespace-name,utility]]::[[class-name,Month]]>(1 + local->[[member-variable,tm_mon]]);
     int day = local->[[member-variable,tm_mday]];
     
     [[namespace-name,std]]::[[class-name,string]] suffix;
@@ -508,7 +699,7 @@ int main() {
     }
 
     str [[operator,=]] [[namespace-name,utility]]::concat("Today is ", [[namespace-name,utility]]::to_string(month), " ", day, suffix, ", ", year);
-    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
+    [[namespace-name,std]]::[[class-name,cout]] [[operator,<<]] str [[operator,<<]] '\n';
 
     
     // Determine the orthonormal basis for the given forward vector (assuming (0, 1, 0) is up)
@@ -517,7 +708,7 @@ int main() {
     [[namespace-name,math]]::[[class-name,Vector3]] right = [[namespace-name,math]]::cross(forward, up);
     
     str [[operator,=]] [[namespace-name,utility]]::concat("The cross product of vectors ", up, " and ", forward, " is ", right);
-    [[namespace-name,std]]::cout [[operator,<<]] str [[operator,<<]] '\n';
+    [[namespace-name,std]]::[[class-name,cout]] [[operator,<<]] str [[operator,<<]] '\n';
     
     [[namespace-name,std]]::[[namespace-name,chrono]]::[[class-name,time_point]] now = [[namespace-name,std]]::[[namespace-name,chrono]]::[[class-name,high_resolution_clock]]::now();
     
