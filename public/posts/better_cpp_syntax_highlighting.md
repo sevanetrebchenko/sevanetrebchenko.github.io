@@ -507,11 +507,17 @@ Additionally, it allows for checking:
 - Whether it is a class member function defined out-of-line
 - And more!
 
-This example merely scratches the surface - at the time of writing this post, there are over 300 different node types, highlighting the vast capabilities of the Clang AST.
+This example merely scratches the surface. 
+At the time of writing this post, there are over 300 different node types, highlighting the vast capabilities of the Clang AST.
 Its highly detailed and verbose nature allows for extensive introspection into the structure of a C++ program.
-For this project, I set out to leverage the Clang AST to augment `PrismJS` and create a more robust and comprehensive syntax highlighting solution.
+
+I wanted to leverage the Clang AST to address the limitations of `PrismJS` and build a more robust and comprehensive syntax highlighting solution.
+For a given code snippet, my program generates and traverses the AST to identify various nodes and adds inline annotations based on the type of node being parsed.
+Before being rendered by the Markdown frontend, these annotations are extracted out and instead used to apply styling, similar to how `PrismJS` works.
 
 ### Clang's LibTooling API
+
+Luckily, while a bit convoluted, the process for setting up a program to traverse the Clang AST is relatively straightforward.
 
 Clang exposes [`LibTooling`](https://clang.llvm.org/docs/LibTooling.html), an API for building Clang-based tools and plugins.
 These programs allow for execution of user actions as part of the compilation process via `FrontendAction` instances.
