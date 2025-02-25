@@ -3,23 +3,15 @@
 
 
 
-I created this blog to have a place to discuss my solutions for interesting problems I encounter while working on my personal projects.
+I created this blog to have a place to discuss interesting problems I encounter while working on my personal projects.
 Many of these projects, particularly those focused on computer graphics, are written in C++.
 
 One problem I wanted to tackle was syntax highlighting, as I often use code snippets in my explanations and wanted them to be easily readable.
 Initially, I integrated [PrismJS](https://prismjs.com/) - a popular library for syntax highlighting in browsers - into my Markdown renderer.
 However, I quickly discovered that PrismJS struggles with properly highlighting C++ code.
 
-This post outlines my process for developing a more robust C++ syntax highlighting solution for browsers.
-
-## Syntax highlighting with PrismJS
-PrismJS breaks the source code into tokens based on a set of predefined grammar rules specific to each language.
-These rules are essentially regular expressions that identify different types of elements in the code, such as keywords, strings, numbers, comments, etc.
-Once the source code is parsed into tokens, each token is tagged with a set of CSS classes that are then used to apply styling.
-
-However, syntax highlighting for C++ requires more context.
-Consider the following example, which showcases a variety of C++20 features, including macros, templates, concepts, overloaded operators, user-defined classes with static members, enums, and nested namespaces (to name a few).  
-Syntax highlighting is done exclusively by PrismJS:
+Consider the following example, which showcases a variety of C++20 features I commonly use.
+Syntax highlighting is handled exclusively by PrismJS:
 ```cpp line-numbers:{enabled}
 #include <stdexcept> // std::runtime_error, std::out_of_range
 #include <vector> // std::vector
@@ -314,16 +306,374 @@ int main() {
 }
 ```
 
-There are several issues with the highlighting:
-1. **Preprocessor directives**: References to preprocessor definitions, such as the `ASSERT` macro on line 197, are incorrectly highlighted as function calls
-2. **User-defined types**: Only declarations of custom types - such as the `Container` concept on line 27, the `Month` enum on line 61, and the `Vector3` struct on line 90 - are recognized as classes. Subsequent uses are treated as plain tokens. Note that this issue extends to standard library types, such as `std::runtime_error` on line 14, `std::string` on line 20, and `std::stringstream` on lines 21 and 46.
-3. **Enums**: Enum values, such as the month names in the `Month` enum on line 61, are highlighted as plain tokens.
-4. **Keywords**: Certain C++ keywords, specifically C++-style casts such as `static_cast` on lines 83 and 226 and `const_cast` on line 126, are incorrectly highlighted as function calls.
-5. **Namespaces**: namespace declarations, such as the `utility` namespace on line 17 or the `math` namespace on line 88, as well as namespace-qualified types, are all highlighted as plain tokens.
+Unfortunately, there are several issues with the syntax highlighting. 
+
+- **Macros**: References to preprocessor definitions are incorrectly highlighted as function calls. 
+An example of this can be seen with the `ASSERT` macro on line 197.
+
+- **User-defined types**: Only declarations of custom types are recognized as classes.
+Subsequent uses are treated as plain tokens.
+Examples of this can be seen with the `Container` concept on line 27, the `Month` enum on line 61, and the `Vector3` struct on line 90.
+This issue also extends to standard library types.
+
+- **Enums**: Enum values, such as the month names in the `Month` enum on line 61, are highlighted as plain tokens.
+
+- **Class member variables**: Class member declarations and references in function bodies are all highlighted as plain tokens. 
+It is difficult to tell whether a variable in a class member function references a local variable or a class member.
+
+6. **Casts**: C++-style casts such as `static_cast` on lines 83 and 226 and `const_cast` on line 126, are incorrectly highlighted as function calls.
+- **Namespaces**: Namespace declarations, such as the `utility` namespace on line 17 or the `math` namespace on line 88, as well as any namespace-qualified types or functions, are all highlighted as plain tokens.
 6. **Templates**: Template type names are highlighted as plain tokens, and template angle brackets are treated as operators rather than delimiters.
 
+The list goes on.
 
-## Prerequisites
+
+PrismJS breaks the source code into tokens based on a set of predefined grammar rules specific to each language.
+These rules are essentially regular expressions that identify different types of elements in the code, such as keywords, strings, numbers, comments, etc.
+Once the source code is parsed into tokens, each token is tagged with a set of CSS classes that are then used to apply styling.
+
+Due to the complexity of C++ syntax, however, such an approach is not feasible.
+It is perfectly valid, for example, for a variable to have the same name as a class (given the class definition is properly scoped):
+```cpp line-numbers:{enabled}
+namespace detail {
+
+    struct MyClass { 
+        ...
+    };
+
+}
+
+int main() {
+    detail::MyClass MyClass { };
+    ...
+}
+```
+If we extend `PrismJS` to highlight *all* tokens that match class names, we may accidentally end up highlighting more than necessary.
+While this example may be contrived, it sheds light on the main underlying problem: it is difficult to reason about the structure of the code by only looking at individual tokens.
+What if we want to extract member variables of a given class?
+How do we distinguish between local variables and class members?
+What about types that we don't have definitions for, such as those included from third-party dependencies or the standard library?
+Approaches like using regular expressions or manual scope tracking quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
+
+It makes sense, therefore, that PrismJS skips most this complexity and only annotates tokens it is confidently able to identify. 
+
+## Abstract Syntax Trees
+
+A more effective approach would be to parse the [Abstract Syntax Tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree) and add custom annotations to tokens based on the exposed symbols.
+Abstract syntax trees are data structures that are widely used by compilers to represent the structure of the source code of a program.
+We can view the AST of a given file with Clang by running the following command:
+```text
+clang -Xclang -ast-dump -fsyntax-only -std=c++20 example.cpp
+```
+To better understand the structure of an AST, let's take a look at (a simplified version of) the one generated for the code snippet at the start of this post:
+```json
+TranslationUnitDecl 0x18b64668268 <<invalid sloc>> <invalid sloc>
+
+// namespace utility { ... }
+|-NamespaceDecl 0x18b6997f0d0 <example.cpp:17:1, line:86:1> line:17:11 utility
+
+// template <typename ...Ts>
+// [[nodiscard]] std::string concat(const Ts&... args) { ... }
+| |-FunctionTemplateDecl 0x18b6997f4c8 <line:19:5, line:24:5> line:20:31 concat
+
+// template <typename T>
+// concept Container = requires(T container) { ... }
+| |-ConceptDecl 0x18b69980e30 <line:26:5, line:42:5> line:27:13 Container
+
+// template <Container C>
+// [[nodiscard]] std::string to_string(const C& container) { ... }
+| |-FunctionTemplateDecl 0x18b699812f8 <line:44:5, line:59:5> line:45:31 to_string
+
+// enum class Month : unsigned { ... };
+| |-EnumDecl 0x18b69985f10 <line:61:5, line:74:5> line:61:16 referenced class Month 'unsigned int'
+
+
+// namespace math { ... }
+|-NamespaceDecl 0x18b69990960 <line:88:1, line:201:1> line:88:11 math
+
+// struct Vector3 { ... };
+| |-CXXRecordDecl 0x18b699909f0 <line:90:5, line:164:5> line:90:12 referenced struct Vector3 definition
+
+// static const Vector3 zero;
+| | |-VarDecl 0x18b69990c28 <line:92:9, col:30> col:30 zero 'const Vector3':'const math::Vector3' static
+
+// static const Vector3 up;
+| | |-VarDecl 0x18b69990cc0 <line:93:9, col:30> col:30 used up 'const Vector3':'const math::Vector3' static
+
+// static const Vector3 forward;
+| | |-VarDecl 0x18b69990d58 <line:94:9, col:30> col:30 forward 'const Vector3':'const math::Vector3' static
+
+// Vector3::Vector3() { ... }
+| | |-CXXConstructorDecl 0x18b69990e50 <line:96:9, line:97:9> line:96:9 used Vector3 'void ()' implicit-inline
+
+// Vector3::Vector3(float value) { ... }
+| | |-CXXConstructorDecl 0x18b69991028 <line:99:9, line:100:9> line:99:9 Vector3 'void (float)' implicit-inline
+
+// Vector3::Vector3(float x, float y, float z) { ... }
+| | |-CXXConstructorDecl 0x18b69991378 <line:102:9, line:103:9> line:102:9 used Vector3 'void (float, float, float)' implicit-inline
+
+// Vector3::~Vector3() = default;
+| | |-CXXDestructorDecl 0x18b699914b8 <line:105:9, col:28> col:9 referenced constexpr ~Vector3 'void () noexcept' default trivial implicit-inline
+
+// Vector3 Vector3::operator+(const Vector3& other) const { ... }
+| | |-CXXMethodDecl 0x18b699917a8 <line:107:9, line:109:9> line:107:17 operator+ 'Vector3 (const Vector3 &) const' implicit-inline
+
+// Vector3 Vector3::operator-(const Vector3& other) const { ... }
+| | |-CXXMethodDecl 0x18b69991940 <line:111:9, line:113:9> line:111:17 operator- 'Vector3 (const Vector3 &) const' implicit-inline
+
+// Vector3 Vector3::operator*(float s) const { ... }
+| | |-CXXMethodDecl 0x18b69991b58 <line:115:9, line:117:9> line:115:17 operator* 'Vector3 (float) const' implicit-inline
+
+// Vector3 Vector3::operator/(float s) const { ... }
+| | |-CXXMethodDecl 0x18b69991cf0 <line:119:9, line:121:9> line:119:17 used operator/ 'Vector3 (float) const' implicit-inline
+
+// float Vector3::operator[](std::size_t index) const { ... }
+| | |-CXXMethodDecl 0x18b69991f80 <line:123:9, line:127:9> line:123:15 operator[] 'float (std::size_t) const' implicit-inline
+
+// float& Vector3::operator[](std::size_t index) { ... }
+| | |-CXXMethodDecl 0x18b699921d0 <line:129:9, line:142:9> line:129:16 used operator[] 'float &(std::size_t)' implicit-inline
+
+// float Vector3::length() const { ... }
+| | |-CXXMethodDecl 0x18b69992340 <line:145:9, line:147:9> line:145:15 used length 'float () const' implicit-inline
+        
+| | |-CXXRecordDecl 0x18b69992408 <line:149:9, line:163:9> line:149:9 union definition
+
+// struct {
+//     float x;
+//     float y;
+//     float z;
+// };
+| | | |-CXXRecordDecl 0x18b69992540 <line:151:13, line:155:13> line:151:13 struct definition
+| | | | |-FieldDecl 0x18b69992698 <line:152:17, col:23> col:23 referenced x 'float'
+| | | | |-FieldDecl 0x18b69992708 <line:153:17, col:23> col:23 referenced y 'float'
+| | | | |-FieldDecl 0x18b69992778 <line:154:17, col:23> col:23 referenced z 'float'
+
+// struct {
+//     float r;
+//     float g;
+//     float b;
+// };
+| | | |-CXXRecordDecl 0x18b699929b8 <line:158:13, line:162:13> line:158:13 struct definition
+| | | | |-FieldDecl 0x18b69992b08 <line:159:17, col:23> col:23 r 'float'
+| | | | |-FieldDecl 0x18b69992b78 <line:160:17, col:23> col:23 g 'float'
+| | | | |-FieldDecl 0x18b69992be8 <line:161:17, col:23> col:23 b 'float'
+
+// const Vector3 Vector3::zero = Vector3();
+| |-VarDecl 0x18b699973c0 parent 0x18b699909f0 prev 0x18b69990c28 <line:167:5, col:43> col:28 zero 'const Vector3':'const math::Vector3' cinit
+
+// const Vector3 Vector3::up = Vector3(0.0f, 1.0f, 0.0f);
+| |-VarDecl 0x18b69997690 parent 0x18b699909f0 prev 0x18b69990cc0 <line:170:5, col:57> col:28 used up 'const Vector3':'const math::Vector3' cinit
+
+// const Vector3 Vector3::forward = Vector3(0.0f, 0.0f, -1.0f);
+| |-VarDecl 0x18b69997890 parent 0x18b699909f0 prev 0x18b69990d58 <line:171:5, col:63> col:28 forward 'const Vector3':'const math::Vector3' cinit
+
+// std::ostream& operator<<(std::ostream& os, const Vector3& vec) { ... }
+| |-FunctionDecl 0x18b69997d70 <line:175:5, line:178:5> line:175:19 used operator<< 'std::ostream &(std::ostream &, const Vector3 &)'
+
+// float dot(Vector3 a, Vector3 b) { ... }
+| |-FunctionDecl 0x18b6999eef0 <line:181:5, line:183:5> line:181:11 dot 'float (Vector3, Vector3)'
+
+// Vector3 cross(Vector3 a, Vector3 b) { ... }
+| |-FunctionDecl 0x18b6999f758 <line:186:5, line:192:5> line:186:13 used cross 'Vector3 (Vector3, Vector3)'
+
+// Vector3 normalize(const Vector3& v) { ... }
+| `-FunctionDecl 0x18b699a0518 <line:195:5, line:199:5> line:195:13 used normalize 'Vector3 (const Vector3 &)'
+
+// int main() { ... }
+`-FunctionDecl 0x18b699a0bd0 <line:203:1, line:291:1> line:203:5 main 'int ()'
+```
+
+The root of the AST is always the translation unit, which represents the entire compiled C++ file.
+Symbols from standard library headers are omitted for brevity - including all expands the AST to 561,445 lines, out of which only 1,758 (~0.3%) are relevant to the example.
+Note that only the top-level nodes are included, with comments indicating which elements these nodes reference in the code.
+Most child nodes, corresponding to function parameters, call expressions, variable declarations, and other statements within the function body itself, have been omitted for clarity purposes.
+Don't worry, we will revisit these later.
+
+Clang's AST nodes model a class hierarchy, with most nodes deriving from three fundamental types:
+1. [`Stmt` nodes](https://clang.llvm.org/doxygen/classclang_1_1Stmt.html), which represent control flow statements such as conditionals (`if`, `switch/case`), loops (`while`, `do/while`, `for`, range-based `for`), jumps (`return`, `break`, `continue`, `goto`), `try/catch` statements for exception handling, coroutines, and inline assembly
+2. [`Decl` nodes](https://clang.llvm.org/doxygen/classclang_1_1Decl.html), which represent declarations of `struct/class` types, functions (including function templates and specializations), namespaces, concepts, module `import/export` statements, and
+3. [`Expr` nodes](https://clang.llvm.org/doxygen/classclang_1_1Expr.html), which represent expressions such as function calls, type casts, binary and unary operators, initializers, literals, conditional expressions, lambdas, array subscripts, and class member accesses
+
+Each AST node provides the source location and extent of the element they reference, as well as additional details depending on the specific type of node being processed.
+For example, a [`FunctionDecl` node](https://clang.llvm.org/doxygen/classclang_1_1FunctionDecl.html), which represents a function declaration or definition, exposes various properties such as the function's name, return type information, references to parameters (if any, each represented by a `ParmVarDecl` node), and (of course) whether the referenced function is a definition or declaration.
+Additionally, it allows for checking:
+- Function attributes, such as `[[noreturn]]` and `[[nodiscard]]`
+- Whether the function is explicitly marked as `static`, `constexpr`, `consteval`, `virtual` (including pure virtual), and/or `inline`
+- Whether the function is explicitly (or implicitly) `default`ed or `delete`d
+- Function exception specification (`throw(...)/nothrow`, `noexcept`, etc.)
+- Language linkage, or whether the function is nested within a C++ `extern "C"` or `extern "C++"` linkage spec
+- Whether the function is variadic
+- Whether the function represents a C++ overloaded operator, or a template (and, if so, what kind)
+- Whether it is a class member function defined out-of-line
+- And more!
+
+This example merely scratches the surface. 
+At the time of writing this post, there are over 300 different node types - the highly detailed and verbose nature of the Clang AST allows for extensive introspection into the structure of a C++ program.
+
+I wanted to leverage the Clang AST to address the limitations of `PrismJS` and build a more robust and comprehensive syntax highlighting solution.
+For a given code snippet, my program generates and traverses the AST to identify various nodes and adds inline annotations based on the type of node being parsed.
+Before being rendered by the Markdown frontend, these annotations are extracted out and used to apply styling, similar to how `PrismJS` works.
+
+## Clang's LibTooling API
+
+Now that we are familiar with the structure of an AST, how do we traverse the one generated by Clang?
+While the process is a bit convoluted, we can set this up using Clang's [`LibTooling` library](https://clang.llvm.org/docs/LibTooling.html).
+
+### Creating a `ASTFrontendAction`
+
+Tools built with `LibTooling` interact with Clang and LLVM by running `FrontendAction`s over code.
+One such interface, `ASTFrontendAction`, provides an easy way to traverse the AST of a given translation unit.
+During traversal, we can extract relevant information about the AST nodes we care about and use it to add annotations for syntax highlighting.
+
+Let's start by defining our `ASTFrontendAction`:
+```cpp line-numbers:{enabled}
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendAction.h>
+
+struct [[class-name,SyntaxHighlighter]] final [[plain,:]] public [[namespace-name,clang]]::[[class-name,ASTFrontendAction]] {
+    [[namespace-name,std]]::[[class-name,unique_ptr]][[plain,<]][[namespace-name,clang]]::[[class-name,ASTConsumer]][[plain,>]] CreateASTConsumer([[namespace-name,clang]]::[[class-name,CompilerInstance]][[plain,&]] compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) override;
+};
+```
+
+### Creating an `ASTConsumer`
+
+The `ASTFrontendAction` interface requires implementing the `CreateASTConsumer` function, which returns an `ASTConsumer` instance.
+As the name suggests, the `ASTConsumer` is responsible for processing the AST.
+
+Our `ASTConsumer` is defined as follows:
+```cpp line-numbers:{enabled}
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/AST/ASTConsumer.h>
+#include <string> // std::string
+
+class Parser final : public clang::ASTConsumer {
+    public:
+        explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
+        ~Parser() override;
+        
+    private:
+        void HandleTranslationUnit(clang::ASTContext& context) override;
+        
+        clang::ASTContext* m_context;
+        std::string m_filepath;
+};
+```
+
+The `ASTConsumer` interface provides multiple entry points for traversal, but for our use case only `HandleTranslationUnit` is necessary.
+This function is called by the `ASTFrontendAction` with an `ASTContext` for the translation unit of the file being processed.
+The `ASTContext` is essential for retrieving semantic information about the nodes of an AST.
+It provides access to type details, declaration contexts, and utility classes like `SourceManager`, which maps nodes back to their source locations (as AST nodes do not store this information directly).
+
+We simply instantiate and return an instance of our `ASTConsumer` from the `CreateASTConsumer` function of the `ASTFrontendAction`.
+```cpp line-numbers:{enabled}
+#include "action.hpp"
+#include "parser.hpp"
+
+[[namespace-name,std]]::[[class-name,unique_ptr]][[plain,<]][[namespace-name,clang]]::[[class-name,ASTConsumer]][[plain,>]] [[class-name,SyntaxHighlighter]]::CreateASTConsumer([[namespace-name,clang]]::[[class-name,CompilerInstance]][[plain,&]] compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) {
+    return [[namespace-name,std]]::[[function,make_unique]][[plain,<]][[class-name,Parser]][[plain,>]](compiler, file.str());
+}
+```
+
+### Creating a `RecursiveASTVisitor`
+
+The final missing piece is the [`RecursiveASTVisitor`](https://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html), which handles visiting individual AST nodes.
+It provides `Visit{NodeType}` visitor hooks for most AST node types.
+Here are a few examples of `Visit` function declarations for common AST nodes:
+```cpp line-numbers:{enabled}
+bool VisitNamespaceDecl([[namespace-name,clang]]::[[class-name,NamespaceDecl]][[plain,*]] node); // For visiting namespaces
+bool VisitFunctionDecl([[namespace-name,clang]]::[[class-name,FunctionDecl]][[plain,*]] node); // For visiting functions
+bool VisitCXXRecordDecl([[namespace-name,clang]]::[[class-name,CXXRecordDecl]][[plain,*]] node); // For visiting C++ classes
+// etc.
+```
+The main exception to this pattern are `TypeLoc` nodes, which are passed by value instead of by pointer.
+The return value determines whether traversal of the AST should continue.
+By default, the implementation simply returns `true`, making it perfectly safe to omit `Visit` function definitions of any node types we are not interested in processing.
+
+Our `RecursiveASTVisitor` is defined as follows:
+```cpp line-numbers:{enabled}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Parser* parser);
+        ~Visitor();
+        
+        // Visitor definitions here...
+        
+    private:
+        clang::ASTContext* m_context;
+        Parser* m_parser;
+};
+```
+It takes in the `ASTContext` from the `ASTConsumer` and the `Parser`, which is used for adding annotations.
+We will explore the visitor function implementations in more detail later on.
+
+The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer` defined above, starting with the root `TranslationUnitDecl` node as retrieved from the `ASTContext`:
+```cpp line-numbers:{enabled}
+void [[class-name,Parser]]::HandleTranslationUnit([[namespace-name,clang]]::[[class-name,ASTContext]][[plain,&]] context) {
+    [[class-name,Visitor]] visitor { &context, this };
+    visitor.TraverseDecl(context.getTranslationUnitDecl());
+}
+```
+
+#### Configuring the traversal behavior (optional)
+
+The `RecursiveASTVisitor` also provides functions to control the behavior of the traversal itself.
+For example, overriding `shouldTraversePostOrder` to return `true` switches the traversal from the default preorder to postorder.
+```cpp line-numbers:{enabled} added:{6-9}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Parser* parser);
+        ~Visitor();
+        
+        bool shouldTraversePostOrder() const {
+            // Configure the visitor to perform a postorder traversal of the AST
+            return true;
+        }
+        
+    private:
+        // ...
+};
+```
+Other functions modify traversal behavior in different ways.
+For example, `shouldVisitTemplateInstantiations` enables visiting template instantiations, while `shouldVisitImplicitCode` allows traversal of implicit constructors and destructors generated by the compiler.
+
+### Putting it all together
+
+Finally, we invoke the tool using `runToolOnCodeWithArgs`, specifying the `ASTFrontendAction`, source code, and any additional [command line arguments](https://clang.llvm.org/docs/ClangCommandLineReference.html):
+```cpp line-numbers:{enabled}
+#include "action.hpp"
+
+#include <clang/Tooling/Tooling.h>
+
+#include <string> // std::string
+#include <vector> // std::vector
+#include <fstream> // std::ifstream
+#include <memory> // std::make_unique
+
+int main(int argc, char[[plain,*]] argv[]) {
+    // ...
+    
+    // Read file contents
+    [[namespace-name,std]]::[[class-name,ifstream]] file(argv[[operator,[]]1[[operator,]]]);
+    if (!file.is_open()) {
+        // ... 
+        return 1;
+    }
+    [[namespace-name,std]]::[[class-name,string]] source { [[namespace-name,std]]::[[class-name,istreambuf_iterator]][[plain,<]]char[[plain,>]](file), [[namespace-name,std]]::[[class-name,istreambuf_iterator]][[plain,<]]char[[plain,>]]() };
+    
+    [[namespace-name,std]]::[[class-name,vector]][[plain,<]][[namespace-name,std]]::[[class-name,string]][[plain,>]] compilation_flags {
+        "-std=c++20",
+        "-fsyntax-only", // Included by default
+        
+        // Project include directories, additional compilation flags, etc.
+    };
+        
+    // runToolOnCodeWithArgs returns 'true' if the tool was successfully executed
+    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags);
+}
+```
+
+### Annotations
+
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
@@ -373,10 +723,11 @@ TranslationUnitDecl 0x1b640a48268 <<invalid sloc>> <invalid sloc>
         `-StringLiteral 0x1b642245dd0 <col:31> 'const char[23]' lvalue "something bad happened"
 ```
 Enums are represented by two node types: `EnumDecl`, which corresponds to the enum declaration, and `EnumConstantDecl`, which represents the enum values.
-From the AST, we can infer that the `Level` enum is declared as an enum class, and that the underlying type is by default set to an int.
+We can infer that the `Level` enum is declared as an enum class, and that the underlying type is defaulted to an int.
 If we had explicitly specified the underlying type, such as a `unsigned char` or `std::uint8_t` for a more compact representation, this would have also been reflected in the AST.
 
-References to enum values are captured under a `DeclRefExpr` node.
+References to enum values are captured under a [`DeclRefExpr` node](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details).
+These nodes capture expressions that reference previously declared variables, functions, classes, and enums. 
 
 ### Enum Declarations
 With our AST visitor configured, we can set up functions to visit `EnumDecl` and `EnumConstantDecl` nodes:
@@ -401,6 +752,7 @@ The process for visiting AST nodes is largely the same.
 
 
 
+[Many IDEs also use this for syntax highlighting](https://clangd.llvm.org/).
 
 There are many issues with this
 Notice that PrismJS only applies syntax highlighting to the declaration of `MyStruct` on line 2. 
