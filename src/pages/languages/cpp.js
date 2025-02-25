@@ -33,6 +33,7 @@ export default function processLanguageCpp(tokens) {
                 "macro", "macro-name", "macro-argument",
                 "enum-name",
                 "enum-value",
+                "function",
                 "plain", "punctuation",
                 "number", "string",
                 "keyword",
