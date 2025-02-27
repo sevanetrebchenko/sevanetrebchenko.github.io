@@ -538,7 +538,7 @@ struct [[class-name,SyntaxHighlighter]] final [[plain,:]] public [[namespace-nam
 ### Creating an `ASTConsumer`
 
 The `ASTFrontendAction` interface requires implementing the `CreateASTConsumer` function, which returns an `ASTConsumer` instance.
-As the name suggests, the `ASTConsumer` is responsible for processing the AST.
+As the name suggests, the `ASTConsumer` is responsible for consuming (processing) the AST.
 
 Our `ASTConsumer` is defined as follows:
 ```cpp line-numbers:{enabled}
@@ -561,8 +561,10 @@ class Parser final : public clang::ASTConsumer {
 
 The `ASTConsumer` interface provides multiple entry points for traversal, but for our use case only `HandleTranslationUnit` is necessary.
 This function is called by the `ASTFrontendAction` with an `ASTContext` for the translation unit of the file being processed.
+
 The `ASTContext` is essential for retrieving semantic information about the nodes of an AST.
 It provides access to type details, declaration contexts, and utility classes like `SourceManager`, which maps nodes back to their source locations (as AST nodes do not store this information directly).
+As we will see, this information is crucial for inserting syntax highlighting annotations in the correct locations.
 
 We simply instantiate and return an instance of our `ASTConsumer` from the `CreateASTConsumer` function of the `ASTFrontendAction`.
 ```cpp line-numbers:{enabled}
@@ -606,7 +608,8 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
 It takes in the `ASTContext` from the `ASTConsumer` and the `Parser`, which is used for adding annotations.
 We will explore the visitor function implementations in more detail later on.
 
-The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer` defined above, starting with the root `TranslationUnitDecl` node as retrieved from the `ASTContext`:
+The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer`.
+By calling `TraverseDecl` with the root `TranslationUnitDecl` node (obtained from the `ASTContext`), we can traverse the entire AST:
 ```cpp line-numbers:{enabled}
 void [[class-name,Parser]]::HandleTranslationUnit([[namespace-name,clang]]::[[class-name,ASTContext]][[plain,&]] context) {
     [[class-name,Visitor]] visitor { &context, this };
@@ -672,7 +675,7 @@ int main(int argc, char[[plain,*]] argv[]) {
 }
 ```
 
-### Annotations
+## Inserting annotations
 
 
 ## Enums
