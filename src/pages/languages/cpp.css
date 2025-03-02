@@ -154,13 +154,14 @@ div[class*="language-"] {
     padding-right: 18px;
 }
 
+/* Code blocks with diff elements have their padding handled by the diff symbol */
+.code.diff {
+    padding-left: 0;
+}
+
 .code code {
     display: flex;
     flex-direction: row;
-}
-
-.diff {
-    padding: 0 1em 0 1em;
 }
 
 .added {
@@ -178,7 +179,6 @@ div[class*="language-"] {
 .highlighted {
     background-color: rgb(76, 76, 46);
 }
-
 
 /* SECTION: Language syntax highlighting ------------------------------------------------------ */
 

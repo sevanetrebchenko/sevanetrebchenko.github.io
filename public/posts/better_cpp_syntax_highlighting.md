@@ -501,7 +501,7 @@ Additionally, it allows for checking:
 - Whether the function is explicitly marked as `static`, `constexpr`, `consteval`, `virtual` (including pure virtual), and/or `inline`
 - Whether the function is explicitly (or implicitly) `default`ed or `delete`d
 - Function exception specification (`throw(...)/nothrow`, `noexcept`, etc.)
-- Language linkage, or whether the function is nested within a C++ `extern "C"` or `extern "C++"` linkage spec
+- Language linkage, or whether the function is nested within a C++ `extern "C"` or `extern "C++"` linkage
 - Whether the function is variadic
 - Whether the function represents a C++ overloaded operator, or a template (and, if so, what kind)
 - Whether it is a class member function defined out-of-line
@@ -605,7 +605,7 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
         Parser* m_parser;
 };
 ```
-It takes in the `ASTContext` from the `ASTConsumer` and the `Parser`, which is used for adding annotations.
+It takes in the `ASTContext` from the `ASTConsumer` for retrieving node source locations, and the `Parser` for adding annotations.
 We will explore the visitor function implementations in more detail later on.
 
 The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer`.
@@ -676,6 +676,48 @@ int main(int argc, char[[plain,*]] argv[]) {
 ```
 
 ## Inserting annotations
+Another thing our `ASTConsumer` is responsible for is adding annotations to source code.
+There is some initial setup we must do before kicking off AST traversal in `HandleTranslationUnit`.
+
+The contents of the file are tokenized and loaded into memory.
+This is to allow retrieving a range of tokens for a particular node.
+Sometimes, it is not possible to get the exact location of a symbol.
+However, we can take advantage of the fact that AST nodes often provide the range of tokens (from starting line/column to ending line/column) that the node pertains to.
+The `Parser` exposes the `get_tokens` method that retrieves a list of tokens that fall within a given `SourceRange`.
+We will see this in action in some of our visitor functions later.
+
+### Tokenization
+We can leverage the `Lexer` class from Clang's LibTooling API to achieve this.
+The `Lexer` is a utility class that converts a text buffer into a stream of tokens.
+By default, whitespace tokens and comments are parsed out.
+
+```cpp line-numbers:{enabled} added:{6-9,18,22}
+#include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
+#include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
+#include <string> // std::string
+#include <vector> // std::vector
+
+struct Token {
+    clang::SourceLocation location;
+    std::string spelling;
+};
+
+class Parser final : public clang::ASTConsumer {
+    public:
+        explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
+        ~Parser() override;
+        
+    private:
+        void HandleTranslationUnit(clang::ASTContext& context) override;
+        void tokenize();
+        
+        clang::ASTContext* m_context;
+        std::string m_filepath;
+        std::vector<std::vector<Token>> m_tokens;
+};
+```
+
+This process consists of two major steps.
 
 
 ## Enums

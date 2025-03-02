@@ -149,7 +149,7 @@ function IC(props) {
 }
 
 function CodeBlock(props) {
-    const { className, children, useLineNumbers, added, removed, modified, hidden, highlighted } = props;
+    let { className, children, useLineNumbers, added, removed, modified, hidden, highlighted } = props;
     if (!children) {
         return;
     }
@@ -164,6 +164,14 @@ function CodeBlock(props) {
             </span>
         );
     }
+
+    // HTML attributes are automatically converted to strings by the Markdown engine
+    // If present, map diff elements back from comma-separated strings to an array of numbers
+    added = added ? added.split(",").map(Number) : [];
+    removed = removed ? removed.split(",").map(Number) : [];
+    modified = modified ? modified.split(",").map(Number) : [];
+    hidden = hidden ? hidden.split(",").map(Number) : [];
+    highlighted = highlighted ? highlighted.split(",").map(Number) : [];
 
     // Specifying the language is optional
     let language = "";
@@ -221,6 +229,7 @@ function CodeBlock(props) {
         }
     }
 
+    let hasOverride = false;
     let metadataContainer = [];
     let codeContainer = [];
 
@@ -293,34 +302,19 @@ function CodeBlock(props) {
             );
         }
 
-        let codeBlock = [];
-        codeBlock.push(
-            <div className={'block'}>
-                {
-                    lines[i].map((token, index) => (
-                        <span className={token.types.join(' ')} key={index}>
-                                    {token.content}
-                                </span>
-                    ))
-                }
-            </div>
-        );
-
-        if (metadataBlock.length > 0) {
-            codeBlock.push(<div className={'padding'}></div>);
-        }
-
         codeContainer.push(
             <div className={override ? override : null}>
                 {
-                    codeBlock.map((element, index) => (
-                        <Fragment key={index}>
-                            {element}
-                        </Fragment>
+                    lines[i].map((token, index) => (
+                        <span className={token.types.join(' ')} key={index}>
+                            {token.content}
+                        </span>
                     ))
                 }
             </div>
         );
+
+        hasOverride |= override != null;
     }
 
     return (
@@ -334,7 +328,7 @@ function CodeBlock(props) {
                     ))
                 }
             </div> : null }
-            <div className='code'>
+            <div className={"code" + (hasOverride ? " diff" : "")}>
                 {
                     codeContainer.map((element, index) => (
                         <Fragment key={index}>
@@ -425,16 +419,18 @@ function parseCodeBlockMetadata() {
             }
 
             // Pass as attributes to the element
+            // hProperties is used to store HTML attributes of nodes
+            // These properties are automatically converted to a string value
             node.data = {
                 ...node.data,
                 hProperties: {
                     ...(node.data?.hProperties || {}),
                     useLineNumbers,
-                    added,
-                    removed,
-                    modified,
-                    hidden,
-                    highlighted,
+                    added: added.join(","),
+                    removed: removed.join(","),
+                    modified: modified.join(","),
+                    hidden: hidden.join(","),
+                    highlighted: highlighted.join(","),
                 },
             };
         });
