@@ -712,12 +712,13 @@ The `Lexer` provides an API to process an input text buffer into a sequence of t
 These tokens are grouped by line and stored in `m_tokens`.
 
 Why? In some cases, determining the exact location of a symbol is not always straightforward.
-While we usually know what we are looking for, the corresponding AST node does not always provide a direct way to retrieve it.
-Fortunately, every token returned by `Lexer::LexFromRawLexer` has an associated `SourceLocation`.
+While we usually know what we are looking for, the corresponding AST node does not always provide a direct way to retrieve its location.
+Fortunately, this can be circumvented as every token returned by `Lexer::LexFromRawLexer` has an associated `SourceLocation`.
 This represents the column and line number of the token within the source file.
 Additionally, AST nodes often include a way to retrieve the range of the node - spanning from a start to an end `SourceLocation` - which helps us narrow down our search.
 By storing tokens in a structured manner, we can efficiently retrieve those that fall within the given `SourceRange` of an AST node without having to traverse every token of the file.
 We can then check against the spelling of the token until we find one that matches the symbol we are looking for.
+
 We will see this approach in action in some of our visitor functions.
 
 Tokenization is handled by the `tokenize` function:
@@ -725,6 +726,8 @@ Tokenization is handled by the `tokenize` function:
 void Parser::tokenize() {
     const clang::SourceManager& source_manager = m_context->getSourceManager();
     
+    // Retrieve source code and language options
+    // This is a structured representation of the arguments provided to runToolOnCodeWithArgs
     clang::FileID file = source_manager.getMainFileID();
     clang::SourceLocation file_start = source_manager.getLocForStartOfFile(file);
     clang::LangOptions options = m_context->getLangOpts();
@@ -735,11 +738,11 @@ void Parser::tokenize() {
     // Configure lexer behavior
     // ... 
     
-    // Tokens are grouped by line
+    // Tokens are stored as a nested array, with one element representing a line of tokens
     std::size_t num_lines = source.count('\n') + 1;
     m_tokens.resize(num_lines);
 
-    // Tokenize
+    // Tokenize source file
     clang::Token token;
     clang::SourceLocation location;
     while (true) {
@@ -752,6 +755,7 @@ void Parser::tokenize() {
         location = token.getLocation();
         unsigned line = source_manager.getSpellingLineNumber(location);
 
+        // Tokens are grouped by line
         m_tokens[line].emplace_back(Token {
             .location = location,
             .spelling = clang::Lexer::getSpelling(token, source_manager, options)
@@ -760,11 +764,91 @@ void Parser::tokenize() {
 }
 ```
 Tokens are retrieved using `LexFromRawLexer` and converted into lightweight `Token` instances, which only store their `SourceLocation` and spelling.
-Since lexing happens after preprocessing, preprocessor directives, whitespace tokens, and comments are already removed.
-However, this behavior can be modified before lexing occurs.
-
+Since lexing happens after preprocessing, any preprocessor directives, whitespace tokens, and comments are already removed.
+If desired, this behavior can be modified before lexing occurs: the `SetKeepWhitespaceMode` and `SetCommentRetentionState` functions from the `Lexer` enable the tokenization of whitespace and comments, respectively.
 Other properties, such as the source file to process and [C/C++ language options](https://clang.llvm.org/doxygen/LangOptions_8h_source.html), are specified on initialization and cannot be changed later.
 To keep things simple, these are retrieved directly from the `ASTContext`, which is configured by the arguments passed to `runToolOnCodeWithArgs`.
+
+Now that the tokens are stored, we need a way to retrieve them.
+```cpp line-numbers:{enabled} added:{16-17} title:{parser.hpp}
+#include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
+#include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
+#include <string> // std::string
+#include <vector> // std::vector
+
+struct Token {
+    clang::SourceLocation location;
+    std::string spelling;
+};
+
+class Parser final : public clang::ASTConsumer {
+    public:
+        explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
+        ~Parser() override;
+        
+        [[nodiscard]] std::vector<Token> get_tokens(clang::SourceLocation start, clang::SourceLocation end) const;
+        [[nodiscard]] std::vector<Token> get_tokens(clang::SourceRange range) const;
+        
+    private:
+        void HandleTranslationUnit(clang::ASTContext& context) override;
+        void tokenize();
+        
+        clang::ASTContext* m_context;
+        std::string m_filepath;
+        std::vector<std::vector<Token>> m_tokens;
+};
+```
+There are two flavors of the `get_tokens` function.
+One takes a start and end `SourceLocation`, and the other takes in a `SourceRange`.
+This is primarily done to simplify the use case.
+Underneath the hood, the `SourceRange` is converted to start and end locations using the `getBegin` and `getEnd` functions, respectively.
+```cpp line-numbers:{enabled} title:{parser.cpp}
+std::vector<Token> Parser::get_tokens(clang::SourceRange range) const {
+    return get_tokens(range.getBegin(), range.getEnd());
+}
+```
+The biggest thing to keep in mind is that the start and end locations can span multiple lines.
+This means that we unfortunately must create a copy of the tokens being returned.
+Another case that needs to be considered is partial tokens: tokens whose start location is before the start and end location is after the start should be included in the final result.
+Same goes for partial tokens at the end, where the start is within the desired range but the end is not.
+```cpp line-numbers:{enabled} title:{parser.cpp}
+std::vector<Token> Parser::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
+    std::vector<Token> tokens;
+
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    unsigned start_line = source_manager.getSpellingLineNumber(start);
+    unsigned start_column = source_manager.getSpellingColumnNumber(start);
+    
+    unsigned end_line = source_manager.getSpellingLineNumber(end);
+    unsigned end_column = source_manager.getSpellingColumnNumber(end);
+    
+    for (unsigned i = start_line; i <= end_line && i < m_tokens.size(); ++i) {
+        for (const Token& token : m_tokens[i]) {
+            unsigned token_start = source_manager.getSpellingColumnNumber(token.location);
+            unsigned token_end = token_start + token.spelling.length();
+            
+            // Skip any tokens before the start location line:column
+            // Partial tokens (if the start location falls in the middle of a token) should also be included here
+            if (i == start_line && token_end <= start_column) {
+                continue;
+            }
+            
+            // Skip any tokens after the end location line:column
+            if (i == end_line && token_start > end_column) {
+                continue;
+            }
+            
+            tokens.emplace_back(token);
+        }
+    }
+    
+    return tokens;
+}
+```
+One unfortunate aspect is the memory cost.
+An alternative approach here would store the tokens contiguously and take advantage of C++20's `std::span` to return a non-owning view of the token array.
+The tokens are stored contiguously, meaning we can take advantage of `std::span` with the release of C++20. 
+`std::mdspan` is a thing, but this project has not been upgraded to C++23.
 
 ### Tokenization
 We can leverage the `Lexer` class from Clang's LibTooling API to achieve this.
