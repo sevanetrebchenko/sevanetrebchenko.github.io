@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, {Fragment, useEffect, useRef, useState} from "react";
 import ReactMarkdown from "react-markdown";
 import RehypeRaw from "rehype-raw";
 import RemarkGFM from "remark-gfm";
@@ -141,6 +141,53 @@ function tokenize(token, types = []) {
     return tokenized;
 }
 
+function CopyButton(props) {
+    const { source, visibleDuration, fadeDuration } = props;
+    const [opacity, setOpacity] = useState(0.0);
+    const intervalRef = useRef(null);
+
+    const handleClick = async () => {
+        await navigator.clipboard.writeText(source);
+
+        // Clear any existing interval before setting a new one
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+
+        // Reset the timer every time the copy button is clicked
+        setOpacity(1.0);
+        setTimeout(() => {
+            // Update the opacity at a fixed interval
+            const step = 0.01;
+            intervalRef.current = setInterval(() => {
+                setOpacity((prev) => {
+                    if (prev <= step) {
+                        clearInterval(intervalRef.current); // Stop fading process
+                        intervalRef.current = null;
+                        return 0.0;
+                    }
+
+                    return prev - step;
+                });
+            }, fadeDuration * 1000 * step);
+        }, visibleDuration * 1000); // Wait 'visibleDuration' ms before starting fade out
+    };
+
+    const visible = opacity > 0.0;
+
+    return (
+        <div className="copy-button" onClick={handleClick}>
+            {
+                visible && <span style={{opacity: opacity}}>
+                    Copied to clipboard!
+                </span>
+            }
+            <i className="fa-regular fa-fw fa-clone"></i>
+        </div>
+    );
+}
+
 function IC(props) {
     return (
         <div className="image-carousel">
@@ -149,7 +196,7 @@ function IC(props) {
 }
 
 function CodeBlock(props) {
-    let { className, children, useLineNumbers, added, removed, modified, hidden, highlighted } = props;
+    let { className, children, useLineNumbers, title, added, removed, modified, hidden, highlighted } = props;
     if (!children) {
         return;
     }
@@ -317,25 +364,48 @@ function CodeBlock(props) {
         hasOverride |= override != null;
     }
 
+    // Build header
+    let headerContainer = [];
+    let headerClassNames = ["code-header"];
+    if (title) {
+        headerContainer.push(<span className="title">{title}</span>);
+    }
+    else {
+        // Code snippet headers with no title should only display the copy code button
+        headerClassNames.push("no-banner");
+    }
+    headerContainer.push(<CopyButton source={source} visibleDuration={0.5} fadeDuration={1}></CopyButton>);
+
     return (
         <div className={className}>
-            {metadataContainer.length > 0 ? <div className='metadata'>
+            <div className={headerClassNames.join(" ")}>
                 {
-                    metadataContainer.map((element, index) => (
+                    headerContainer.map((element, index) => (
                         <Fragment key={index}>
                             {element}
                         </Fragment>
                     ))
                 }
-            </div> : null }
-            <div className={"code" + (hasOverride ? " diff" : "")}>
-                {
-                    codeContainer.map((element, index) => (
-                        <Fragment key={index}>
-                            {element}
-                        </Fragment>
-                    ))
-                }
+            </div>
+            <div className="code-block">
+                {metadataContainer.length > 0 ? <div className='metadata'>
+                    {
+                        metadataContainer.map((element, index) => (
+                            <Fragment key={index}>
+                                {element}
+                            </Fragment>
+                        ))
+                    }
+                </div> : null }
+                <div className={"code" + (hasOverride ? " diff" : "")}>
+                    {
+                        codeContainer.map((element, index) => (
+                            <Fragment key={index}>
+                                {element}
+                            </Fragment>
+                        ))
+                    }
+                </div>
             </div>
         </div>
     );
@@ -355,6 +425,7 @@ function parseCodeBlockMetadata() {
             let hidden = [];
             let highlighted = [];
             let useLineNumbers = false;
+            let title = null;
 
             // Added lines are specified by the added:{[range]} metadata tag
             // These lines show up with a green background
@@ -418,6 +489,15 @@ function parseCodeBlockMetadata() {
                 }
             }
 
+            // Code snippet title is specified by the title:{...} metadata tag
+            {
+                const regexp = /\btitle\b:{(.+)}/;
+                const match = regexp.exec(meta);
+                if (match) {
+                    title = match[1];
+                }
+            }
+
             // Pass as attributes to the element
             // hProperties is used to store HTML attributes of nodes
             // These properties are automatically converted to a string value
@@ -426,6 +506,7 @@ function parseCodeBlockMetadata() {
                 hProperties: {
                     ...(node.data?.hProperties || {}),
                     useLineNumbers,
+                    title,
                     added: added.join(","),
                     removed: removed.join(","),
                     modified: modified.join(","),
