@@ -676,22 +676,13 @@ int main(int argc, char[[plain,*]] argv[]) {
 ```
 
 ## Inserting annotations
-Another thing our `ASTConsumer` is responsible for is adding annotations to source code.
-There is some initial setup we must do before kicking off AST traversal in `HandleTranslationUnit`.
-
-The contents of the file are tokenized and loaded into memory.
-This is to allow retrieving a range of tokens for a particular node.
-Sometimes, it is not possible to get the exact location of a symbol.
-However, we can take advantage of the fact that AST nodes often provide the range of tokens (from starting line/column to ending line/column) that the node pertains to.
-The `Parser` exposes the `get_tokens` method that retrieves a list of tokens that fall within a given `SourceRange`.
-We will see this in action in some of our visitor functions later.
+One of the other responsibilities of our `ASTConsumer` is inserting syntax highlighting annotations into the source code.
+Before kicking off AST traversal in `HandleTranslationUnit`, we must perform some additional setup.
 
 ### Tokenization
-We can leverage the `Lexer` class from Clang's LibTooling API to achieve this.
-The `Lexer` is a utility class that converts a text buffer into a stream of tokens.
-By default, whitespace tokens and comments are parsed out.
+The contents of the source file are tokenized and stored in memory.
 
-```cpp line-numbers:{enabled} added:{6-9,18,22}
+```cpp line-numbers:{enabled} added:{6-9,18,22} title:{parser.hpp}
 #include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
 #include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
 #include <string> // std::string
@@ -716,9 +707,75 @@ class Parser final : public clang::ASTConsumer {
         std::vector<std::vector<Token>> m_tokens;
 };
 ```
+We can leverage Clang's `Lexer` class from the LibTooling API to handle tokenization.
+The `Lexer` provides an API to process an input text buffer into a sequence of tokens based on a set of predetermined C/C++ language rules.
+These tokens are grouped by line and stored in `m_tokens`.
+
+Why? In some cases, determining the exact location of a symbol is not always straightforward.
+While we usually know what we are looking for, the corresponding AST node does not always provide a direct way to retrieve it.
+Fortunately, every token returned by `Lexer::LexFromRawLexer` has an associated `SourceLocation`.
+This represents the column and line number of the token within the source file.
+Additionally, AST nodes often include a way to retrieve the range of the node - spanning from a start to an end `SourceLocation` - which helps us narrow down our search.
+By storing tokens in a structured manner, we can efficiently retrieve those that fall within the given `SourceRange` of an AST node without having to traverse every token of the file.
+We can then check against the spelling of the token until we find one that matches the symbol we are looking for.
+We will see this approach in action in some of our visitor functions.
+
+Tokenization is handled by the `tokenize` function:
+```cpp line-numbers:{enabled} title:{parser.cpp}
+void Parser::tokenize() {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    
+    clang::FileID file = source_manager.getMainFileID();
+    clang::SourceLocation file_start = source_manager.getLocForStartOfFile(file);
+    clang::LangOptions options = m_context->getLangOpts();
+    
+    clang::StringRef source = source_manager.getBufferData(file);
+    clang::Lexer lexer(file_start, options, source.begin(), source.begin(), source.end());
+    
+    // Configure lexer behavior
+    // ... 
+    
+    // Tokens are grouped by line
+    std::size_t num_lines = source.count('\n') + 1;
+    m_tokens.resize(num_lines);
+
+    // Tokenize
+    clang::Token token;
+    clang::SourceLocation location;
+    while (true) {
+        lexer.LexFromRawLexer(token);
+        if (token.is(clang::tok::eof)) {
+            // Done processing source file (reached EOF token)
+            break;
+        }
+        
+        location = token.getLocation();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+
+        m_tokens[line].emplace_back(Token {
+            .location = location,
+            .spelling = clang::Lexer::getSpelling(token, source_manager, options)
+        });
+    }
+}
+```
+Tokens are retrieved using `LexFromRawLexer` and converted into lightweight `Token` instances, which only store their `SourceLocation` and spelling.
+Since lexing happens after preprocessing, preprocessor directives, whitespace tokens, and comments are already removed.
+However, this behavior can be modified before lexing occurs.
+
+Other properties, such as the source file to process and [C/C++ language options](https://clang.llvm.org/doxygen/LangOptions_8h_source.html), are specified on initialization and cannot be changed later.
+To keep things simple, these are retrieved directly from the `ASTContext`, which is configured by the arguments passed to `runToolOnCodeWithArgs`.
+
+### Tokenization
+We can leverage the `Lexer` class from Clang's LibTooling API to achieve this.
+The `Lexer` is a utility class that converts a text buffer into a stream of tokens.
+Lexing happens 
+By default, whitespace tokens, comments, and p are parsed out.
+
+
 
 This process consists of two major steps.
-
+First, the input file must be tokenized.
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
