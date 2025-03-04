@@ -671,7 +671,7 @@ int main(int argc, char[[plain,*]] argv[]) {
     };
         
     // runToolOnCodeWithArgs returns 'true' if the tool was successfully executed
-    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags);
+    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags, filepath);
 }
 ```
 
@@ -764,8 +764,8 @@ If desired, this behavior can be modified before lexing occurs: the `SetKeepWhit
 Other properties, such as the source file to process and [C/C++ language options](https://clang.llvm.org/doxygen/LangOptions_8h_source.html), are specified on initialization and cannot be changed later.
 To keep things simple, these are retrieved directly from the `ASTContext`, which is configured by the arguments passed to `runToolOnCodeWithArgs`.
 
-Now that the tokens are stored, we need a way to retrieve them.
-```cpp line-numbers:{enabled} added:{16-17} title:{parser.hpp}
+Now that the source file has been tokenized, we need a mechanism to retrieve a subset of tokens for a given range.
+```cpp line-numbers:{enabled} added:{17-18} title:{parser.hpp}
 #include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
 #include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
 #include <string> // std::string
@@ -782,8 +782,8 @@ class Parser final : public clang::ASTConsumer {
         explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
         ~Parser() override;
         
-        [[nodiscard]] std::vector<Token> get_tokens(clang::SourceLocation start, clang::SourceLocation end) const;
-        [[nodiscard]] std::vector<Token> get_tokens(clang::SourceRange range) const;
+        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceLocation start, clang::SourceLocation end) const;
+        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceRange range) const;
         
     private:
         void HandleTranslationUnit(clang::ASTContext& context) override;
@@ -794,18 +794,20 @@ class Parser final : public clang::ASTConsumer {
         std::vector<Token> m_tokens;
 };
 ```
-There are two flavors of the `get_tokens` function.
-One takes a start and end `SourceLocation`, and the other takes in a `SourceRange`.
-This is primarily done to simplify the use case.
-Underneath the hood, the `SourceRange` is converted to start and end locations using the `getBegin` and `getEnd` functions, respectively.
+There are two version of the `get_tokens` function.
+One takes a `start` and `end` `SourceLocation`, while the other accepts a `SourceRange`.
+This is done purely for convenience: internally, the `SourceRange` overload forwards the call to the other version, passing the start and end locations extracted using `getBegin()` and `getEnd()`, respectively.
 ```cpp line-numbers:{enabled} title:{parser.cpp}
-std::vector<Token> Parser::get_tokens(clang::SourceRange range) const {
+std::span<const Token> Parser::get_tokens(clang::SourceRange range) const {
     return get_tokens(range.getBegin(), range.getEnd());
 }
 ```
-The biggest thing to keep in mind is that the start and end locations can span multiple lines.
-Another case that needs to be considered is partial tokens: tokens whose start location is before the start and end location is after the start should be included in the final result.
-Same goes for partial tokens at the end, where the start is within the desired range but the end is not.
+Tokens are stored contiguously in `m_tokens`, allowing `std::span` to return a non-owning view instead of copying the data.
+Since `get_tokens` is called frequently during the traversal of the AST, avoiding unnecessary allocations provides a significant performance boost and reduces memory overhead.
+
+A key consideration when retrieving tokens is that a range may span multiple lines.
+A good example of this is a `FunctionDecl` node representing a complex function definition.
+Additionally, partial tokens - those that overlap the start or end of the range - should also be included in the result.
 ```cpp line-numbers:{enabled} title:{parser.cpp}
 std::span<const Token> Parser::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
     const clang::SourceManager& source_manager = m_context->getSourceManager();
@@ -849,13 +851,11 @@ std::span<const Token> Parser::get_tokens(clang::SourceLocation start, clang::So
     return std::span(m_tokens.begin() + offset, count);
 }
 ```
-Tokens are stored in a contiguous array to take advantage of C++20's `std::span` to return a non-owning view of the token array.
-This is primarily done for performance reasons.
-`get_tokens` is called for almost every AST node, and creating copies of a subrange of tokens every time would incur high memory overhead.
-Using a `std::span` circumvents this entirely.
-
-The process for determining which tokens fall within a start and end `SourceLocation` can be broken up into two steps.
-Finding the first token and the number of tokens
+The challenge of the `get_tokens` function is determining which tokens fall within the range specified by `start` and `end`.
+The function begins by locating the first token that starts at or after `start`.
+It then iterates through the tokens until it encounters one that begins after `end`, keeping track of all the tokens within the range.
+Tokens that straddle the range boundaries - either starting before but extending past `start`, or starting before but continuing past `end` - are also included.
+The resulting `std::span` contains a view of all tokens that overlap the given range.
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
