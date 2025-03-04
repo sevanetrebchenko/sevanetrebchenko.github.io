@@ -742,28 +742,23 @@ void Parser::tokenize() {
     std::size_t num_lines = source.count('\n') + 1;
     m_tokens.resize(num_lines);
 
-    // Tokenize source file
+    // Tokenize the entire source file
     clang::Token token;
-    clang::SourceLocation location;
     while (true) {
         lexer.LexFromRawLexer(token);
         if (token.is(clang::tok::eof)) {
-            // Done processing source file (reached EOF token)
             break;
         }
         
-        location = token.getLocation();
+        clang::SourceLocation location = token.getLocation();
         unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
 
-        // Tokens are grouped by line
-        m_tokens[line].emplace_back(Token {
-            .location = location,
-            .spelling = clang::Lexer::getSpelling(token, source_manager, options)
-        });
+        m_tokens.emplace_back(line, column, clang::Lexer::getSpelling(token, source_manager, options));
     }
 }
 ```
-Tokens are retrieved using `LexFromRawLexer` and converted into lightweight `Token` instances, which only store their `SourceLocation` and spelling.
+Tokens are retrieved using `LexFromRawLexer` and converted into lightweight `Token` instances, which only store their location (line and column number) and spelling.
 Since lexing happens after preprocessing, any preprocessor directives, whitespace tokens, and comments are already removed.
 If desired, this behavior can be modified before lexing occurs: the `SetKeepWhitespaceMode` and `SetCommentRetentionState` functions from the `Lexer` enable the tokenization of whitespace and comments, respectively.
 Other properties, such as the source file to process and [C/C++ language options](https://clang.llvm.org/doxygen/LangOptions_8h_source.html), are specified on initialization and cannot be changed later.
@@ -777,7 +772,8 @@ Now that the tokens are stored, we need a way to retrieve them.
 #include <vector> // std::vector
 
 struct Token {
-    clang::SourceLocation location;
+    unsigned line;
+    unsigned column;
     std::string spelling;
 };
 
@@ -795,7 +791,7 @@ class Parser final : public clang::ASTConsumer {
         
         clang::ASTContext* m_context;
         std::string m_filepath;
-        std::vector<std::vector<Token>> m_tokens;
+        std::vector<Token> m_tokens;
 };
 ```
 There are two flavors of the `get_tokens` function.
@@ -808,58 +804,58 @@ std::vector<Token> Parser::get_tokens(clang::SourceRange range) const {
 }
 ```
 The biggest thing to keep in mind is that the start and end locations can span multiple lines.
-This means that we unfortunately must create a copy of the tokens being returned.
 Another case that needs to be considered is partial tokens: tokens whose start location is before the start and end location is after the start should be included in the final result.
 Same goes for partial tokens at the end, where the start is within the desired range but the end is not.
 ```cpp line-numbers:{enabled} title:{parser.cpp}
-std::vector<Token> Parser::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
-    std::vector<Token> tokens;
-
+std::span<const Token> Parser::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
     const clang::SourceManager& source_manager = m_context->getSourceManager();
     unsigned start_line = source_manager.getSpellingLineNumber(start);
     unsigned start_column = source_manager.getSpellingColumnNumber(start);
-    
+
+    // Determine tokens that fall within the range defined by [start:end]
+    // Partial tokens (if the range start location falls within the extent of a token) should also be included here
+
+    // Determine the index of the first token that falls within the input range
+    unsigned offset = m_tokens.size(); // Invalid offset
+    for (std::size_t i = 0; i < m_tokens.size(); ++i) {
+        const Token& token = m_tokens[i];
+
+        // Skip any tokens that end before the range start line:column
+        if (token.line <= start_line && (token.column + token.spelling.length()) <= start_column) {
+            continue;
+        }
+
+        offset = i;
+        break;
+    }
+
+    // Get the number of tokens that fall within the input range
+    unsigned count = 0;
     unsigned end_line = source_manager.getSpellingLineNumber(end);
     unsigned end_column = source_manager.getSpellingColumnNumber(end);
-    
-    for (unsigned i = start_line; i <= end_line && i < m_tokens.size(); ++i) {
-        for (const Token& token : m_tokens[i]) {
-            unsigned token_start = source_manager.getSpellingColumnNumber(token.location);
-            unsigned token_end = token_start + token.spelling.length();
-            
-            // Skip any tokens before the start location line:column
-            // Partial tokens (if the start location falls in the middle of a token) should also be included here
-            if (i == start_line && token_end <= start_column) {
-                continue;
-            }
-            
-            // Skip any tokens after the end location line:column
-            if (i == end_line && token_start > end_column) {
-                continue;
-            }
-            
-            tokens.emplace_back(token);
+
+    for (std::size_t i = offset; i < m_tokens.size(); ++i) {
+        const Token& token = m_tokens[i];
+
+        // Skip any tokens that start after the range end line:column
+        if (token.line > end_line || token.line == end_line && token.column > end_column) {
+            break;
         }
+
+        ++count;
     }
-    
-    return tokens;
+
+    // Return non-owning range of tokens
+    return std::span(m_tokens.begin() + offset, count);
 }
 ```
-One unfortunate aspect is the memory cost.
-An alternative approach here would store the tokens contiguously and take advantage of C++20's `std::span` to return a non-owning view of the token array.
-The tokens are stored contiguously, meaning we can take advantage of `std::span` with the release of C++20. 
-`std::mdspan` is a thing, but this project has not been upgraded to C++23.
+Tokens are stored in a contiguous array to take advantage of C++20's `std::span` to return a non-owning view of the token array.
+This is primarily done for performance reasons.
+`get_tokens` is called for almost every AST node, and creating copies of a subrange of tokens every time would incur high memory overhead.
+Using a `std::span` circumvents this entirely.
 
-### Tokenization
-We can leverage the `Lexer` class from Clang's LibTooling API to achieve this.
-The `Lexer` is a utility class that converts a text buffer into a stream of tokens.
-Lexing happens 
-By default, whitespace tokens, comments, and p are parsed out.
-
-
-
-This process consists of two major steps.
-First, the input file must be tokenized.
+The process for determining which tokens fall within a start and end `SourceLocation` can be broken up into two steps.
+Finding the first token and the number of tokens
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
