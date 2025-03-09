@@ -196,7 +196,7 @@ function IC(props) {
 }
 
 function CodeBlock(props) {
-    let { className, children, useLineNumbers, title, added, removed, modified, hidden, highlighted } = props;
+    let { className, children, options, title, added, removed, modified, hidden, highlighted } = props;
     if (!children) {
         return;
     }
@@ -285,7 +285,7 @@ function CodeBlock(props) {
         let metadataBlock = [];
 
         // line numbers
-        if (useLineNumbers) {
+        if (options.useLineNumbers) {
             metadataBlock.push(<div className='padding'></div>);
 
             const lineNumber = (i + 1).toString().padStart(lines.length.toString().length, ' ');
@@ -321,6 +321,11 @@ function CodeBlock(props) {
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
                 metadataBlock.push(<div className={override}>{symbol}</div>);
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
+            }
+            else {
+                metadataBlock.push(<div className={'padding'}></div>);
+                metadataBlock.push(<div>{" "}</div>);
+                metadataBlock.push(<div className={'padding'}></div>);
             }
         }
         else {
@@ -505,7 +510,9 @@ function parseCodeBlockMetadata() {
                 ...node.data,
                 hProperties: {
                     ...(node.data?.hProperties || {}),
-                    useLineNumbers,
+                    options: {
+                        useLineNumbers: useLineNumbers,
+                    },
                     title,
                     added: added.join(","),
                     removed: removed.join(","),
