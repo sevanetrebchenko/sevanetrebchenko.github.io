@@ -677,11 +677,12 @@ int main(int argc, char[[plain,*]] argv[]) {
 
 ### Inserting annotations
 
-One of the other responsibilities of our `ASTConsumer` is inserting syntax highlighting annotations into the source code.
-An annotation follows the following structure: `[[{AnnotationType},{Tokens}]]`, where `AnnotationType` is what is used for the class name of the CSS style applied to one of more tokens `Tokens`.
-These annotations are inserted directly into the source code and later parsed out by the Markdown renderer.
+One of the other responsibilities of our `ASTConsumer` is adding syntax highlighting annotations to the source code.
+An annotation follows the structure: `[[{AnnotationType},{Tokens}]]`, where `AnnotationType` determines the CSS class applied to one or more `Tokens`.
+The annotations are embedded directly into the source code and later extracted from code blocks by a custom Markdown renderer, which applies CSS styles to transform them into styled elements.
 
-For example, below is a sample code snippet
+Annotations provide hints to the Markdown renderer on how to apply syntax highlighting to symbols `PrismJS` cannot accurately identify.
+For example, the following snippet demonstrates a few common C++ annotation types: `namespace-name` for namespaces, `class-name` for classes, and `function` for functions.
 ```text
 namespace [[namespace-name,math]] {
     struct [[class-name,Vector3]] {
@@ -693,8 +694,8 @@ namespace [[namespace-name,math]] {
     }
 }
 ```
-As discussed before, annotations are inserted to hint at how the Markdown renderer should apply syntax highlighting to symbols it is unable to identify accurately. 
-When parsed out and rendered, this code snippet results in the following:
+These annotations exist only in the Markdown source.
+When processed, they are removed, and the enclosed tokens are assigned the corresponding CSS style(s).
 ```cpp
 namespace [[namespace-name,math]] {
     struct [[class-name,Vector3]] {
@@ -706,46 +707,41 @@ namespace [[namespace-name,math]] {
     }
 }
 ```
-Note that this showcases a few common annotation types.
-We will define additional annotation types as we encounter and process different AST nodes.
+As we traverse the AST, we will define additional annotation types as needed.
 
-```cpp line-numbers:{enabled} added:{6-10,17,21,26-27} title:{parser.hpp}
-#include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
-#include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
-#include <string> // std::string
-#include <vector> // std::vector
+If you are interested, I've written a [short post]() about how this is implemented in the renderer (the same one being used for this post!).
 
+All the logic for inserting annotations is contained within the `Annotator` helper class.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
 struct Annotation {
+    Annotation(const char* name, unsigned start, unsigned length);
+    ~Annotation();
+    
+    const char* name;
     unsigned start;
     unsigned length;
-    const char* name;
 };
 
-class Parser final : public clang::ASTConsumer {
+class Annotator {
     public:
-        explicit Parser(clang::CompilerInstance& compiler, std::string filepath);
-        ~Parser() override;
+        explicit Annotator(std::string file);
+        ~Annotator();
         
-        void add_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
-        
-    private:
-        void HandleTranslationUnit(clang::ASTContext& context) override;
+        void insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
         void annotate();
         
-        clang::ASTContext* m_context;
-        std::string m_filepath;
-        
-        std::vector<std::string> m_lines;
-        std::unordered_map<unsigned, <std::vector<Annotation>> m_annotations;
+    private:
+        std::string m_file;
+        std::unordered_map<unsigned, std::vector<Annotation>> m_annotations;
 };
 ```
+Annotations themselves are stored in the `m_annotations` map, which associates a line number to a list of annotations for that line.
 
-The `ASTConsumer` exposes an `add_annotation` function to allow for inserting an annotation at a given location.
-This function is called from AST node visitor functions during traversal of the AST.
-```cpp line-numbers:{enabled} title:{parser.cpp}
-#include "parser.hpp"
+The `insert_annotation` function inserts an annotation at a specific line and column, spanning a specified length in characters.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
 
-void Parser::add_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+void Annotator::insert_annotation(const char* name, unsigned int line, unsigned int column, unsigned int length, bool overwrite) {
     // Do not add duplicate annotations of the same name at the same location
     for (Annotation& annotation : m_annotations[line - 1]) {
         if (annotation.start == (column - 1)) {
@@ -758,60 +754,50 @@ void Parser::add_annotation(const char* name, unsigned line, unsigned column, un
         }
     }
 
-    m_annotations[line - 1].emplace_back(name, column - 1, length);
+    m_annotations[line - 1].emplace_back(name, column, length);
 }
 ```
-While traversal is happening, annotations are stored in the `m_annotations` map, which maps line number to a list of annotations for that line.
-This is done to simplify the implementation of `annotate`.
-```cpp
-void Parser::annotate() {
-    // Read in file lines
-    
+Annotations cannot be overwritten unless `overwrite` flag is explicitly specified - two annotations cannot correspond to the same token, as it would create ambiguity regarding which CSS style should be applied.
+
+After AST traversal is complete, the annotated source file is generated by a call to `annotate`.
+```cpp title:{annotator.cpp}
+#include "annotator.hpp"
+
+void Annotator::annotate() {
+    // Read source file contents
+    std::vector<std::string> lines = read(m_file);
     
     // Insert annotations
-    for (unsigned line = 0; line < m_annotations.size(); ++line) {
+    for (auto& [line, annotations] : m_annotations) {
         // Insert annotations in reverse order so that positions of subsequent annotation are not affected
-        std::sort(m_annotations[line].begin(), m_annotations[line].end(), [](const Annotation& a, const Annotation& b) -> bool {
+        std::sort(annotations.begin(), annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
             return a.start < b.start;
         });
         
-        for (auto iter = m_annotations[line].crbegin(); iter != m_annotations[line].crend(); ++iter) {
-            const Annotation& annotation = *iter;
-            unsigned column = annotation.start;
-            unsigned length = annotation.length;
-
-            std::string src = m_lines[line].substr(column, length);
-            m_lines[line].replace(column, length, utils::format("[[{},{}]]", annotation.name, src));
+        // Annotation format: [[{AnnotationType},{Tokens}]]
+        for (const Annotation& annotation : annotations) {
+            std::string src = lines[line].substr(annotation.start, annotation.length);
+            lines[line].replace(annotation.start, annotation.length, utils::format("[[{},{}]]", annotation.name, src));
         }
     }
 
-    // Write annotated output file
-    std::ofstream file("result.txt", std::ios::out | std::ios::trunc);
-    if (!file.is_open()) {
-        utils::logging::error("Failed to open output file");
-        return;
-    }
-
-    for (const std::string& str : m_lines) {
-        file << str << "\n";
-    }
+    // Write modified output file contents
+    write("result.txt", lines);
 }
 ```
-Once traversal is complete, the resulting code snippet is generated with a call to `annotate`.
-Annotations are inserted inline, so the first step is to read in the contents of the source file.
-AST nodes are traversed in preorder, and there is no guarantee of the order in which annotations for a given line are inserted.
-Therefore, when inserting annotations, they must be sorted in reverse order.
-This is to ensure that positions of subsequent annotations are not affected.
-An alternative approach here is to sort in increasing order and keep track of an offset:
-```cpp
+The annotations are sorted and inserted in reverse order.
+Since the children of an AST node are not guaranteed to be on the same level of the AST, determining the order (and location) of annotations for these nodes is not straightforward.
+Additionally, adding an annotation modifies the length of the line, which shifts the positions of any subsequent annotations.
+Inserting annotations in reverse order simplifies this process, as it removes the need to adjust offsets after each insertion.
 
-```
-After insertion is complete, the file is written out and saved to disk.
+It's worth noting that we can precompute the final length of each line (including all annotations) to avoid potentially reallocating the resulting string multiple times during insertion.
+However, this approach introduces slightly higher memory overhead, as both the original and modified versions of the line must exist in memory simultaneously.
 
-Note that it is possible to precompute the final length of the line with all annotations included to avoid (potentially) reallocating the resulting string multiple times.
-This does, however, come with a slight memory overhead, as both the source and reconstructed strings will exist.
+Once the annotations are inserted, the modified file is written out and saved to disk.
+Provided that all annotation types are recognized, this modified code snippet can now be embedded directly into a Markdown file and processed by the renderer for syntax highlighting.
 
-Before kicking off AST traversal in `HandleTranslationUnit`, we must perform some additional setup.
+With the logic to insert annotations into the source code implemented, the next task is to identify the tokens that need annotation.
+Before kicking off AST traversal and implementing custom visitor functions, we must address one final issue: tokenization.
 
 ### Tokenization
 The contents of the source file are tokenized and stored in memory.
@@ -940,7 +926,7 @@ Tokens are stored contiguously in `m_tokens`, allowing `std::span` to return a n
 Since `get_tokens` is called frequently during the traversal of the AST, avoiding unnecessary allocations provides a significant performance boost and reduces memory overhead.
 
 A key consideration when retrieving tokens is that a range may span multiple lines.
-A good example of this is a `FunctionDecl` node representing a complex function definition.
+A good example of this is a `FunctionDecl` node representing a multi-line function definition.
 Additionally, partial tokens - those that overlap the start or end of the range - should also be included in the result.
 ```cpp line-numbers:{enabled} title:{parser.cpp}
 std::span<const Token> Parser::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
@@ -991,8 +977,7 @@ It then iterates through the tokens until it encounters one that begins after `e
 Tokens that straddle the range boundaries - either starting before but extending past `start`, or starting before but continuing past `end` - are also included.
 The resulting `std::span` contains a view of all tokens that overlap the given range.
 
-### Annotation
-
+With all of these prerequisite components implemented, let's take a look at some visitor function implementations. 
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
