@@ -219,6 +219,7 @@ function CodeBlock(props) {
     modified = modified ? modified.split(",").map(Number) : [];
     hidden = hidden ? hidden.split(",").map(Number) : [];
     highlighted = highlighted ? highlighted.split(",").map(Number) : [];
+    options = JSON.parse(options);
 
     // Specifying the language is optional
     let language = "";
@@ -321,11 +322,6 @@ function CodeBlock(props) {
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
                 metadataBlock.push(<div className={override}>{symbol}</div>);
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
-            }
-            else {
-                metadataBlock.push(<div className={'padding'}></div>);
-                metadataBlock.push(<div>{" "}</div>);
-                metadataBlock.push(<div className={'padding'}></div>);
             }
         }
         else {
@@ -496,7 +492,7 @@ function parseCodeBlockMetadata() {
 
             // Code snippet title is specified by the title:{...} metadata tag
             {
-                const regexp = /\btitle\b:{(.+)}/;
+                const regexp = /\btitle\b:{([^}]*)}/;
                 const match = regexp.exec(meta);
                 if (match) {
                     title = match[1];
@@ -510,10 +506,11 @@ function parseCodeBlockMetadata() {
                 ...node.data,
                 hProperties: {
                     ...(node.data?.hProperties || {}),
-                    options: {
+                    // Pass dictionary of options as a JSON blob
+                    options: JSON.stringify({
                         useLineNumbers: useLineNumbers,
-                    },
-                    title,
+                    }),
+                    title: title,
                     added: added.join(","),
                     removed: removed.join(","),
                     modified: modified.join(","),

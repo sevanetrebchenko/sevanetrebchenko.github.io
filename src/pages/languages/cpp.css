@@ -236,10 +236,12 @@ div[class*="language-"] {
 
 .modified {
     background-color: rgb(47, 62, 69);
+    width: 100%;
 }
 
 .highlighted {
     background-color: rgb(76, 76, 46);
+    width: 100%;
 }
 
 /* SECTION: Language syntax highlighting ------------------------------------------------------ */
