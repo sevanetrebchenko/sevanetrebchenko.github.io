@@ -712,7 +712,11 @@ It follows that there should be a corresponding CSS style for every annotation t
 
 If you are interested, I've written a [short post]() about how this is implemented in the renderer (the same one being used for this post!).
 
+#### The `Annotator`
 The logic for inserting annotations is contained within the `Annotator` class.
+This class contains two important functions: 
+1. `insert_annotation`, which inserts an annotation at a specific line and column, spanning a specified length in characters, and
+2. `annotate`, which generates the final annotated source file
 ```cpp line-numbers:{enabled} title:{annotator.hpp}
 struct Annotation {
     Annotation(const char* name, unsigned start, unsigned length);
@@ -736,7 +740,8 @@ class Annotator {
         std::unordered_map<unsigned, std::vector<Annotation>> m_annotations;
 };
 ```
-Annotations themselves are stored in the `m_annotations` map, which associates a line number to a list of annotations for that line.
+Originally, I had implemented this class such that annotations were stored in the `m_annotations` map, which associates a line number to a list of annotations for that line.
+This was the most straightforward implementation, 
 
 The `insert_annotation` function inserts an annotation at a specific line and column, spanning a specified length in characters.
 ```cpp line-numbers:{enabled} title:{annotator.cpp}
@@ -744,7 +749,7 @@ The `insert_annotation` function inserts an annotation at a specific line and co
 
 void Annotator::insert_annotation(const char* name, unsigned int line, unsigned int column, unsigned int length, bool overwrite) {
     // Do not add duplicate annotations of the same name at the same location
-    // Note: line and column numbers returned from Clang's AST API are 1-based
+    // Note: line and column numbers returned from Clang's AST start with 1
     for (Annotation& annotation : m_annotations[line - 1]) {
         if (annotation.start == (column - 1)) {
             if (overwrite) {
@@ -791,23 +796,245 @@ void Annotator::annotate() {
     write("result.txt", lines);
 }
 ```
-Since the children of an AST node are not guaranteed to be on the same level of the AST, determining the order (and location) of annotations for these nodes is not straightforward.
-Additionally, adding an annotation modifies the length of the line, which shifts the positions of any subsequent annotations.
 To simplify the implementation, all annotations for a line are sorted by insertion position in **reverse order** before being inserted.
-This is done remove the need to adjust offsets after each insertion.
-
-The initial approach I used for this project 
-
-The final length of the entire file (including all annotations) is precomputed to avoid doing frequent small allocations.
-At the end, the file is written out
-
-The final length of each line (including all annotations) is precomputed so that it can be allocated once.
-This is done so that the resulting string is not reallocated multiple times.
-This issue is especially prominent for lines that have a large number of annotations.
-This approach, however, introduces slightly higher memory overhead, as both the original and modified versions of the line must exist in memory simultaneously.
+Since the children of an AST node are not guaranteed to be on the same level of the AST, determining the order (and location) of annotations for these nodes is not straightforward.
+Additionally, adding an annotation modifies the length of the line, which shifts the positions of any annotations that follow.
+Sorting the annotations beforehand removes the need to adjust offsets after each insertion.
 
 Once the annotations are inserted, the modified file is written out and saved to disk.
-The modified code snippet can now be embedded directly into a Markdown source file, where it will be processed by the renderer for syntax highlighting.
+The code snippet can now be embedded directly into a Markdown source file, where it will be processed by the renderer for syntax highlighting.
+
+#### A more efficient approach
+
+The current approach offers several optimization opportunities.
+Since annotations are inserted sequentially, we risk incurring unnecessary overhead due to repeated reallocations, especially for lines with a large number of annotations.
+Given that the annotation format is already defined, we can precompute the final length of each line (including all annotations) and pre-allocate the necessary space upfront.
+This allows us to copy characters directly into the string while formatting each annotation as it is encountered, reducing memory overhead and improving runtime efficiency.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::vector<std::string> read(const std::string& filename);
+void write(const std::string& filename, const std::vector<std::string>& lines);
+
+void Annotator::annotate() {
+    // Read source file contents
+    std::vector<std::string> lines = read(m_file);
+    
+    for (auto& [line, annotations] : m_annotations) {
+        // Sort annotations in reverse order so that inserting an annotation does not affect the positions of subsequent annotations
+        std::sort(annotations.begin(), annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
+            return a.start < b.start;
+        });
+        
+        const std::string& src = lines[line];
+        
+        // Precompute the final length of the string
+        std::size_t length = src.length();
+        for (const Annotation& annotation : annotations) {
+            // Annotation format: [[{AnnotationType},{Tokens}]]
+            // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
+            length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+        }
+
+        // Preallocate result string
+        std::string result;
+        result.reserve(length);
+        
+        std::size_t position = 0;
+        for (const Annotation& annotation : annotations) {
+            // Copy the part before the annotation
+            result.append(src, position, annotation.start - position);
+            
+            // Insert annotation
+            result.append("[[");
+            result.append(annotation.name);
+            result.append(",");
+            result.append(src, annotation.start, annotation.length);
+            result.append("]]");
+    
+            // Move offset past annotation
+            position = annotation.start + annotation.length;
+        }
+    
+        // Copy any trailing characters after the last annotation
+        result.append(src, position, src.length() - position);
+        
+        lines[line] = result;
+    }
+
+    // Write modified output file contents
+    write("result.txt", lines);
+}
+```
+The `read` function loads the file’s contents into memory as individual lines, while `write` saves the modified contents back to disk.
+The implementation of these functions is straightforward and omitted from the code snippet for brevity.
+
+But why stop there?
+If we can precompute the final length of each line, we can just as easily determine the final length of the entire file.
+By doing so, we only need to allocate memory once, further reducing memory overhead and allowing us to write the entire file in a single operation rather than line by line.
+
+Additionally, we can optimize how annotations are stored to improve memory usage and cache efficiency.
+Instead of sorting the annotations in each line individually, we sort the entire `m_annotations` structure at once - reducing the number of calls to `std::sort` from one per line to just one for the entire file.
+
+To achieve this, we need to change the way annotations are represented.
+Instead of using a `std::unordered_map`, we'll use an `std::vector` to store annotations contiguously in memory.
+This change removes the ability to do direct line-based lookups, but we can compensate for this by computing and storing each annotation’s character offset within the file rather than tracking them by line and column.
+
+With this approach, generating the annotated file becomes more efficient, as annotations can be interleaved with the source content directly.
+Below is the new interface for our `Annotator`:
+```cpp line-numbers:{enabled} added:{23,24,27} modified:{6,10,28} removed:{2} title:{annotator.hpp}
+#include <string> // std::string
+#include <unordered_map> // std::unordered_map
+#include <vector> // std::vector
+
+struct Annotation {
+    Annotation(const char* name, unsigned offset, unsigned length);
+    ~Annotation();
+    
+    const char* name;
+    unsigned offset;
+    unsigned length;
+};
+
+class Annotator {
+    public:
+        explicit Annotator(std::string file);
+        ~Annotator();
+        
+        void insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
+        void annotate();
+        
+    private:
+        void compute_line_lengths();
+        [[nodiscard]] std::size_t compute_offset(unsigned line, unsigned column) const;
+    
+        std::string m_file;
+        std::vector<unsigned> m_line_lengths;
+        std::vector<Annotation> m_annotations;
+};
+```
+To compute the offset given a line and column number, we need to keep track of the lengths of each line.
+This is achieved by iterating through the file and calculating the length of each line, separated by the newline character.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+// Returns a string containing the contents of the file
+std::string read(const std::string& filename);
+
+Annotator::Annotator(const std::string& file) {
+    // Read source file contents
+    m_file = read(file);
+    compute_line_lengths();
+}
+
+void Annotator::compute_line_lengths() {
+    std::size_t start = 0;
+
+    // Traverse through the string and count lengths of lines separated by newlines
+    for (std::size_t i = 0; i < m_file.size(); ++i) {
+        if (m_file[i] == '\n') {
+            // Include newline character in line length calculation
+            // Note: automatically accounts for the carriage return (\r) character on Windows
+            m_line_lengths.push_back(i - start + 1);
+            start = i + 1;
+        }
+    }
+
+    // Add any trailing characters (if the file does not end in a newline)
+    if (start < m_file.size()) {
+        m_line_lengths.push_back(m_file.size() - start);
+    }
+}
+```
+Once we have this information, we can determine the offset of an annotation by summing the lengths of all preceding lines and adding the column index within the target line.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::size_t Annotator::compute_offset(unsigned line, unsigned column) {
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < line; ++i) {
+        // m_line_lengths[i] stores the length of line i (newline included)
+        offset += m_line_lengths[i];
+    }
+    return offset + column;
+}
+```
+
+The `insert_annotation` implementation is updated to compute the offset instead of relying on the annotation's line and column directly:
+```cpp line-numbers:{enabled} added:{4} modified:{7-8,18} title:{annotator.cpp}
+#include "annotator.hpp"
+
+void Annotator::insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+    std::size_t offset = compute_offset(line, column);
+    
+    // Do not add duplicate annotations of the same name at the same location
+    for (Annotation& annotation : m_annotations) {
+        if (annotation.offset == offset) {
+            if (overwrite) {
+                annotation.name = name;
+                annotation.length = length;
+            }
+            
+            return;
+        }
+    }
+    
+    m_annotations.emplace_back(name, offset, length);
+}
+```
+
+Finally, we integrate all these optimizations into the `annotate` function:
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::string read(const std::string& filename);
+void write(const std::string& filename, const std::string& contents);
+
+void Annotator::annotate() {
+    // Read source file contents
+    std::string src = read(m_file);
+    
+    // Sort annotations in reverse order so that inserting an annotation does not affect the positions of subsequent annotations
+    std::sort(m_annotations.begin(), m_annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
+        return a.offset < b.offset;
+    });
+    
+    // Precompute the final length of the file
+    std::size_t length = src.length();
+    for (const Annotation& annotation : m_annotations) {
+        // Annotation format: [[{AnnotationType},{Tokens}]]
+        // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
+        length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+    }
+    
+    // Preallocate string
+    std::string result;
+    result.reserve(length);
+        
+    std::size_t position = 0;
+    for (const Annotation& annotation : m_annotations) {
+        // Copy the part before the annotation
+        result.append(src, position, annotation.offset - position);
+        
+        // Insert annotation
+        result.append("[[");
+        result.append(annotation.name);
+        result.append(",");
+        result.append(src, annotation.offset, annotation.length);
+        result.append("]]");
+
+        // Move offset into 'src'
+        position = annotation.offset + annotation.length;
+    }
+
+    // Copy the remaining part of the line
+    result.append(src, position, src.length() - position);
+
+    // Write modified output file contents
+    write("result.txt", result);
+}
+```
+Note that the `read` and `write` functions have been updated to operate directly on the file's contents, rather than handling it as a collection of individual lines.
 
 ### Tokenization
 
