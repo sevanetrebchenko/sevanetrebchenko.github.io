@@ -546,10 +546,10 @@ Our `ASTConsumer` is defined as follows:
 #include <clang/AST/ASTConsumer.h>
 #include <string> // std::string
 
-class Parser final : public clang::ASTConsumer {
+class Consumer final : public clang::ASTConsumer {
     public:
-        explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
-        ~Parser() override;
+        explicit Consumer(clang::CompilerInstance& compiler, clang::StringRef filepath);
+        ~Consumer() override;
         
     private:
         void HandleTranslationUnit(clang::ASTContext& context) override;
@@ -1035,6 +1035,14 @@ void Annotator::annotate() {
 }
 ```
 Note that the `read` and `write` functions have been updated to operate directly on the file's contents, rather than handling it as a collection of individual lines.
+
+Without any optimizations
+tool: 1,224,222,680 nanoseconds
+annotate: 1,113,800
+
+With optimizations:
+tool: 1,145,447,200 nanoseconds
+annotate: 475,416 nanoseconds
 
 ### Tokenization
 
