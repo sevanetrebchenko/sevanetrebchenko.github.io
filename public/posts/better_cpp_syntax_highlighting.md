@@ -315,7 +315,7 @@ This also extends to type aliases, such as `Color` on line 283, and all standard
 An example of this is the definition of the `Month` enum on line 61.
 Enum values, such as the month names in the `Month` enum definition, are also highlighted as plain tokens.
 
-- **Class member variables**: Class member declarations and references in function bodies are highlighted as plain tokens.
+- **Class member variables**: Class member declarations and references in member function bodies are highlighted as plain tokens.
 Examples of this can be seen with references to `x`, `y`, and `z` member variables throughout the definition of the `Vector3` class.
 
 - **Functions**: Preprocessor definitions, constructors, and C++-style casts are incorrectly highlighted as function calls.
@@ -325,14 +325,13 @@ Examples of this are the use of the `ASSERT` macro on line 197, the `Color` cons
 Examples of this are definitions of the `utility` namespace on line 17 or the `math` namespace on line 88, as well as the `std` qualifier on standard library types.
 This also extends to `using namespace` declarations and namespace aliases, such as `using namespace std::chrono` on line 218.
 
-- **Templates**: Type names in template definitions, specializations, and instantiations are highlighted as plain tokens.
+- **Templates**: As with user-defined types, type names in template definitions, specializations, and instantiations are highlighted as plain tokens.
 This extends to C++20 concepts, such as the `Container` concept on line 27.
 
 - **Operators**: Certain characters are highlighted as operators.
-Examples of this can be seen with reference highlighted as the address-of operator, 
+For example, lvalue and rvalue references are highlighted as the address-of operator, pointers as the multiplication operator, and template angle brackets as comparison operators.
 
 The list goes on.
-
 
 PrismJS breaks the source code into tokens based on a set of predefined grammar rules specific to each language.
 These rules are essentially regular expressions that identify different types of elements in the code, such as keywords, strings, numbers, comments, etc.
@@ -357,6 +356,7 @@ int main() {
 If we extend `PrismJS` to highlight *all* tokens that match class names, we may accidentally end up highlighting more than necessary.
 
 While this example may be contrived, it sheds light on the fundamental issue of syntax highlighting with `PrismJS`: it is difficult to reason about the structure of the code by only looking at individual tokens.
+I believe this to be the reason for the issues pointed out above.
 Syntax highlighting for C++ requires additional context.
 Even tokens with the same spelling may need to be highlighted differently based on the context they appear in.
 What if we want to extract member variables of a given class?
@@ -859,8 +859,8 @@ class Tokenizer {
 ```
 We can leverage Clang's `Lexer` class from the LibTooling API to handle tokenization.
 The `Lexer` provides an API to process an input text buffer into a sequence of tokens based on a set of predetermined C/C++ language rules.
-Raw tokens for the code snippet are stored contiguously in `m_tokens`, allowing functions to return a non-owning `std::span` instead of copying the data.
-This helps avoid unnecessary allocations and provides a significant boost to performance as the `get_tokens` functions are called frequently during the traversal of the AST, 
+Raw tokens for the code snippet are stored contiguously in `m_tokens`, allowing the `get_tokens` functions to return a non-owning `std::span` instead of copying token data into a separate buffer.
+This helps avoid unnecessary allocations and provides a significant boost to performance, as the `get_tokens` functions are called frequently during the traversal of the AST, 
 
 Tokenization is handled by the `tokenize` function:
 ```cpp line-numbers:{enabled} title:{tokenizer.cpp}
@@ -909,7 +909,6 @@ std::span<const Token> Tokenizer::get_tokens(clang::SourceRange range) const {
 
 A key consideration when retrieving tokens is that the provided range may span multiple lines.
 A good example of this is a `FunctionDecl` node, which represents a multi-line function definition.
-Additionally, the function needs to properly account for partial tokens - those that overlap the start or end of the range - in the result.
 ```cpp line-numbers:{enabled} title:{tokenizer.cpp}
 std::span<const Token> Tokenizer::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
     const clang::SourceManager& source_manager = m_context->getSourceManager();
@@ -951,7 +950,7 @@ std::span<const Token> Tokenizer::get_tokens(clang::SourceLocation start, clang:
     return { m_tokens.begin() + offset, count };
 }
 ```
-The main challenge of `get_tokens` is determining which tokens fall within the range specified by `start` and `end`.
+The main challenge of `get_tokens` is properly accounting for partial tokens - those that overlap the range specified by `start` and `end` - in the result.
 The function begins by locating the first token that starts at or after `start`.
 It then iterates through the tokens until it encounters one that begins after `end`, keeping track of all the tokens in between (those within the range).
 The resulting `std::span` contains a view of all tokens that overlap the given range.
@@ -1210,7 +1209,7 @@ While this is not the most precise method, it effectively illustrates the differ
 With optimizations included, the runtime of `annotate` has been reduced by approximately 57.4%, leading to an overall tool runtime reduction of 6.4%.
 As expected, the overall runtime of the tool did not decrease significantly as most of the remaining time being spent in visitor functions and AST traversal.
 
-With all of these prerequisite components implemented, let's take a look at some visitor function implementations. 
+With all of these prerequisite components implemented, let's (finally) take a look at some visitor function implementations. 
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
