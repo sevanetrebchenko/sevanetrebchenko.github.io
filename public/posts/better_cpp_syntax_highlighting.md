@@ -296,7 +296,7 @@ int main() {
     
     
     using Color = math::Vector3;
-    Color color = Color { 253, 164, 15 };
+    Color color(253, 164, 15);
 
     str = utility::concat("My favorite color is: ", color);
     std::cout << str << '\n';
@@ -305,25 +305,31 @@ int main() {
     return 0;
 }
 ```
-
 Unfortunately, there are several issues with the syntax highlighting. 
 
-- **Macros**: References to preprocessor definitions are incorrectly highlighted as function calls. 
-An example of this can be seen with the `ASSERT` macro on line 197.
+- **User-defined types**: Only declarations of custom types are recognized as classes, with subsequent uses treated as plain tokens.
+Examples of are the `Container` concept on line 27 and the `Vector3` struct on line 90.
+This also extends to type aliases, such as `Color` on line 283, and all standard library types. 
 
-- **User-defined types**: Only declarations of custom types are recognized as classes.
-Subsequent uses are treated as plain tokens.
-Examples of this can be seen with the `Container` concept on line 27, the `Month` enum on line 61, and the `Vector3` struct on line 90.
-This issue also extends to standard library types.
+- **Enums**: As with user-defined types, only declarations of enums are highlighted properly.
+An example of this is the definition of the `Month` enum on line 61.
+Enum values, such as the month names in the `Month` enum definition, are also highlighted as plain tokens.
 
-- **Enums**: Enum values, such as the month names in the `Month` enum on line 61, are highlighted as plain tokens.
+- **Class member variables**: Class member declarations and references in function bodies are highlighted as plain tokens.
+Examples of this can be seen with references to `x`, `y`, and `z` member variables throughout the definition of the `Vector3` class.
 
-- **Class member variables**: Class member declarations and references in function bodies are all highlighted as plain tokens. 
-It is difficult to tell whether a variable in a class member function references a local variable or a class member.
+- **Functions**: Preprocessor definitions, constructors, and C++-style casts are incorrectly highlighted as function calls.
+Examples of this are the use of the `ASSERT` macro on line 197, the `Color` constructor on line 284, and uses of C++-style casts `static_cast` and `const_cast` on lines 83 and 226 and line 126, respectively.
 
-6. **Casts**: C++-style casts such as `static_cast` on lines 83 and 226 and `const_cast` on line 126, are incorrectly highlighted as function calls.
-- **Namespaces**: Namespace declarations, such as the `utility` namespace on line 17 or the `math` namespace on line 88, as well as any namespace-qualified types or functions, are all highlighted as plain tokens.
-6. **Templates**: Template type names are highlighted as plain tokens, and template angle brackets are treated as operators rather than delimiters.
+- **Namespaces**: Namespace declarations, as well as namespace qualifiers on types and functions, are highlighted as plain tokens.
+Examples of this are definitions of the `utility` namespace on line 17 or the `math` namespace on line 88, as well as the `std` qualifier on standard library types.
+This also extends to `using namespace` declarations and namespace aliases, such as `using namespace std::chrono` on line 218.
+
+- **Templates**: Type names in template definitions, specializations, and instantiations are highlighted as plain tokens.
+This extends to C++20 concepts, such as the `Container` concept on line 27.
+
+- **Operators**: Certain characters are highlighted as operators.
+Examples of this can be seen with reference highlighted as the address-of operator, 
 
 The list goes on.
 
@@ -349,11 +355,14 @@ int main() {
 }
 ```
 If we extend `PrismJS` to highlight *all* tokens that match class names, we may accidentally end up highlighting more than necessary.
-While this example may be contrived, it sheds light on the main underlying problem: it is difficult to reason about the structure of the code by only looking at individual tokens.
+
+While this example may be contrived, it sheds light on the fundamental issue of syntax highlighting with `PrismJS`: it is difficult to reason about the structure of the code by only looking at individual tokens.
+Syntax highlighting for C++ requires additional context.
+Even tokens with the same spelling may need to be highlighted differently based on the context they appear in.
 What if we want to extract member variables of a given class?
 How do we distinguish between local variables and class members?
 What about types that we don't have definitions for, such as those included from third-party dependencies or the standard library?
-Approaches like using regular expressions or manual scope tracking quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
+Approaches like using regular expressions or rule-based syntax highlighting quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
 
 It makes sense, therefore, that PrismJS skips most this complexity and only annotates tokens it is confidently able to identify. 
 
