@@ -296,7 +296,7 @@ int main() {
     
     
     using Color = math::Vector3;
-    Color color = Color { 253, 164, 15 };
+    Color color(253, 164, 15);
 
     str = utility::concat("My favorite color is: ", color);
     std::cout << str << '\n';
@@ -305,28 +305,33 @@ int main() {
     return 0;
 }
 ```
-
 Unfortunately, there are several issues with the syntax highlighting. 
 
-- **Macros**: References to preprocessor definitions are incorrectly highlighted as function calls. 
-An example of this can be seen with the `ASSERT` macro on line 197.
+- **User-defined types**: Only declarations of custom types are recognized as classes, with subsequent uses treated as plain tokens.
+Examples of are the `Container` concept on line 27 and the `Vector3` struct on line 90.
+This also extends to type aliases, such as `Color` on line 283, and all standard library types. 
 
-- **User-defined types**: Only declarations of custom types are recognized as classes.
-Subsequent uses are treated as plain tokens.
-Examples of this can be seen with the `Container` concept on line 27, the `Month` enum on line 61, and the `Vector3` struct on line 90.
-This issue also extends to standard library types.
+- **Enums**: As with user-defined types, only declarations of enums are highlighted properly.
+An example of this is the definition of the `Month` enum on line 61.
+Enum values, such as the month names in the `Month` enum definition, are also highlighted as plain tokens.
 
-- **Enums**: Enum values, such as the month names in the `Month` enum on line 61, are highlighted as plain tokens.
+- **Class member variables**: Class member declarations and references in member function bodies are highlighted as plain tokens.
+Examples of this can be seen with references to `x`, `y`, and `z` member variables throughout the definition of the `Vector3` class.
 
-- **Class member variables**: Class member declarations and references in function bodies are all highlighted as plain tokens. 
-It is difficult to tell whether a variable in a class member function references a local variable or a class member.
+- **Functions**: Preprocessor definitions, constructors, and C++-style casts are incorrectly highlighted as function calls.
+Examples of this are the use of the `ASSERT` macro on line 197, the `Color` constructor on line 284, and uses of C++-style casts `static_cast` and `const_cast` on lines 83 and 226 and line 126, respectively.
 
-6. **Casts**: C++-style casts such as `static_cast` on lines 83 and 226 and `const_cast` on line 126, are incorrectly highlighted as function calls.
-- **Namespaces**: Namespace declarations, such as the `utility` namespace on line 17 or the `math` namespace on line 88, as well as any namespace-qualified types or functions, are all highlighted as plain tokens.
-6. **Templates**: Template type names are highlighted as plain tokens, and template angle brackets are treated as operators rather than delimiters.
+- **Namespaces**: Namespace declarations, as well as namespace qualifiers on types and functions, are highlighted as plain tokens.
+Examples of this are definitions of the `utility` namespace on line 17 or the `math` namespace on line 88, as well as the `std` qualifier on standard library types.
+This also extends to `using namespace` declarations and namespace aliases, such as `using namespace std::chrono` on line 218.
+
+- **Templates**: As with user-defined types, type names in template definitions, specializations, and instantiations are highlighted as plain tokens.
+This extends to C++20 concepts, such as the `Container` concept on line 27.
+
+- **Operators**: Certain characters are highlighted as operators.
+For example, lvalue and rvalue references are highlighted as the address-of operator, pointers as the multiplication operator, and template angle brackets as comparison operators.
 
 The list goes on.
-
 
 PrismJS breaks the source code into tokens based on a set of predefined grammar rules specific to each language.
 These rules are essentially regular expressions that identify different types of elements in the code, such as keywords, strings, numbers, comments, etc.
@@ -349,11 +354,15 @@ int main() {
 }
 ```
 If we extend `PrismJS` to highlight *all* tokens that match class names, we may accidentally end up highlighting more than necessary.
-While this example may be contrived, it sheds light on the main underlying problem: it is difficult to reason about the structure of the code by only looking at individual tokens.
+
+While this example may be contrived, it sheds light on the fundamental issue of syntax highlighting with `PrismJS`: it is difficult to reason about the structure of the code by only looking at individual tokens.
+I believe this to be the reason for the issues pointed out above.
+Syntax highlighting for C++ requires additional context.
+Even tokens with the same spelling may need to be highlighted differently based on the context they appear in.
 What if we want to extract member variables of a given class?
 How do we distinguish between local variables and class members?
 What about types that we don't have definitions for, such as those included from third-party dependencies or the standard library?
-Approaches like using regular expressions or manual scope tracking quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
+Approaches like using regular expressions or rule-based syntax highlighting quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
 
 It makes sense, therefore, that PrismJS skips most this complexity and only annotates tokens it is confidently able to identify. 
 
@@ -501,7 +510,7 @@ Additionally, it allows for checking:
 - Whether the function is explicitly marked as `static`, `constexpr`, `consteval`, `virtual` (including pure virtual), and/or `inline`
 - Whether the function is explicitly (or implicitly) `default`ed or `delete`d
 - Function exception specification (`throw(...)/nothrow`, `noexcept`, etc.)
-- Language linkage, or whether the function is nested within a C++ `extern "C"` or `extern "C++"` linkage spec
+- Language linkage, or whether the function is nested within a C++ `extern "C"` or `extern "C++"` linkage
 - Whether the function is variadic
 - Whether the function represents a C++ overloaded operator, or a template (and, if so, what kind)
 - Whether it is a class member function defined out-of-line
@@ -538,7 +547,7 @@ struct [[class-name,SyntaxHighlighter]] final [[plain,:]] public [[namespace-nam
 ### Creating an `ASTConsumer`
 
 The `ASTFrontendAction` interface requires implementing the `CreateASTConsumer` function, which returns an `ASTConsumer` instance.
-As the name suggests, the `ASTConsumer` is responsible for processing the AST.
+As the name suggests, the `ASTConsumer` is responsible for consuming (processing) the AST.
 
 Our `ASTConsumer` is defined as follows:
 ```cpp line-numbers:{enabled}
@@ -546,10 +555,10 @@ Our `ASTConsumer` is defined as follows:
 #include <clang/AST/ASTConsumer.h>
 #include <string> // std::string
 
-class Parser final : public clang::ASTConsumer {
+class Consumer final : public clang::ASTConsumer {
     public:
-        explicit Parser(clang::CompilerInstance& compiler, clang::StringRef filepath);
-        ~Parser() override;
+        explicit Consumer(clang::CompilerInstance& compiler, clang::StringRef filepath);
+        ~Consumer() override;
         
     private:
         void HandleTranslationUnit(clang::ASTContext& context) override;
@@ -561,8 +570,10 @@ class Parser final : public clang::ASTConsumer {
 
 The `ASTConsumer` interface provides multiple entry points for traversal, but for our use case only `HandleTranslationUnit` is necessary.
 This function is called by the `ASTFrontendAction` with an `ASTContext` for the translation unit of the file being processed.
+
 The `ASTContext` is essential for retrieving semantic information about the nodes of an AST.
 It provides access to type details, declaration contexts, and utility classes like `SourceManager`, which maps nodes back to their source locations (as AST nodes do not store this information directly).
+As we will see, this information is crucial for inserting syntax highlighting annotations in the correct locations.
 
 We simply instantiate and return an instance of our `ASTConsumer` from the `CreateASTConsumer` function of the `ASTFrontendAction`.
 ```cpp line-numbers:{enabled}
@@ -603,10 +614,11 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
         Parser* m_parser;
 };
 ```
-It takes in the `ASTContext` from the `ASTConsumer` and the `Parser`, which is used for adding annotations.
+It takes in the `ASTContext` from the `ASTConsumer` for retrieving node source locations, and the `Parser` for adding annotations.
 We will explore the visitor function implementations in more detail later on.
 
-The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer` defined above, starting with the root `TranslationUnitDecl` node as retrieved from the `ASTContext`:
+The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer`.
+By calling `TraverseDecl` with the root `TranslationUnitDecl` node (obtained from the `ASTContext`), we can traverse the entire AST:
 ```cpp line-numbers:{enabled}
 void [[class-name,Parser]]::HandleTranslationUnit([[namespace-name,clang]]::[[class-name,ASTContext]][[plain,&]] context) {
     [[class-name,Visitor]] visitor { &context, this };
@@ -668,12 +680,536 @@ int main(int argc, char[[plain,*]] argv[]) {
     };
         
     // runToolOnCodeWithArgs returns 'true' if the tool was successfully executed
-    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags);
+    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags, filepath);
 }
 ```
 
-### Annotations
+### Inserting annotations
 
+One of the other responsibilities of our `ASTConsumer` is adding syntax highlighting annotations to the source code.
+An annotation follows the structure: `[[{AnnotationType},{Tokens}]]`, where `AnnotationType` determines the CSS class applied to one or more `Tokens`.
+The annotations are embedded directly into the source code and later extracted from code blocks by a custom Markdown renderer, which applies CSS styles to transform them into styled elements.
+
+Annotations provide hints to the Markdown renderer on how to apply syntax highlighting to symbols `PrismJS` cannot accurately identify.
+For example, the following snippet demonstrates a few common C++ annotation types: `namespace-name` for namespaces, `class-name` for classes, and `function` for functions.
+```text
+namespace [[namespace-name,math]] {
+    struct [[class-name,Vector3]] {
+        // ... 
+    };
+    
+    float [[function,dot]](const [[class-name,Vector3]]& a, const [[class-name,Vector3]]& b) {
+        // ... 
+    }
+}
+```
+These annotations exist only in the Markdown source.
+When processed, they are removed, and the enclosed tokens are assigned the corresponding CSS styles.
+For the purposes of syntax highlighting, these styles simply correspond to the color these elements should have:
+```css
+.language-cpp .function {
+    color: rgb(255, 198, 109);
+}
+
+.language-cpp .class-name,
+.language-cpp .namespace-name {
+    color: rgb(181, 182, 227);
+}
+```
+As we traverse the AST, we will define additional annotation types as needed.
+It follows that there should be a corresponding CSS style for every annotation type.
+
+If you are interested, I've written a [short post]() about how this is implemented in the renderer (the same one being used for this post!).
+
+#### The `Annotator`
+All logic for inserting annotations is contained within the `Annotator` class:
+```cpp line-numbers:{enabled} title:{annotator.hpp}
+#include <unordered_map> // std::unordered_map
+#include <vector> // std::vector
+#include <string> // std::string
+
+struct [[class-name,Annotation]] {
+    [[function,Annotation]](const char[[punctuation,*]] name, unsigned start, unsigned length);
+    [[punctuation,~]][[function,Annotation]]();
+
+    const char[[punctuation,*]] [[member-variable,name]];
+    unsigned [[member-variable,start]];
+    unsigned [[member-variable,length]];
+};
+
+class [[class-name,Annotator]] {
+    public[[punctuation,:]]
+        explicit [[function,Annotator]]([[namespace-name,std]]::[[class-name,string]] file);
+        [[punctuation,~]][[function,Annotator]]();
+    
+        void insert_annotation(const char[[punctuation,*]] name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
+        void annotate();
+
+    private[[punctuation,:]]
+        [[namespace-name,std]]::[[class-name,string]] [[member-variable,m_file]];
+        [[namespace-name,std]]::[[class-name,unordered_map]][[punctuation,<]]unsigned, [[namespace-name,std]]::[[class-name,vector]][[punctuation,<]][[class-name,Annotation]][[punctuation,>]][[punctuation,>]] [[member-variable,m_annotations]];
+};
+```
+This class stores annotations in the `m_annotations` map, which associates a line number to a list of annotations for that line.
+
+The `insert_annotation` function simply registers a new `Annotation` with the given name and source location.
+Annotations cannot be overwritten unless `overwrite` flag is explicitly specified - two annotations cannot correspond to the same token, as it would create ambiguity regarding which CSS style should be applied.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+void [[class-name,Annotator]]::[[function,insert_annotation]](const char[[punctuation,*]] name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+    // Do not add duplicate annotations of the same name at the same location
+    // Note: line and column numbers returned from Clang's AST start with 1
+    for ([[class-name,Annotation]][[punctuation,&]] annotation [[punctuation,:]] [[member-variable,m_annotations]][[operator,[]]line - 1[[operator,]]]) {
+        if (annotation.[[member-variable,start]] == (column - 1)) {
+            if (overwrite) {
+                annotation.[[member-variable,name]] = name;
+                annotation.[[member-variable,length]] = length;
+            }
+
+            return;
+        }
+    }
+
+    [[member-variable,m_annotations]][[operator,[]]line - 1[[operator,]]].[[function,emplace_back]](name, column - 1, length);
+}
+```
+
+After AST traversal is complete, the final annotated source file is generated by a call to `annotate`.
+```cpp title:{annotator.cpp}
+#include "annotator.hpp"
+
+void [[class-name,Annotator]]::[[function,annotate]]() {
+    // Read source file contents
+    [[namespace-name,std]]::[[class-name,vector]][[punctuation,<]][[namespace-name,std]]::[[class-name,string]][[punctuation,>]] lines = [[function,read]]([[member-variable,m_file]]);
+
+    for (auto[[punctuation,&]] [line, annotations] [[punctuation,:]] [[member-variable,m_annotations]]) {
+        // Insert annotations in reverse order so that positions of subsequent annotation are not affected
+        [[namespace-name,std]]::[[function,sort]](annotations.[[function,begin]](), annotations.[[function,end]](), [](const [[class-name,Annotation]][[punctuation,&]] a, const [[class-name,Annotation]][[punctuation,&]] b) -> bool {
+            return a.[[member-variable,start]] < b.[[member-variable,start]];
+        });
+
+        // Precompute the final length of the string
+
+        // Insert annotations
+        for (const [[class-name,Annotation]][[punctuation,&]] annotation [[punctuation,:]] annotations) {
+            [[namespace-name,std]]::[[class-name,string]] src = lines[[operator,[]]line[[operator,]]].[[function,substr]](annotation.[[member-variable,start]], annotation.[[member-variable,length]]);
+
+            // Annotation format: [[{AnnotationType},{Tokens}]]
+            lines[[operator,[]]line[[operator,]]].[[function,replace]](annotation.[[member-variable,start]], annotation.[[member-variable,length]], [[namespace-name,utils]]::[[function,format]]("[[{},{}]]", annotation.[[member-variable,name]], src));
+        }
+    }
+
+    // Write modified output file contents
+    [[function,write]]("result.txt", lines);
+}
+```
+Before being inserted, all annotations for a line are sorted by their location in **reverse order**.
+Since the children of an AST node are not guaranteed to be on the same level of the AST, determining the order (and location) of annotations for these nodes is not straightforward.
+Additionally, adding an annotation modifies the length of the line, which shifts the positions of any annotations that follow.
+Sorting the annotations beforehand removes the need to adjust offsets after each insertion.
+
+Once the annotations are inserted, the modified file is written out and saved to disk.
+The generated code snippet can now be embedded directly into a Markdown source file, where annotations will be processed by the renderer for syntax highlighting.
+
+### Tokenization
+
+With the logic to insert annotations into the source code implemented, the next task is to implement a way to retrieve a subset of tokens that are contained within a `SourceRange`.
+Why?
+In some cases, determining the exact location of a symbol is not always straightforward.
+In general, while we usually know what symbol(s) we are looking for, the corresponding AST node does not always provide a direct way to retrieve their location(s).
+It does, however, include a way to retrieve the range of the node - spanning from a start to an end `SourceLocation` - which greatly helps us narrow down our search.
+By tokenizing the source file and storing tokens in a structured manner, we can efficiently retrieve those that fall within the given `SourceRange` of an AST node without having to traverse every token of the file every time.
+We can then check against the spelling of the token until we find one that matches that of the symbol we are looking for.
+
+For example, a `CallExpr` node only provides the location of the corresponding function invocation.
+If we want to annotate any namespace qualifiers on the function call, such as the `std` in `std::sort`, one possible workaround is to tokenize the node's `SourceRange` and compare the tokens against the namespace names extracted from the function's *declaration*.
+We will explore this in greater detail when we look at visitor function implementations.
+
+Tokenization is handled by the `Tokenizer` class.
+```cpp line-numbers:{enabled} title:{tokenizer.hpp}
+#include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
+#include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
+#include <string> // std::string
+#include <vector> // std::vector
+
+struct Token {
+    Token(std::string spelling, unsigned line, unsigned column);
+    ~Token();
+    
+    std::string spelling;
+    unsigned line;
+    unsigned column;
+};
+
+class Tokenizer {
+    public:
+        explicit Tokenizer(clang::ASTContext* context);
+        ~Tokenizer();
+        
+        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceLocation start, clang::SourceLocation end) const;
+        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceRange range) const;
+        
+    private:
+        void tokenize();
+        
+        clang::ASTContext* m_context;
+        std::vector<Token> m_tokens;
+};
+```
+We can leverage Clang's `Lexer` class from the LibTooling API to handle tokenization.
+The `Lexer` provides an API to process an input text buffer into a sequence of tokens based on a set of predetermined C/C++ language rules.
+Raw tokens for the code snippet are stored contiguously in `m_tokens`, allowing the `get_tokens` functions to return a non-owning `std::span` instead of copying token data into a separate buffer.
+This helps avoid unnecessary allocations and provides a significant boost to performance, as the `get_tokens` functions are called frequently during the traversal of the AST, 
+
+Tokenization is handled by the `tokenize` function:
+```cpp line-numbers:{enabled} title:{tokenizer.cpp}
+void Tokenizer::tokenize() {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    
+    clang::FileID file = source_manager.getMainFileID();
+    clang::SourceLocation file_start = source_manager.getLocForStartOfFile(file);
+    clang::LangOptions options = m_context->getLangOpts();
+    
+    clang::StringRef source = source_manager.getBufferData(file);
+    clang::Lexer lexer(file_start, options, source.begin(), source.begin(), source.end());
+
+    // Tokenize the entire file
+    clang::Token token;
+    while (true) {
+        lexer.LexFromRawLexer(token);
+        if (token.is(clang::tok::eof)) {
+            break;
+        }
+        
+        clang::SourceLocation location = token.getLocation();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+
+        m_tokens.emplace_back(clang::Lexer::getSpelling(token, source_manager, options), line, column);
+    }
+}
+```
+The heavy lifting in this function is done by `Lexer::LexFromRawLexer`, which returns the next token from the input buffer.
+Tokens are converted into lightweight `Token` instances and stored in `m_tokens`.
+
+Since lexing happens after preprocessing, any whitespace tokens and comments are already removed.
+If desired, this behavior can be modified before lexing occurs: the `SetKeepWhitespaceMode` and `SetCommentRetentionState` functions from the `Lexer` enable the tokenization of whitespace and comments, respectively.
+Other properties, such as the source file to process and [C/C++ language options](https://clang.llvm.org/doxygen/LangOptions_8h_source.html), are specified on initialization and cannot be changed later.
+To keep things simple, these are retrieved directly from the `ASTContext`, which is configured by the arguments passed to `runToolOnCodeWithArgs`.
+
+Now that the source file has been tokenized, let's turn our attention to `get_tokens`.
+There are two version of this function: one takes a `start` and `end` `SourceLocation`, while the other accepts a `SourceRange`.
+This is done purely for convenience: internally, the `SourceRange` overload forwards the call to the other version, passing the start and end locations extracted using `getBegin()` and `getEnd()`, respectively.
+```cpp line-numbers:{enabled} title:{tokenizer.cpp}
+std::span<const Token> Tokenizer::get_tokens(clang::SourceRange range) const {
+    return get_tokens(range.getBegin(), range.getEnd());
+}
+```
+
+A key consideration when retrieving tokens is that the provided range may span multiple lines.
+A good example of this is a `FunctionDecl` node, which represents a multi-line function definition.
+```cpp line-numbers:{enabled} title:{tokenizer.cpp}
+std::span<const Token> Tokenizer::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    unsigned start_line = source_manager.getSpellingLineNumber(start);
+    unsigned start_column = source_manager.getSpellingColumnNumber(start);
+
+    // Determine tokens that fall within the range defined by [start:end]
+    // Partial tokens (if the range start location falls within the extent of a token) should also be included here
+
+    unsigned offset = m_tokens.size(); // Invalid offset
+    for (std::size_t i = 0; i < m_tokens.size(); ++i) {
+        const Token& token = m_tokens[i];
+
+        // Skip any tokens that end before the range start line:column
+        if (token.line < start_line || (token.line == start_line && (token.column + token.spelling.length()) <= start_column)) {
+            continue;
+        }
+
+        offset = i;
+        break;
+    }
+
+    unsigned count = 0;
+    unsigned end_line = source_manager.getSpellingLineNumber(end);
+    unsigned end_column = source_manager.getSpellingColumnNumber(end);
+
+    for (std::size_t i = offset; i < m_tokens.size(); ++i) {
+        const Token& token = m_tokens[i];
+
+        // Skip any tokens that start after the range end line:column
+        if (token.line > end_line || token.line == end_line && token.column > end_column) {
+            break;
+        }
+
+        ++count;
+    }
+
+    // Return non-owning range of tokens
+    return { m_tokens.begin() + offset, count };
+}
+```
+The main challenge of `get_tokens` is properly accounting for partial tokens - those that overlap the range specified by `start` and `end` - in the result.
+The function begins by locating the first token that starts at or after `start`.
+It then iterates through the tokens until it encounters one that begins after `end`, keeping track of all the tokens in between (those within the range).
+The resulting `std::span` contains a view of all tokens that overlap the given range.
+If `start` or `end` does not align with a token boundary, any tokens that straddle the range - either starting before but extending past `start`, or starting before but continuing past `end` - are also included.
+
+The `Annotator` and `Tokenizer` are added as member variables of the `ASTFrontendAction` class.
+
+#### A more efficient approach
+
+The current annotation approach offers several optimization opportunities.
+Since annotations are inserted sequentially, we risk incurring unnecessary overhead due to repeated reallocations, especially for lines with a large number of annotations.
+Given that the annotation format is already defined, we can precompute the final length of each line (including all annotations) and pre-allocate the necessary space upfront.
+This allows us to copy characters directly into the string while formatting each annotation as it is encountered, reducing memory overhead and improving runtime efficiency.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::vector<std::string> read(const std::string& filename);
+void write(const std::string& filename, const std::vector<std::string>& lines);
+
+void Annotator::annotate() {
+    // Read source file contents
+    std::vector<std::string> lines = read(m_file);
+    
+    for (auto& [line, annotations] : m_annotations) {
+        // Sort annotations in reverse order so that inserting an annotation does not affect the positions of subsequent annotations
+        std::sort(annotations.begin(), annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
+            return a.start < b.start;
+        });
+        
+        const std::string& src = lines[line];
+        
+        // Precompute the final length of the string
+        std::size_t length = src.length();
+        for (const Annotation& annotation : annotations) {
+            // Annotation format: [[{AnnotationType},{Tokens}]]
+            // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
+            length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+        }
+
+        // Preallocate result string
+        std::string result;
+        result.reserve(length);
+        
+        std::size_t position = 0;
+        for (const Annotation& annotation : annotations) {
+            // Copy the part before the annotation
+            result.append(src, position, annotation.start - position);
+            
+            // Insert annotation
+            result.append("[[");
+            result.append(annotation.name);
+            result.append(",");
+            result.append(src, annotation.start, annotation.length);
+            result.append("]]");
+    
+            // Move offset past annotation
+            position = annotation.start + annotation.length;
+        }
+    
+        // Copy any trailing characters after the last annotation
+        result.append(src, position, src.length() - position);
+        
+        lines[line] = result;
+    }
+
+    // Write modified output file contents
+    write("result.txt", lines);
+}
+```
+The `read` function loads the file’s contents into memory as individual lines, while `write` saves the modified contents back to disk.
+The implementation of these functions is straightforward and omitted from the code snippet for brevity.
+
+But why stop there?
+If we can precompute the final length of each line, we can just as easily determine the final length of the entire file.
+By doing so, we only need to allocate memory once, further reducing memory overhead and allowing us to write the entire file in a single operation rather than line by line.
+
+Additionally, we can optimize how annotations are stored to improve memory usage and cache efficiency.
+Instead of sorting the annotations in each line individually, we sort the entire `m_annotations` structure at once - reducing the number of calls to `std::sort` from one per line to just one for the entire file.
+
+To achieve this, we need to change the way annotations are represented.
+Instead of using a `std::unordered_map`, we'll use an `std::vector` to store annotations contiguously in memory.
+While this change removes the ability to do direct line-based lookups, this was only useful for knowing which line an annotation belongs to.
+Rather than tracking annotations by line and column, we can compute and store each annotation’s offset within the file directly.
+
+Below is the new interface for our `Annotator`:
+```cpp line-numbers:{enabled} added:{23,24,27} modified:{6,10,28} removed:{2} title:{annotator.hpp}
+#include <string> // std::string
+#include <unordered_map> // std::unordered_map
+#include <vector> // std::vector
+
+struct Annotation {
+    Annotation(const char* name, unsigned offset, unsigned length);
+    ~Annotation();
+    
+    const char* name;
+    unsigned offset;
+    unsigned length;
+};
+
+class Annotator {
+    public:
+        explicit Annotator(std::string file);
+        ~Annotator();
+        
+        void insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
+        void annotate();
+        
+    private:
+        void compute_line_lengths();
+        [[nodiscard]] std::size_t compute_offset(unsigned line, unsigned column) const;
+    
+        std::string m_file;
+        std::vector<unsigned> m_line_lengths;
+        std::vector<Annotation> m_annotations;
+};
+```
+To compute the offset given a line and column number, we need to keep track of the lengths of each line.
+This is achieved by iterating through the file and calculating the length of each line:
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+// Returns a string containing the contents of the file
+std::string read(const std::string& filename);
+
+Annotator::Annotator(const std::string& file) {
+    // Read source file contents
+    m_file = read(file);
+    compute_line_lengths();
+}
+
+void Annotator::compute_line_lengths() {
+    std::size_t start = 0;
+
+    // Traverse through the string and count lengths of lines separated by newlines
+    for (std::size_t i = 0; i < m_file.size(); ++i) {
+        if (m_file[i] == '\n') {
+            // Include newline character in line length calculation
+            // Note: automatically accounts for the carriage return (\r) character on Windows
+            m_line_lengths.push_back(i - start + 1);
+            start = i + 1;
+        }
+    }
+
+    // Add any trailing characters (if the file does not end in a newline)
+    if (start < m_file.size()) {
+        m_line_lengths.push_back(m_file.size() - start);
+    }
+}
+```
+Once we have this information, we can determine the offset of an annotation by summing the lengths of all preceding lines and adding the column index within the target line.
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::size_t Annotator::compute_offset(unsigned line, unsigned column) {
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < line; ++i) {
+        // m_line_lengths[i] stores the length of line i (newline included)
+        offset += m_line_lengths[i];
+    }
+    return offset + column;
+}
+```
+
+The `insert_annotation` implementation is updated to compute the offset instead of relying on the annotation's line and column directly:
+```cpp line-numbers:{enabled} added:{4} modified:{7-8,18} title:{annotator.cpp}
+#include "annotator.hpp"
+
+void Annotator::insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+    std::size_t offset = compute_offset(line, column);
+    
+    // Do not add duplicate annotations of the same name at the same location
+    for (Annotation& annotation : m_annotations) {
+        if (annotation.offset == offset) {
+            if (overwrite) {
+                annotation.name = name;
+                annotation.length = length;
+            }
+            
+            return;
+        }
+    }
+    
+    m_annotations.emplace_back(name, offset, length);
+}
+```
+
+Finally, we integrate all these optimizations into the `annotate` function:
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+#include "annotator.hpp"
+
+std::string read(const std::string& filename);
+void write(const std::string& filename, const std::string& contents);
+
+void Annotator::annotate() {
+    // Read source file contents
+    std::string src = read(m_file);
+    
+    // Sort annotations in reverse order so that inserting an annotation does not affect the positions of subsequent annotations
+    std::sort(m_annotations.begin(), m_annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
+        return a.offset < b.offset;
+    });
+    
+    // Precompute the final length of the file
+    std::size_t length = src.length();
+    for (const Annotation& annotation : m_annotations) {
+        // Annotation format: [[{AnnotationType},{Tokens}]]
+        // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
+        length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+    }
+    
+    // Preallocate string
+    std::string result;
+    result.reserve(length);
+        
+    std::size_t position = 0;
+    for (const Annotation& annotation : m_annotations) {
+        // Copy the part before the annotation
+        result.append(src, position, annotation.offset - position);
+        
+        // Insert annotation
+        result.append("[[");
+        result.append(annotation.name);
+        result.append(",");
+        result.append(src, annotation.offset, annotation.length);
+        result.append("]]");
+
+        // Move offset into 'src'
+        position = annotation.offset + annotation.length;
+    }
+
+    // Copy the remaining part of the line
+    result.append(src, position, src.length() - position);
+
+    // Write modified output file contents
+    write("result.txt", result);
+}
+```
+Note that the `read` and `write` functions have been updated to operate directly on the file's contents, rather than handling it as a collection of individual lines.
+
+Below is a comparison of the performance of the initial implementation against the optimized version, evaluating the effectiveness of the optimizations made in this section.
+This test was run on the code snippet at the beginning of this post, which contains approximately 300 annotations.
+
+Without optimizations:  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`annotate`: ~1.113 milliseconds  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tool: ~1,224 milliseconds
+
+With optimizations:  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`annotate`: ~0.475 milliseconds  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tool: ~1.146 seconds
+
+Performance measurements were collected using a simple timestamping approach with `std::chrono::high_resolution_clock`.
+This method was chosen because many Windows profilers require debug information in PDB files, which are not generated when building with Clang/MSYS2/MinGW.
+Even with the `-g` compilation flag specified, profilers output raw memory addresses instead of function names, making it difficult to associate symbols with their corresponding functions.
+While this is not the most precise method, it effectively illustrates the differences in performance for this section.
+
+With optimizations included, the runtime of `annotate` has been reduced by approximately 57.4%, leading to an overall tool runtime reduction of 6.4%.
+As expected, the overall runtime of the tool did not decrease significantly as most of the remaining time being spent in visitor functions and AST traversal.
+
+With all of these prerequisite components implemented, let's (finally) take a look at some visitor function implementations. 
 
 ## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
@@ -722,31 +1258,502 @@ TranslationUnitDecl 0x1b640a48268 <<invalid sloc>> <invalid sloc>
       `-ImplicitCastExpr 0x1b642245ec8 <col:31> 'const char *' <ArrayToPointerDecay>
         `-StringLiteral 0x1b642245dd0 <col:31> 'const char[23]' lvalue "something bad happened"
 ```
-Enums are represented by two node types: `EnumDecl`, which corresponds to the enum declaration, and `EnumConstantDecl`, which represents the enum values.
-We can infer that the `Level` enum is declared as an enum class, and that the underlying type is defaulted to an int.
-If we had explicitly specified the underlying type, such as a `unsigned char` or `std::uint8_t` for a more compact representation, this would have also been reflected in the AST.
-
-References to enum values are captured under a [`DeclRefExpr` node](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details).
-These nodes capture expressions that reference previously declared variables, functions, classes, and enums. 
 
 ### Enum Declarations
-With our AST visitor configured, we can set up functions to visit `EnumDecl` and `EnumConstantDecl` nodes:
-```cpp
+
+Enums are represented by two node types: `EnumDecl`, which corresponds to the enum declaration, and `EnumConstantDecl`, which represents the enum values.
+From the `EnumDecl` node, we can infer that the `Level` enum is declared as an enum class, and that the underlying type is defaulted to an int.
+If we had explicitly specified the underlying type, such as a `unsigned char` or `std::uint8_t` for a more compact representation, this would have also been reflected in the AST.
+
+Let's set up visitor functions to inspect `EnumDecl` and `EnumConstantDecl` nodes:
+```cpp line-numbers:{enabled} title:{visitor.hpp} added:{9-10}
 class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
-    // For visiting enum declarations
-    bool VisitEnumDecl(clang::EnumDecl* node);
-    bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
-    // ...
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting enum declarations
+        bool VisitEnumDecl(clang::EnumDecl* node);
+        bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
+        
+        // ...
 };
 ```
 
-The process for visiting AST nodes is largely the same.
+The implementation of these functions is relatively straightforward.
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+#include "visitor.hpp"
 
+bool Visitor::VisitEnumDecl(clang::EnumDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip any enum definitions that do not come from the main file
+    if (source_manager.isInMainFile(location)) {
+        const std::string& name = node->getNameAsString();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("enum-name", line, column, name.length());
+    }
 
+    return true;
+}
+```
+An `enum-name` annotation is inserted for every `enum` declaration.
+
+The return value of a visitor function indicates whether we want AST traversal to continue.
+Since we are interested in traversing all the nodes of the AST, this will always be `true`.
+
+As mentioned earlier, the `SourceManager` class maps AST nodes back to their source locations within the translation unit.
+The `source_manager.isInMainFile(location)` check ensures that the node originates from the "main" file we are annotating - the one provided to `runToolOnCodeWithArgs`.
+This prevents annotations from being applied to external headers, and is a recurring pattern in every visitor function.
+
+The implementation of `VisitEnumConstantDecl` is nearly identical, except that it inserts an `enum-value` annotation instead of `enum-name`.
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+#include "visitor.hpp"
+
+bool Visitor::VisitEnumConstantDecl(clang::EnumConstantDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip any enum constant definitions that do not come from the main file
+    if (source_manager.isInMainFile(location)) {
+        const std::string& name = node->getNameAsString();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("enum-value", line, column, name.length());
+    }
+    
+    return true;
+}
+```
+
+With these two functions implemented, the tool produces the following output:
+```text line-numbers:{enabled}
+enum class [[enum-name,Level]] {
+    [[enum-value,Debug]] = 0,
+    [[enum-value,Info]],
+    [[enum-value,Warning]],
+    [[enum-value,Error]],
+    [[enum-value,Fatal]] = Error,
+};
+
+void log_message(Level level, const char* message);
+
+int main() {
+    log_message(Level::Error, "something bad happened");
+    // ...
+}
+```
+This is not yet complete.
+We will handle references to user-defined types, such as `Level` on lines 9 and 12, in a separate visitor function.
+The reference to `Error` on line 12, however, is still missing an `enum-value` annotation.
+As this is not a declaration, handling this will require a new visitor function.
+
+### Enum References
+
+References to enum values are captured by a [`DeclRefExpr` node](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details).
+These nodes capture expressions that refer to previously declared variables, functions, and types.
+
+We can see this in following line from the AST above, which references the `DeclRefExpr` node on columns 17-24 of line 12 and corresponds to the `Error` enum constant within the call to `log_message`:
+```json
+// log_message(...)
+CallExpr 0x1b642245e98 <line:12:5, col:55> 'void'
+    // Level::Error
+    DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
+    // ...
+```
+
+For capturing nodes of this type, we need to set up a new visitor function:
+```cpp line-numbers:{enabled} title:{visitor.hpp} added:{13}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting enum declarations
+        bool VisitEnumDecl(clang::EnumDecl* node);
+        bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
+        
+        // For visiting references to enum constants
+        bool VisitDeclRefExpr(clang::DeclRefExpr* node);
+        
+        // ...
+};
+```
+The implementation of `VisitDeclRefExpr` is very similar to the `VisitEnumDecl` and `VisitEnumConstantDecl` visitor functions from earlier:
+```cpp
+#include "visitor.hpp"
+
+bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip any DeclRefExpr nodes that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    if (clang::ValueDecl* decl = node->getDecl()) {
+        const std::string& name = decl->getNameAsString();
+
+        if (const clang::EnumConstantDecl* ec = clang::dyn_cast<clang::EnumConstantDecl>(decl)) {
+            // Found a reference to an enum constant
+            m_annotator->insert_annotation("enum-value", line, column, name.length());
+        }
+    }
+    
+    return true;
+}
+```
+Most of the information we need is retrieved from the *declaration* of the underlying symbol, as it contains details about the type, value, and other attributes of the expression.
+Other information, such as the source location in the file, is retrieved directly from the `DeclRefExpr` node, as our focus now is to annotate references rather and not declarations (which have already been handled above).
+This is a common pattern that will be applied across several visitor function implementations.
+If the declaration we are inspecting refers to a `EnumConstantDecl` node, we have found a reference to an enum constant and insert the `enum-value` annotation.
+
+`DeclRefExpr` nodes reference more than just enum constants, and we will revisit this visitor function later to handle additional cases.
+
+With the `VisitDeclRefExpr` visitor function implemented, the tool now properly annotates references to enum constants, in addition to enum declarations.
+```text line-numbers:{enabled} added:{6,12}
+enum class [[enum-name,Level]] {
+    [[enum-value,Debug]] = 0,
+    [[enum-value,Info]],
+    [[enum-value,Warning]],
+    [[enum-value,Error]],
+    [[enum-value,Fatal]] = [[enum-value,Error]],
+};
+
+void log_message(Level level, const char* message);
+
+int main() {
+    log_message(Level::[[enum-value,Error]], "something bad happened");
+    // ...
+}
+```
+The final step is to add definitions for the `enum-name` and `enum-value` CSS styles:
+```css
+.language-cpp .enum-name {
+    color: rgb(181, 182, 227);
+}
+.language-cpp .enum-value {
+    color: rgb(199, 125, 187);
+}
+```
+```cpp
+enum class [[enum-name,Level]] {
+    [[enum-value,Debug]] = 0,
+    [[enum-value,Info]],
+    [[enum-value,Warning]],
+    [[enum-value,Error]],
+    [[enum-value,Fatal]] = [[enum-value,Error]],
+};
+
+void log_message(Level level, const char* message);
+
+int main() {
+    log_message(Level::[[enum-value,Error]], "something bad happened");
+    // ...
+}
+```
+
+## Namespaces
+
+Next up are namespace declarations.
+Consider the following example:
+```cpp line-numbers:{enabled}
+namespace math {
+    namespace utility {
+        // ...
+    }
+}
+
+int main() {
+    using namespace math;
+    namespace utils = math::utility;
+
+    // ...
+}
+```
+With corresponding AST:
+```text
+|-NamespaceDecl 0x1cce3be79e8 <example.cpp:1:1, line:5:1> line:1:11 math
+| `-NamespaceDecl 0x1cce3be7a78 <line:2:5, line:4:5> line:2:15 utility
+`-FunctionDecl 0x1cce540bb68 <line:7:1, line:12:1> line:7:5 main 'int ()'
+  `-CompoundStmt 0x1cce540bdc0 <col:12, line:12:1>
+    |-DeclStmt 0x1cce540bd08 <line:8:5, col:25>
+    | `-UsingDirectiveDecl 0x1cce540bcb0 <col:5, col:21> col:21 Namespace 0x1cce3be79e8 'math'
+    `-DeclStmt 0x1cce540bda8 <line:9:5, col:36>
+      `-NamespaceAliasDecl 0x1cce540bd48 <col:5, col:29> col:15 utils
+        `-Namespace 0x1cce3be7a78 'utility'
+```
+
+For adding annotations to namespaces, we need to set up visitor functions to process three new kinds of nodes:
+- [`NamespaceDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1NamespaceDecl.html), which represent namespace declarations,
+- [`NamespaceAliasDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1NamespaceAliasDecl.html), which represent namespace aliases, and
+- [`UsingDirectiveDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1UsingDirectiveDecl.html), which represent `using namespace` directives
+```cpp line-numbers:{enabled} added:{8-15} title:{visitor.hpp}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting namespace declarations
+        bool VisitNamespaceDecl(clang::NamespaceDecl* node);
+        
+        // For visiting namespace alias declarations
+        bool VisitNamespaceAliasDecl(clang::NamespaceAliasDecl* node);
+        
+        // For visiting 'using namespace' directives
+        bool VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node);
+        
+        // ...
+};
+```
+
+### Namespace declarations
+
+Namespace declarations are captured by `NamespaceDecl` nodes.
+The corresponding `VisitNamespaceDecl` visitor function inserts a `namespace-name` annotation to all namespace declarations from the main file.
+```cpp title:{visitor.cpp}
+#include "visitor.hpp"
+
+bool Visitor::VisitNamespaceDecl(clang::NamespaceDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip any namespace declarations that do not come from the main file
+    if (source_manager.isInMainFile(location)) {
+        const std::string& name = node->getNameAsString();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("namespace-name", line, column, name.length());
+    }
+    
+    return true;
+}
+```
+
+With the `VisitNamespaceDecl` visitor function implemented, the tool now properly annotates namespace declarations:
+```text
+namespace [[namespace-name,math]] {
+    namespace [[namespace-name,utility]] {
+        // ...
+    }
+}
+
+int main() {
+    using namespace math;
+    namespace utils = math::utility;
+
+    // ...
+}
+```
+
+### Namespace aliases
+
+Namespace aliases are captured by `NamespaceAliasDecl` nodes.
+In addition to adding a `namespace-name` annotation to the namespace(s) being aliased, we also need to insert an annotation for the alias itself.
+```cpp title:{visitor.cpp} line-numbers:{enabled}
+#include "visitor.hpp"
+
+bool Visitor::VisitNamespaceAliasDecl(clang::NamespaceAliasDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getLocation();
+    
+    // Skip any namespace alias declarations that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // Annotate namespace alias
+    std::string name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    m_annotator->insert_annotation("namespace-name", line, column, name.length());
+    
+    // Annotate aliased namespace(s)
+    // Generate namespace chain
+    const clang::NamedDecl* aliased = node->getAliasedNamespace();
+    std::unordered_set<std::string> namespaces = extract_namespaces(aliased->getDeclContext());
+    
+    // extract_namespaces checks for NamespaceDecl nodes, but this node is a NamespaceAliasDecl
+    // Include it in the namespace chain 
+    namespaces.insert(aliased->getNameAsString());
+    
+    // Tokenize the node range and annotate all tokens containing namespace names
+    for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
+        if (namespaces.contains(token.spelling)) {
+            m_annotator->insert_annotation("namespace-name", token.line, token.column, token.spelling.length());
+        }
+    }
+    
+    return true;
+}
+```
+Annotating the namespace alias is straightforward, as we can directly retrieve the necessary properties from the `NamespaceAliasDecl` node.
+However, annotating all namespaces in the aliased namespace chain requires a bit more work.
+
+Every `Decl` node inherits from the [`DeclContext` interface](https://clang.llvm.org/doxygen/classclang_1_1DeclContext.html#details), which provides the `getDeclContext` function (as shown on line 19).
+This function allows us to leverage the tree-based structure of the AST and walk up the declaration hierarchy of a node until we reach the top-level `TranslationUnitDecl`.
+This is particularly useful in the case of an aliased namespace chain, as it allows us to visit all parent namespaces that enclose a given namespace and capture their names.
+The namespace hierarchy chain is accessed through the `DeclContext` of the aliased namespace, which is retrieved via the call to `NamespaceAliasDecl::getAliasedNamespace` on line 20.
+For each token contained within the range of the node (retrieved with the `get_tokens` function from earlier), we check if it matches one of the names contained in the namespace hierarchy and insert a `namespace-name` annotation if it does.
+
+This pattern of walking up the AST hierarchy and annotating relevant tokens will be applied across several other visitor function implementations.
+The `extract_namespaces` function (line 19) performs this traversal and returns the names of all namespaces.
+```cpp title:{visitor.hpp} added:{20} line-numbers:{enabled}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting namespace declarations
+        bool VisitNamespaceDecl(clang::NamespaceDecl* node);
+        
+        // For visiting namespace alias declarations
+        bool VisitNamespaceAliasDecl(clang::NamespaceAliasDecl* node);
+        
+        // For visiting 'using namespace' directives
+        bool VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node);
+        
+        // ...
+        
+    private:
+        [[nodiscard]] std::unordered_set<std::string> extract_namespaces(const clang::DeclContext* context) const;
+        
+        // ...
+};
+```
+The parent node in the hierarchy is accessed through the `DeclContext::getParent` function.
+```cpp title:{visitor.cpp}
+#include "visitor.hpp"
+
+std::unordered_set<std::string> Visitor::extract_namespaces(const clang::DeclContext* context) {
+    std::unordered_set<std::string> namespaces;
+    while (context) {
+        if (const clang::NamespaceDecl* n = clang::dyn_cast<clang::NamespaceDecl>(context)) {
+            namespaces.insert(n->getNameAsString());
+        }
+        context = context->getParent();
+    }
+    return namespaces;
+}
+```
+
+With the `VisitNamespaceAliasDecl` visitor function implemented, the tool now also properly annotates namespace aliases:
+```text
+namespace [[namespace-name,math]] {
+    namespace [[namespace-name,utility]] {
+        // ...
+    }
+}
+
+int main() {
+    using namespace math;
+    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
+
+    // ...
+}
+```
+
+### `using namespace` directives
+
+The final node we are interested in for this section is the `UsingDirectiveDecl` node, which represents `using namespace` directives.
+The corresponding `VisitUsingDirectiveDecl` visitor function inserts a `namespace-name` annotation to all namespace names in the nominated namespace chain.
+```cpp line-numbers:{enabled}
+#include "visitor.hpp"
+
+bool Visitor::VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    if (const clang::NamespaceDecl* n = node->getNominatedNamespace()) {
+        std::unordered_set<std::string> namespaces = extract_namespaces(n->getDeclContext());
+        
+        // extract_namespaces checks for NamespaceDecl nodes, but this node is a UsingDirectiveDecl
+        // Include it in the namespace chain 
+        namespaces.insert(n->getNameAsString());
+        
+        // Tokenize the node range and annotate all tokens containing namespace names
+        std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
+        for (const Token& token : tokens) {
+            if (namespaces.contains(token.spelling)) {
+                m_annotator->insert_annotation("namespace-name", token.line, token.column, token.spelling.length());
+            }
+        }
+    }
+    
+    return true;
+}
+```
+This approach is very similar to that of the `VisitNamespaceAliasDecl` visitor function: for each token contained within the range of the `VisitUsingDirectiveDecl` node, we check if it matches one of the names contained in the namespace hierarchy and insert a `namespace-name` annotation if it does.
+The namespace hierarchy chain is accessed through the `DeclContext` of the nominated namespace, which is retrieved via the call to `UsingDirectiveDecl::getNominatedNamespace` on line 11.
+
+With all the visitor functions implemented, the tool now properly annotates all namespace declaration statements:
+```text
+namespace [[namespace-name,math]] {
+    namespace [[namespace-name,utility]] {
+        // ...
+    }
+}
+
+int main() {
+    using namespace [[namespace-name,math]];
+    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
+
+    // ...
+}
+```
+The final step is to add a definition for the `namespace-name` CSS style:
+```css
+.language-cpp .namespace-name {
+    color: rgb(181, 182, 227);
+}
+```
+```cpp
+namespace [[namespace-name,math]] {
+    namespace [[namespace-name,utility]] {
+        // ...
+    }
+}
+
+int main() {
+    using namespace [[namespace-name,math]];
+    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
+
+    // ...
+}
+```
+
+## Classes
+
+## Member variables
+
+## Functions
 
 ## Preprocessor Directives
 
 ## Keywords
+
+## Punctuation
 
 
 
