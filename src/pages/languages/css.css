@@ -1,0 +1,16 @@
+
+.language-css .class {
+    color: rgb(255, 198, 109);
+}
+
+.language-css .property {
+    color: rgb(152, 118, 170);
+}
+
+.language-css .function {
+    color: rgb(255, 198, 109);
+}
+
+.language-css .number {
+    color: rgb(42, 172, 184);
+}

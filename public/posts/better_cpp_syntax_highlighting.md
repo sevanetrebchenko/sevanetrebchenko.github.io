@@ -708,7 +708,7 @@ When processed, they are removed, and the enclosed tokens are assigned the corre
 For the purposes of syntax highlighting, these styles simply correspond to the color these elements should have:
 ```css
 .language-cpp .function {
-    color: 	rgb(255, 198, 109);
+    color: rgb(255, 198, 109);
 }
 
 .language-cpp .class-name,
@@ -1389,6 +1389,8 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
 ```
 The implementation of `VisitDeclRefExpr` is very similar to the `VisitEnumDecl` and `VisitEnumConstantDecl` visitor functions from earlier:
 ```cpp
+#include "visitor.hpp"
+
 bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
     const clang::SourceManager& source_manager = m_context->getSourceManager();
     const clang::SourceLocation& location = node->getLocation();
@@ -1420,7 +1422,7 @@ If the declaration we are inspecting refers to a `EnumConstantDecl` node, we hav
 
 `DeclRefExpr` nodes reference more than just enum constants, and we will revisit this visitor function later to handle additional cases.
 
-With the `VisitDeclRefExpr` visitor function implemented, the tool now properly annotates enum declarations and constants.
+With the `VisitDeclRefExpr` visitor function implemented, the tool now properly annotates references to enum constants, in addition to enum declarations.
 ```text line-numbers:{enabled} added:{6,12}
 enum class [[enum-name,Level]] {
     [[enum-value,Debug]] = 0,
@@ -1462,6 +1464,9 @@ int main() {
     // ...
 }
 ```
+
+## Classes
+
 
 ## Preprocessor Directives
 

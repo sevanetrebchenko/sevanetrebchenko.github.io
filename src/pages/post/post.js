@@ -25,6 +25,7 @@ import "./post.css"
 import "../languages/cpp.css"
 import "../languages/json.css"
 import "../languages/yaml.css"
+import "../languages/css.css"
 
 function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;
