@@ -569,4 +569,3 @@ export default function Post(props) {
         </div>
     );
 }
-
