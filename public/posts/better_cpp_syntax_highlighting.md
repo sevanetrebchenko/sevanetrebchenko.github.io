@@ -1744,6 +1744,77 @@ int main() {
 
 ## Functions
 
+```cpp
+#include <cstring> // std::strcmp
+
+template <typename T>
+bool equal(T a, T b) {
+    return a == b;
+}
+
+// Template specialization
+template <>
+bool equal(const char* a, const char* b) {
+    return std::strcmp(a, b) == 0;
+}
+
+int main() {
+    bool eq = equal("apple", "banana"); // false
+    
+    // ...
+}
+```
+
+```text
+|-FunctionTemplateDecl 0x1f2ac42b8f8 <example.cpp:4:1, line:7:1> line:5:6 equal
+| |-TemplateTypeParmDecl 0x1f2ac42b5b8 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
+| |-FunctionDecl 0x1f2ac42b848 <line:5:1, line:7:1> line:5:6 equal 'bool (T, T)'
+| | |-ParmVarDecl 0x1f2ac42b678 <col:12, col:14> col:14 referenced a 'T'
+| | |-ParmVarDecl 0x1f2ac42b6f8 <col:17, col:19> col:19 referenced b 'T'
+| | `-CompoundStmt 0x1f2ac42ba50 <col:22, line:7:1>
+| |   `-ReturnStmt 0x1f2ac42ba40 <line:6:5, col:17>
+| |     `-BinaryOperator 0x1f2ac42ba20 <col:12, col:17> '<dependent type>' '=='
+| |       |-DeclRefExpr 0x1f2ac42b9e0 <col:12> 'T' lvalue ParmVar 0x1f2ac42b678 'a' 'T'
+| |       `-DeclRefExpr 0x1f2ac42ba00 <col:17> 'T' lvalue ParmVar 0x1f2ac42b6f8 'b' 'T'
+| `-Function 0x1f2ac42bc38 'equal' 'bool (const char *, const char *)'
+|-FunctionDecl 0x1f2ac42bc38 prev 0x1f2ac42bf28 <line:10:1, line:13:1> line:11:6 used equal 'bool (const char *, const char *)' explicit_specialization
+| |-TemplateArgument type 'const char *'
+| | `-PointerType 0x1f2aab477e0 'const char *'
+| |   `-QualType 0x1f2aab46c21 'const char' const
+| |     `-BuiltinType 0x1f2aab46c20 'char'
+| |-ParmVarDecl 0x1f2ac42baa0 <col:12, col:24> col:24 used a 'const char *'
+| |-ParmVarDecl 0x1f2ac42bb28 <col:27, col:39> col:39 used b 'const char *'
+| `-CompoundStmt 0x1f2ac42c278 <col:42, line:13:1>
+|   `-ReturnStmt 0x1f2ac42c268 <line:12:5, col:33>
+|     `-BinaryOperator 0x1f2ac42c248 <col:12, col:33> 'bool' '=='
+|       |-CallExpr 0x1f2ac42c1c8 <col:12, col:28> 'int'
+|       | |-ImplicitCastExpr 0x1f2ac42c1b0 <col:12, col:17> 'int (*)(const char *, const char *) __attribute__((cdecl))' <FunctionToPointerDecay>
+|       | | `-DeclRefExpr 0x1f2ac42c0d0 <col:12, col:17> 'int (const char *, const char *) __attribute__((cdecl))':'int (const char *, const char *)' lvalue Function 0x1f2ac3db588 'strcmp' 'int (const char *, const char *) __attribute__((cdecl))':'int (const char *, const char *)' (UsingShadow 0x1f2ac422d20 'strcmp')
+|       | |   `-NestedNameSpecifier Namespace 0x1f2ac4258b8 'std'
+|       | |-ImplicitCastExpr 0x1f2ac42c1f8 <col:24> 'const char *' <LValueToRValue>
+|       | | `-DeclRefExpr 0x1f2ac42c108 <col:24> 'const char *' lvalue ParmVar 0x1f2ac42baa0 'a' 'const char *'
+|       | `-ImplicitCastExpr 0x1f2ac42c210 <col:27> 'const char *' <LValueToRValue>
+|       |   `-DeclRefExpr 0x1f2ac42c128 <col:27> 'const char *' lvalue ParmVar 0x1f2ac42bb28 'b' 'const char *'
+|       `-IntegerLiteral 0x1f2ac42c228 <col:33> 'int' 0
+`-FunctionDecl 0x1f2ac42c420 <line:15:1, line:19:1> line:15:5 main 'int ()'
+  `-CompoundStmt 0x1f2ac42c868 <col:12, line:19:1>
+    `-DeclStmt 0x1f2ac42c850 <line:16:5, col:39>
+      `-VarDecl 0x1f2ac42c4f8 <col:5, col:38> col:10 eq 'bool' cinit
+        `-CallExpr 0x1f2ac42c7d8 <col:15, col:38> 'bool'
+          |-ImplicitCastExpr 0x1f2ac42c7c0 <col:15> 'bool (*)(const char *, const char *)' <FunctionToPointerDecay>
+          | `-DeclRefExpr 0x1f2ac42c768 <col:15> 'bool (const char *, const char *)' lvalue Function 0x1f2ac42bc38 'equal' 'bool (const char *, const char *)' (FunctionTemplate 0x1f2ac42b8f8 'equal')
+          |-ImplicitCastExpr 0x1f2ac42c808 <col:21> 'const char *' <ArrayToPointerDecay>
+          | `-StringLiteral 0x1f2ac42c610 <col:21> 'const char[6]' lvalue "apple"
+          `-ImplicitCastExpr 0x1f2ac42c820 <col:30> 'const char *' <ArrayToPointerDecay>
+            `-StringLiteral 0x1f2ac42c690 <col:30> 'const char[7]' lvalue "banana"
+```
+
+## Function declarations
+Function declarations are captured under `FunctionDecl` nodes:
+```cpp title:{visitor.hpp}
+
+```
+
 ## Classes
 
 Let's start moving into some more complex cases.
