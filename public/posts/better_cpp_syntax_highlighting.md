@@ -12,7 +12,7 @@ However, I quickly discovered that PrismJS struggles with properly highlighting 
 
 Consider the following example, which showcases a variety of C++20 features I commonly use.
 Syntax highlighting is handled exclusively by PrismJS:
-```cpp line-numbers:{enabled}
+```cpp line-numbers:{enabled} show-lines:{20}
 #include <stdexcept> // std::runtime_error, std::out_of_range
 #include <vector> // std::vector
 #include <string> // std::string, std::to_string
@@ -1764,7 +1764,7 @@ int main() {
     // ...
 }
 ```
-
+The AST for this example is as follows:
 ```text
 |-FunctionTemplateDecl 0x1f2ac42b8f8 <example.cpp:4:1, line:7:1> line:5:6 equal
 | |-TemplateTypeParmDecl 0x1f2ac42b5b8 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
@@ -1808,12 +1808,85 @@ int main() {
           `-ImplicitCastExpr 0x1f2ac42c820 <col:30> 'const char *' <ArrayToPointerDecay>
             `-StringLiteral 0x1f2ac42c690 <col:30> 'const char[7]' lvalue "banana"
 ```
+For adding annotations to functions, we need to set up visitor functions to process two new kinds of nodes:
+- [`FunctionDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1FunctionDecl.html), which represent regular function declarations / definitions,
+- [`FunctionTemplateDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1FunctionTemplateDecl.html), which represent template function declarations / definitions, and
+- [`CallExpr` nodes](https://clang.llvm.org/doxygen/classclang_1_1CallExpr.html), which represent function calls
+
+```cpp title:{visitor.hpp} added:{8-15}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting function declarations / definitions
+        bool VisitFunctionDecl(clang::NamespaceDecl* node);
+        
+        // For visiting template function declarations / definitions
+        bool VisitFunctionTemplateDecl(clang::FunctionTemplateDecl* node);
+        
+        // For visiting function calls
+        bool VisitCallExpr(clang::CallExpr* node);
+        
+        // ...
+};
+```
+
+Keen observers will notice that each `FunctionTemplateDecl` node in the above AST references a child `FunctionDecl`, which represents the function declaration itself.
+This means that for annotating function names, we don't actually need the visitor function for the `FunctionTemplateDecl` node, as we can easily visit both template and non-template functions with the same `FunctionDecl` visitor.
+However, we will still implement a visitor function for `FunctionTemplateDecl` nodes, for reasons we will see later.
 
 ## Function declarations
 Function declarations are captured under `FunctionDecl` nodes:
 ```cpp title:{visitor.hpp}
+#include "visitor.hpp"
 
+bool Visitor::VisitFunctionDecl(clang::FunctionDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getLocation();
+    
+    // Skip any function declarations / definitions that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    const std::string name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("function", line, column, name.length());
+    
+    return true;
+}
 ```
+For now, the implementation of the `VisitFunctionTemplateDecl` visitor is the same and is omitted for brevity.
+As expected, this visitor annotates both regular and template functions, including specializations.
+```text
+#include <cstring> // std::strcmp
+
+template <typename T>
+bool [[function,equal]](T a, T b) {
+    return a == b;
+}
+
+// Template specialization
+template <>
+bool [[function,equal]](const char* a, const char* b) {
+    return std::strcmp(a, b) == 0;
+}
+
+int [[function,main]]() {
+    bool eq = equal("apple", "banana"); // false
+    
+    // ...
+}
+```
+
+### Function calls
+
+Function calls are captured under `CallExpr` nodes.
 
 ## Classes
 
@@ -2363,6 +2436,8 @@ int main() {
 ### Class functions + operators
 
 ## Templates + concepts
+
+modify call expr
 
 You'll notice that template classes were not omitted.
 Templates, specializations, and concepts use different nodes.
