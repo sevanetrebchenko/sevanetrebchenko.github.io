@@ -201,6 +201,7 @@ function CodeBlock(props) {
     if (!children) {
         return;
     }
+
     const source = children.toString();
 
     const inline = className === undefined;
@@ -221,6 +222,9 @@ function CodeBlock(props) {
     hidden = hidden ? hidden.split(",").map(Number) : [];
     highlighted = highlighted ? highlighted.split(",").map(Number) : [];
     options = JSON.parse(options);
+
+    let [lineCount, setLineCount] = useState(options.lineCount);
+    let [expanded, setExpanded] = useState(false);
 
     // Specifying the language is optional
     let language = "";
@@ -282,7 +286,8 @@ function CodeBlock(props) {
     let metadataContainer = [];
     let codeContainer = [];
 
-    for (let i = 0; i < lines.length; ++i) {
+    const count = (lineCount === -1) ? lines.length : lineCount;
+    for (let i = 0; i < count; ++i) {
         // metadata block
         let metadataBlock = [];
 
@@ -409,6 +414,27 @@ function CodeBlock(props) {
                     }
                 </div>
             </div>
+            {options.lineCount !== -1 && <div className="overlay" onClick={(e) => {
+                e.preventDefault();
+                if (expanded) {
+                    setLineCount(options.lineCount);
+                }
+                else {
+                    setLineCount(lines.length);
+                }
+
+                setExpanded(!expanded);
+            }}>
+                {
+                    expanded ? <Fragment>
+                        <span>Collapse</span>
+                        <i className="fa-solid fa-chevron-up fa-fw"></i>
+                    </Fragment> : <Fragment>
+                        <span>Expand</span>
+                        <i className="fa-solid fa-chevron-down fa-fw"></i>
+                    </Fragment>
+                }
+            </div>}
         </div>
     );
 }
@@ -426,6 +452,7 @@ function parseCodeBlockMetadata() {
             let modified = [];
             let hidden = [];
             let highlighted = [];
+            let lineCount = -1; // -1 means show all lines
             let useLineNumbers = false;
             let title = null;
 
@@ -500,6 +527,15 @@ function parseCodeBlockMetadata() {
                 }
             }
 
+            // Collapsible code snippet height is specified by the show-lines{...} metadata tag
+            {
+                const regexp = /\bshow-lines\b:{(\d+)}/;
+                const match = regexp.exec(meta);
+                if (match) {
+                    lineCount = match[1];
+                }
+            }
+
             // Pass as attributes to the element
             // hProperties is used to store HTML attributes of nodes
             // These properties are automatically converted to a string value
@@ -510,6 +546,7 @@ function parseCodeBlockMetadata() {
                     // Pass dictionary of options as a JSON blob
                     options: JSON.stringify({
                         useLineNumbers: useLineNumbers,
+                        lineCount: lineCount
                     }),
                     title: title,
                     added: added.join(","),

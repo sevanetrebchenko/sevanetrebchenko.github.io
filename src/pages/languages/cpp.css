@@ -108,6 +108,26 @@ div[class*="language-"] {
     -moz-hyphens: none;
     -ms-hyphens: none;
     hyphens: none;
+
+    overflow: hidden;
+}
+
+div[class*="language-"] .overlay {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    column-gap: 10px;
+    align-items: baseline;
+
+    transition: 0.125s;
+    color: rgb(100, 100, 100);
+
+    padding: 10px;
+}
+
+div[class*="language-"] .overlay:hover {
+    cursor: pointer;
+    color: gainsboro;
 }
 
 .code-header {
