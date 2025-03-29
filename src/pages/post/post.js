@@ -326,8 +326,13 @@ function CodeBlock(props) {
 
             if (override?.length > 0) {
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
-                metadataBlock.push(<div className={override}>{symbol}</div>);
+                metadataBlock.push(<span className={override}>{symbol}</span>);
                 metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
+            }
+            else {
+                metadataBlock.push(<div className='padding'></div>);
+                metadataBlock.push(<span className={override}>{symbol}</span>);
+                metadataBlock.push(<div className='padding'></div>);
             }
         }
         else {
@@ -339,7 +344,7 @@ function CodeBlock(props) {
             }
 
             if (override) {
-                metadataBlock.push(<div className={('padding' + ' ' + override).trim()}></div>);
+                metadataBlock.push(<div className={'padding' + ' ' + override}></div>);
             }
         }
         if (metadataBlock.length > 0) {
