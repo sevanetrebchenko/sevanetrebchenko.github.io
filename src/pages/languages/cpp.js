@@ -4,6 +4,11 @@ export default function processLanguageCpp(tokens) {
     const parsed = [];
     let i = 0;
 
+    // Manually remove the 'operator' type from all tokens
+    for (let i = 0; i < tokens.length; ++i) {
+        tokens[i].types = tokens[i].types.filter(type => type !== "operator");
+    }
+
     while (i < tokens.length) {
         if (tokens[i].content === "[" && tokens[i + 1]?.content === "[") {
             // Found start of annotation block '[['
@@ -37,7 +42,7 @@ export default function processLanguageCpp(tokens) {
                 "plain", "punctuation",
                 "number", "string",
                 "keyword",
-                "operator",
+                "operator", "unary-operator", "binary-operator", "function-operator",
                 "concept",
             ];
 
