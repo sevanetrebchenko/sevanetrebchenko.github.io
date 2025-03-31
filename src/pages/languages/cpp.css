@@ -320,7 +320,10 @@ div[class*="language-"] .overlay:hover {
     color: rgb(152, 118, 170);
 }
 
-.language-cpp .operator {
+.language-cpp .operator,
+.language-cpp .unary-operator,
+.language-cpp .binary-operator,
+.language-cpp .function-operator {
     color: rgb(95, 140, 138);
 }
 
