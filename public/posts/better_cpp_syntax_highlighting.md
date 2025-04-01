@@ -2162,7 +2162,7 @@ bool Visitor::VisitCallExpr(clang::CallExpr* node) {
     }
     
     // Retrieve the name of the function from the function declaration
-    const clang::FunctionDecl* function = node->getCalleeDecl()->getAsFunction();
+    const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
     std::string name = function->getNameAsString();
     
     // Clang does not provide an easy way to retrieve the location of the function name directly
@@ -2388,7 +2388,7 @@ bool Visitor::VisitUserDefinedLiteral(clang::UserDefinedLiteral* node) {
     }
     
     // Retrieve the name of the literal operator from the function declaration
-    const clang::FunctionDecl* function = node->getCalleeDecl()->getAsFunction();
+    const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
     std::string name = function->getNameAsString();
     name = name.substr(10); // Skip 'operator""' prefix
     
@@ -3075,7 +3075,7 @@ Once again, we retrieve the name of the member using its declaration as returned
 This is used to ensure that the annotation is applied to only the length of the member variable.
 
 One important thing to note is that base class initializers also get captured by the `CXXCtorInitializer` node.
-For now, we skip these with a `CXXCtorInitializer::isBaseInitializer` check on line 23 - we will revisit this later when we add annotations for functions.
+For now, we skip these with a `CXXCtorInitializer::isBaseInitializer` check on line 23 - we will revisit this later when we add annotations for classes.
 
 ```text added:{4,5}
 #include <cmath> // std::sqrt
@@ -3261,14 +3261,781 @@ int main() {
 }
 ```
 
-### Class functions + operators
+## Templates
 
-## Templates + concepts
+Another big portion of the C++ language are templates.
+This includes template declarations, definitions, and specializations (both partial and explicit).
+```cpp
+#include <concepts> // std::same_as
+#include <string> // std::string, std::string_view
+#include <type_traits> // std::true_type, std::false_type
 
-modify call expr
+template <typename T>
+struct is_string_type : std::false_type {
+};
 
-You'll notice that template classes were not omitted.
-Templates, specializations, and concepts use different nodes.
+// Partial specializations
+// References to string types should resolve to true
+template <typename T>
+struct is_string_type<T&> : is_string_type<T> {
+};
+
+template <typename T>
+struct is_string_type<const T&> : is_string_type<T> {
+};
+
+// Explicit specializations
+// const char*
+template <>
+struct is_string_type<const char*> : std::true_type {
+};
+
+// std::string
+template <>
+struct is_string_type<std::string> : std::true_type {
+};
+
+// std::string_view
+template <>
+struct is_string_type<std::string_view> : std::true_type {
+};
+```
+
+```text
+|-ClassTemplateDecl 0x1bc2d2842a8 <example.cpp:4:1, line:6:1> line:5:8 is_string_type
+| |-TemplateTypeParmDecl 0x1bc2d284148 <line:4:11, col:20> col:20 typename depth 0 index 0 T
+| |-CXXRecordDecl 0x1bc2d2841f8 <line:5:1, line:6:1> line:5:8 struct is_string_type definition
+| | |-DefinitionData empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+| | | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | | |-MoveConstructor exists simple trivial needs_implicit
+| | | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | | |-MoveAssignment exists simple trivial needs_implicit
+| | | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| | |-public 'std::false_type':'std::integral_constant<bool, false>'
+| | `-CXXRecordDecl 0x1bc2d284610 <col:1, col:8> col:8 implicit struct is_string_type
+| |-ClassTemplateSpecialization 0x1bc2d285150 'is_string_type'
+| |-ClassTemplateSpecialization 0x1bc2d285540 'is_string_type'
+| `-ClassTemplateSpecialization 0x1bc2d285900 'is_string_type'
+|-ClassTemplatePartialSpecializationDecl 0x1bc2d284860 <line:10:1, line:12:1> line:11:8 struct is_string_type definition explicit_specialization
+| |-DefinitionData empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveConstructor exists simple trivial needs_implicit
+| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveAssignment exists simple trivial needs_implicit
+| | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| |-public 'is_string_type<T>'
+| |-TemplateArgument type 'type-parameter-0-0 &'
+| | `-LValueReferenceType 0x1bc2bf68960 'type-parameter-0-0 &' dependent
+| |   `-TemplateTypeParmType 0x1bc2bd6b340 'type-parameter-0-0' dependent depth 0 index 0
+| |-TemplateTypeParmDecl 0x1bc2d2846d8 <line:10:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-CXXRecordDecl 0x1bc2d284b38 <line:11:1, col:8> col:8 implicit struct is_string_type
+|-ClassTemplatePartialSpecializationDecl 0x1bc2d284d80 <line:14:1, line:16:1> line:15:8 struct is_string_type definition explicit_specialization
+| |-DefinitionData empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveConstructor exists simple trivial needs_implicit
+| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveAssignment exists simple trivial needs_implicit
+| | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| |-public 'is_string_type<T>'
+| |-TemplateArgument type 'const type-parameter-0-0 &'
+| | `-LValueReferenceType 0x1bc2c021df0 'const type-parameter-0-0 &' dependent
+| |   `-QualType 0x1bc2bd6b341 'const type-parameter-0-0' const
+| |     `-TemplateTypeParmType 0x1bc2bd6b340 'type-parameter-0-0' dependent depth 0 index 0
+| |-TemplateTypeParmDecl 0x1bc2d284c00 <line:14:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-CXXRecordDecl 0x1bc2d285058 <line:15:1, col:8> col:8 implicit struct is_string_type
+|-ClassTemplateSpecializationDecl 0x1bc2d285150 <line:20:1, line:22:1> line:21:8 struct is_string_type definition explicit_specialization
+| |-DefinitionData pass_in_registers empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveConstructor exists simple trivial needs_implicit
+| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveAssignment exists simple trivial needs_implicit
+| | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| |-public 'std::true_type':'std::integral_constant<bool, true>'
+| |-TemplateArgument type 'const char *'
+| | `-PointerType 0x1bc2a5077e0 'const char *'
+| |   `-QualType 0x1bc2a506c21 'const char' const
+| |     `-BuiltinType 0x1bc2a506c20 'char'
+| `-CXXRecordDecl 0x1bc2d2853e0 <col:1, col:8> col:8 implicit struct is_string_type
+|-ClassTemplateSpecializationDecl 0x1bc2d285540 <line:25:1, line:27:1> line:26:8 struct is_string_type definition explicit_specialization
+| |-DefinitionData pass_in_registers empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveConstructor exists simple trivial needs_implicit
+| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveAssignment exists simple trivial needs_implicit
+| | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| |-public 'std::true_type':'std::integral_constant<bool, true>'
+| |-TemplateArgument type 'std::basic_string<char>'
+| | `-RecordType 0x1bc2bd7db50 'std::basic_string<char>'
+| |   `-ClassTemplateSpecialization 0x1bc2bd7da28 'basic_string'
+| `-CXXRecordDecl 0x1bc2d2857a0 <col:1, col:8> col:8 implicit struct is_string_type
+`-ClassTemplateSpecializationDecl 0x1bc2d285900 <line:30:1, line:32:1> line:31:8 struct is_string_type definition explicit_specialization
+  |-DefinitionData pass_in_registers empty aggregate standard_layout trivially_copyable trivial literal has_constexpr_non_copy_move_ctor can_const_default_init
+  | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+  | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+  | |-MoveConstructor exists simple trivial needs_implicit
+  | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+  | |-MoveAssignment exists simple trivial needs_implicit
+  | `-Destructor simple irrelevant trivial constexpr needs_implicit
+  |-public 'std::true_type':'std::integral_constant<bool, true>'
+  |-TemplateArgument type 'std::basic_string_view<char>'
+  | `-RecordType 0x1bc2c934460 'std::basic_string_view<char>'
+  |   `-ClassTemplateSpecialization 0x1bc2c934348 'basic_string_view'
+  `-CXXRecordDecl 0x1bc2d285b60 <col:1, col:8> col:8 implicit struct is_string_type
+```
+If we wanted to visit templates, we would need to set up additional visitors for a few new node types:
+- `ClassTemplateDecl` nodes, which represent template class definitions
+- `ClassTemplatePartialSpecializationDecl` nodes, which represent definitions of partial template specializations,
+- `ClassTemplateSpecializationDecl` nodes, which represent definitions of explicit (full) template specializations, and
+- `TemplateTypeParmDecl` nodes, which represent template parameters in template class definitions
+
+However, we don't actually need any of the template class visitors, as each node contains a nested `CXXRecordDecl` representing the class itself.
+This means that the `VisitCXXRecordDecl` is already set up to annotate the names of template classes.
+We will, however, still require a visitor for `TemplateTypeParmDecl` nodes:
+
+```cpp title:{visitor.hpp} added:{8,9}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting template parameters
+        bool TemplateTypeParmDecl(clang::TemplateTypeParmDecl* node);
+        
+        // ...
+};
+```
+
+### Template parameters
+
+Template parameters are captured by `TemplateTypeParmDecl` nodes:
+```cpp title:{visitor.cpp}
+#include "visitor.hpp"
+
+bool Visitor::VisitTemplateTypeParmDecl(clang::TemplateTypeParmDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip template parameter declarations that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("class-name", line, column, name.length());
+    
+    return true;
+}
+```
+The implementation of the `VisitTemplateTypeParmDecl` is very similar to visitors we have already seen.
+This visitor works for both template functions and classes alike:
+```cpp
+template <typename T>
+void print(const T& value);
+
+template <typename ...Ts>
+void print(const Ts&... values);
+
+template <typename T>
+struct Foo {
+    // ...
+};
+
+template <typename ...Ts>
+struct Bar {
+    // ...
+};
+```
+
+```cpp
+template <typename [[class-name,T]]>
+void print(const [[class-name,T]]& value);
+
+template <typename ...[[class-name,Ts]]>
+void print(const [[class-name,Ts]]&... values);
+
+template <typename [[class-name,T]]>
+struct Foo {
+    // ...
+};
+
+template <typename ...[[class-name,Ts]]>
+struct Bar {
+    // ...
+};
+```
+
+## Concepts
+
+With the standardization of C++20 came concepts.
+
+```cpp
+#include <concepts> // std::same_as
+#include <iterator> // std::begin, std::end
+
+template <typename T>
+concept ForwardIterable = requires(T container) {
+    // Ensure the container supports the std::begin and std::end methods
+    { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
+    
+    // Ensure the container iterator can be dereferenced
+    { *std::begin(container) };
+
+    // Ensure the container iterator can be incremented
+    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
+};
+
+template <typename T>
+void print(const T& value);
+
+// Concept-constrained function specialization for containers
+template <ForwardIterable T>
+void print(const T& container);
+```
+
+```text
+|-ConceptDecl 0x1bea7b28e88 <example.cpp:4:1, line:15:1> line:5:9 ForwardIterable
+| |-TemplateTypeParmDecl 0x1bea7b28de0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-RequiresExpr 0x1bea7b29dd8 <line:5:27, line:15:1> 'bool'
+|   |-ParmVarDecl 0x1bea7b28ee8 <line:5:36, col:38> col:38 referenced container 'T'
+|   |-CompoundRequirement 0x1bea7b293c8 dependent
+|   | |-CallExpr 0x1bea7b29020 <line:7:7, col:23> '<dependent type>'
+|   | | `-CXXDependentScopeMemberExpr 0x1bea7b28fd8 <col:7, col:17> '<dependent type>' lvalue .begin
+|   | |   `-DeclRefExpr 0x1bea7b28fb8 <col:7> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x1bea7b29338 <col:30, col:68> 'bool' Concept 0x1bea660dbb0 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x1bea7b29248 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|   |   | |-TemplateArgument type 'type-parameter-1-0'
+|   |   | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | `-TemplateArgument type 'decltype(container.end())'
+|   |   |   `-DecltypeType 0x1bea7b290e0 'decltype(container.end())' dependent
+|   |   |     `-CallExpr 0x1bea7b290c0 <example.cpp:7:52, col:66> '<dependent type>'
+|   |   |       `-CXXDependentScopeMemberExpr 0x1bea7b29078 <col:52, col:62> '<dependent type>' lvalue .end
+|   |   |         `-DeclRefExpr 0x1bea7b29058 <col:52> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
+|   |   | `-TemplateTypeParmType 0x1bea7b291d0 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x1bea7b29168 'expr-type'
+|   |   `-TemplateArgument <col:43, col:67> type 'decltype(container.end())'
+|   |     `-DecltypeType 0x1bea7b29110 'decltype(container.end())' dependent
+|   |       `-CallExpr 0x1bea7b290c0 <col:52, col:66> '<dependent type>'
+|   |         `-CXXDependentScopeMemberExpr 0x1bea7b29078 <col:52, col:62> '<dependent type>' lvalue .end
+|   |           `-DeclRefExpr 0x1bea7b29058 <col:52> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1bea7b29898 dependent
+|   | |-CallExpr 0x1bea7b294a8 <line:8:7, col:27> '<dependent type>'
+|   | | |-UnresolvedLookupExpr 0x1bea7b29418 <col:7, col:12> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1bea6e46220 0x1bea6e46d08 0x1bea6e472f8 0x1bea6e48540 0x1bea6e4d0c0 0x1bea6e4d5b0
+|   | | `-DeclRefExpr 0x1bea7b29488 <col:18> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x1bea7b29808 <col:34, col:76> 'bool' Concept 0x1bea660dbb0 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x1bea7b29718 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|   |   | |-TemplateArgument type 'type-parameter-1-0'
+|   |   | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | `-TemplateArgument type 'decltype(std::end(container))'
+|   |   |   `-DecltypeType 0x1bea7b295b0 'decltype(std::end(container))' dependent
+|   |   |     `-CallExpr 0x1bea7b29580 <example.cpp:8:56, col:74> '<dependent type>'
+|   |   |       |-UnresolvedLookupExpr 0x1bea7b294f0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1bea6e46710 0x1bea6e478e8 0x1bea6e47ed8 0x1bea6e48b00 0x1bea6e4da30 0x1bea6e4deb0
+|   |   |       `-DeclRefExpr 0x1bea7b29560 <col:65> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
+|   |   | `-TemplateTypeParmType 0x1bea7b296a0 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x1bea7b29638 'expr-type'
+|   |   `-TemplateArgument <col:47, col:75> type 'decltype(std::end(container))'
+|   |     `-DecltypeType 0x1bea7b295e0 'decltype(std::end(container))' dependent
+|   |       `-CallExpr 0x1bea7b29580 <col:56, col:74> '<dependent type>'
+|   |         |-UnresolvedLookupExpr 0x1bea7b294f0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1bea6e46710 0x1bea6e478e8 0x1bea6e47ed8 0x1bea6e48b00 0x1bea6e4da30 0x1bea6e4deb0
+|   |         `-DeclRefExpr 0x1bea7b29560 <col:65> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1bea7b29968 dependent
+|   | `-UnaryOperator 0x1bea7b29950 <line:11:7, col:24> '<dependent type>' lvalue prefix '*' cannot overflow
+|   |   `-CallExpr 0x1bea7b29930 <col:8, col:24> '<dependent type>'
+|   |     `-CXXDependentScopeMemberExpr 0x1bea7b298e8 <col:8, col:18> '<dependent type>' lvalue .begin
+|   |       `-DeclRefExpr 0x1bea7b298c8 <col:8> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   `-CompoundRequirement 0x1bea7b29da8 dependent
+|     |-UnaryOperator 0x1bea7b29a20 <line:14:7, col:25> '<dependent type>' lvalue prefix '++' cannot overflow
+|     | `-CallExpr 0x1bea7b29a00 <col:9, col:25> '<dependent type>'
+|     |   `-CXXDependentScopeMemberExpr 0x1bea7b299b8 <col:9, col:19> '<dependent type>' lvalue .begin
+|     |     `-DeclRefExpr 0x1bea7b29998 <col:9> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|     `-ConceptSpecializationExpr 0x1bea7b29d18 <col:32, col:72> 'bool' Concept 0x1bea660dbb0 'same_as'
+|       |-ImplicitConceptSpecializationDecl 0x1bea7b29c28 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|       | |-TemplateArgument type 'type-parameter-1-0'
+|       | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
+|       | `-TemplateArgument type 'decltype(container.begin())'
+|       |   `-DecltypeType 0x1bea7b29ac0 'decltype(container.begin())' dependent
+|       |     `-CallExpr 0x1bea7b29aa0 <example.cpp:14:54, col:70> '<dependent type>'
+|       |       `-CXXDependentScopeMemberExpr 0x1bea7b29a58 <col:54, col:64> '<dependent type>' lvalue .begin
+|       |         `-DeclRefExpr 0x1bea7b29a38 <col:54> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|       |-TemplateArgument type 'expr-type':'type-parameter-1-0'
+|       | `-TemplateTypeParmType 0x1bea7b29bb0 'expr-type' dependent depth 1 index 0
+|       |   `-TemplateTypeParm 0x1bea7b29b48 'expr-type'
+|       `-TemplateArgument <col:45, col:71> type 'decltype(container.begin())'
+|         `-DecltypeType 0x1bea7b29af0 'decltype(container.begin())' dependent
+|           `-CallExpr 0x1bea7b29aa0 <col:54, col:70> '<dependent type>'
+|             `-CXXDependentScopeMemberExpr 0x1bea7b29a58 <col:54, col:64> '<dependent type>' lvalue .begin
+|               `-DeclRefExpr 0x1bea7b29a38 <col:54> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|-FunctionTemplateDecl 0x1bea7b2a0c8 <line:17:1, line:18:26> col:6 print
+| |-TemplateTypeParmDecl 0x1bea7b29e38 <line:17:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-FunctionDecl 0x1bea7b2a018 <line:18:1, col:26> col:6 print 'void (const T &)'
+|   `-ParmVarDecl 0x1bea7b29f28 <col:12, col:21> col:21 value 'const T &'
+`-FunctionTemplateDecl 0x1bea7b2a5a8 <line:21:1, line:22:30> col:6 print
+  |-TemplateTypeParmDecl 0x1bea7b2a1c8 <line:21:11, col:27> col:27 referenced Concept 0x1bea7b28e88 'ForwardIterable' depth 0 index 0 T
+  | `-ConceptSpecializationExpr 0x1bea7b2a330 <col:11> 'bool' Concept 0x1bea7b28e88 'ForwardIterable'
+  |   |-ImplicitConceptSpecializationDecl 0x1bea7b2a278 <line:5:9> col:9
+  |   | `-TemplateArgument type 'type-parameter-0-0'
+  |   |   `-TemplateTypeParmType 0x1bea6395e10 'type-parameter-0-0' dependent depth 0 index 0
+  |   `-TemplateArgument <line:21:27> type 'T':'type-parameter-0-0'
+  |     `-TemplateTypeParmType 0x1bea7b2a230 'T' dependent depth 0 index 0
+  |       `-TemplateTypeParm 0x1bea7b2a1c8 'T'
+  `-FunctionDecl 0x1bea7b2a4f8 <line:22:1, col:30> col:6 print 'void (const T &)'
+    `-ParmVarDecl 0x1bea7b2a408 <col:12, col:21> col:21 container 'const T &'
+```
+
+From the above AST, there are a few new nodes that we need to visit.
+- `ConceptDecl` nodes, which represent concept definitions, and
+- `ConceptSpecializationExpr` nodes, which represent concept constraint expressions
+
+```cpp title:{visitor.hpp} added:{9,14-18}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting function calls
+        // For visiting unresolved (dependent) type expressions
+        bool VisitCallExpr(clang::CallExpr* node);
+        
+        // ...
+        
+        // For visiting concept declarations / definitions
+        bool VisitConceptDecl(clang::ConceptDecl* node);
+        
+        // For visiting concept constraint expressions
+        bool VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* node);
+        
+        // ...
+};
+```
+
+### Concept declarations
+
+Concept declarations are captured by `ConceptDecl` nodes.
+```cpp
+#include "visitor.hpp"
+
+bool Visitor::VisitConceptDecl(clang::ConceptDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+    
+    // Skip any concept declarations that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("concept", line, column, name.length());
+    
+    return true;
+}
+```
+This visitor follows the same pattern as before.
+Concept definitions are annotated with the `concept` annotation.
+
+```text added:{5}
+#include <concepts> // std::same_as
+#include <iterator> // std::begin, std::end
+
+template <typename T>
+concept [[concept,ForwardIterable]] = requires(T container) {
+    // Ensure the container supports the std::begin and std::end methods
+    { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
+    
+    // Ensure the container iterator can be dereferenced
+    { *std::begin(container) };
+
+    // Ensure the container iterator can be incremented
+    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
+};
+
+template <typename T>
+void print(const T& value);
+
+// Concept-constrained function specialization for containers
+template <ForwardIterable T>
+void print(const T& container);
+```
+
+### Concept constraint expressions
+
+Concept constraints are captured by `ConceptSpecializationExpr` nodes.
+This includes constraints applied to the concept definition itself and also when the concept is used as a constraint in a `constexpr` environment.
+```cpp
+#include "visitor.hpp"
+
+bool Visitor::VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getConceptNameLoc();
+    
+    // Skip any concept constraint expressions that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // Retrieve the name of the concept through the declaration
+    const clang::ConceptDecl* decl = node->getNamedConcept();
+    const std::string& name = decl->getNameAsString();
+    
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("concept", line, column, name.length());
+    
+    return true;
+}
+```
+The implementation for the `VisitConceptSpecializationExpr` follows closely to that of `VisitConceptDecl`.
+The name of the concept is retrieved from the declaration via `ConceptSpecializationExpr::getNamedConcept`.
+
+```text added:{7,13,20}
+#include <concepts> // std::same_as
+#include <iterator> // std::begin, std::end
+
+template <typename T>
+concept [[concept,ForwardIterable]] = requires(T container) {
+    // Ensure the container supports the std::begin and std::end methods
+    { std::begin(container) } -> std::[[concept,same_as]]<decltype(std::end(container))>;
+    
+    // Ensure the container iterator can be dereferenced
+    { *std::begin(container) };
+
+    // Ensure the container iterator can be incremented
+    { ++std::begin(container) } -> std::[[concept,same_as]]<decltype(std::begin(container))>;
+};
+
+template <typename T>
+void print(const T& value);
+
+// Concept-constrained function specialization for containers
+template <[[concept,ForwardIterable]] T>
+void print(const T& container);
+```
+This visitor function annotates concept constraints in both concept definitions and template specializations, and any other `constexpr` expressions that reference the concept.
+
+### Dependent expressions
+
+There are a few more nodes that pertain to dependent lookup contexts, such as those in template / concept definitions.
+Consider the following example:
+```cpp
+template <typename T>
+concept MyConcept = requires(T value) {
+    // Ensure that the type can be printed
+    // Assuming the existence of some overloaded function 'print'...
+    { print(value) };
+
+    // Ensure that the type has a member variable named 'foo'
+    { value.foo };
+
+    // Ensure that the type has a member function named 'bar'
+    { T::bar() };
+    
+    // Ambiguous: is this referring to a static class variable or type?
+    { T::value_type };
+};
+```
+With corresponding AST:
+```text
+`-ConceptDecl 0x1f600187ac8 <example.cpp:1:1, line:14:1> line:2:9 MyConcept
+  |-TemplateTypeParmDecl 0x1f6001879e8 <line:1:11, col:20> col:20 referenced typename depth 0 index 0 T
+  `-RequiresExpr 0x1f60199f330 <line:2:21, line:14:1> 'bool'
+    |-ParmVarDecl 0x1f60199ef98 <line:2:30, col:32> col:32 referenced value 'T'
+    |-CompoundRequirement 0x1f60199f0f0 dependent
+    | `-CallExpr 0x1f60199f0c8 <line:4:7, col:18> '<dependent type>'
+    |   |-UnresolvedLookupExpr 0x1f60199f068 <col:7> '<overloaded function type>' lvalue (ADL) = 'print' empty
+    |   `-DeclRefExpr 0x1f60199f0a8 <col:13> 'T' lvalue ParmVar 0x1f60199ef98 'value' 'T' non_odr_use_unevaluated
+    |-CompoundRequirement 0x1f60199f188 dependent
+    | `-CXXDependentScopeMemberExpr 0x1f60199f140 <line:7:7, col:13> '<dependent type>' lvalue .foo
+    |   `-DeclRefExpr 0x1f60199f120 <col:7> 'T' lvalue ParmVar 0x1f60199ef98 'value' 'T' non_odr_use_unevaluated
+    |-CompoundRequirement 0x1f60199f260 dependent
+    | `-CallExpr 0x1f60199f240 <line:10:7, col:14> '<dependent type>'
+    |   `-DependentScopeDeclRefExpr 0x1f60199f208 <col:7, col:10> '<dependent type>' lvalue
+    |     `-NestedNameSpecifier TypeSpec 'T'
+    `-CompoundRequirement 0x1f60199f300 dependent
+      `-DependentScopeDeclRefExpr 0x1f60199f2c8 <line:13:7, col:10> '<dependent type>' lvalue
+        `-NestedNameSpecifier TypeSpec 'T'
+```
+This example demonstrates several instances of expressions that are unable to be fully resolved due to their dependency on an unknown type `T`.
+These typically happen in template contexts where the compiler cannot determine the correct declaration to use and name lookup is deferred until instantiation.
+There are a few nodes we need to process:
+- [`UnresolvedLookupExpr` nodes](), which refer to names whose resolution is ambiguous,
+- [`CXXDependentScopeMemberExpr` nodes](), which refer to member access expressions, and
+- [`DependentScopeDeclRefExpr` nodes](), which represent references to variable declarations (similar to `DeclRefExpr` nodes)
+
+Despite the full type being unknown, it is still possible to deduce enough information from the AST (for most cases) to apply syntax highlighting.
+
+### Dependent function calls
+
+As can be seen from the AST, `UnresolvedLookupExpr` and, in some cases, `DependentScopeDeclRefExpr` nodes, are children of a `CallExpr` node.
+However, if we execute the `VisitCallExpr` function as is, we get a segmentation fault.
+```cpp
+#include "visitor.hpp"
+
+bool Visitor::VisitCallExpr(clang::CallExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getBeginLoc();
+    
+    // Skip any function calls that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // Retrieve the name of the function from the function declaration
+    const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
+    std::string name = function->getNameAsString();
+    
+    // Clang does not provide an easy way to retrieve the location of the function name directly
+    std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
+    for (const Token& token : tokens) {
+        if (token.spelling == name) {
+            m_annotator->insert_annotation("function", token.line, token.column, name.length());
+            break;
+        }
+    }
+
+    return true;
+}
+```
+Why is it, then, that the existing `VisitCallExpr` cannot properly handle these nodes?
+The main problem lies in the way the name of the function is retrieved.
+For unresolved nodes, `CallExpr::getCalleeDecl` returns `nullptr`, as due to the unknown type of `T` it is ambiguous which declaration the function refers to.
+
+We must process these nodes separately.
+
+```cpp added:{12-33,46}
+#include "visitor.hpp"
+
+bool Visitor::VisitCallExpr(clang::CallExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getBeginLoc();
+    
+    // Skip any function calls that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // In template contexts, CallExpr nodes fail to resolve fully due to their dependency on an unknown type `T`.
+    if (const clang::UnresolvedLookupExpr* ule = clang::dyn_cast<clang::UnresolvedLookupExpr>(node->getCallee())) {
+        // An example of an UnresolvedLookupExpr is std::begin(T)
+        std::string name = ule->getNameInfo().getAsString();
+        location = ule->getNameLoc();
+        
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("function", line, column, name.length());
+    }
+    else if (const clang::DependentScopeDeclRefExpr* dre = clang::dyn_cast<clang::DependentScopeDeclRefExpr>(node->getCallee())) {
+        // An example of an DependentScopeDeclRefExpr is T::function()
+        std::string name = dre->getNameInfo().getAsString();
+        location = dre->getLocation();
+        
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("function", line, column, name.length());
+    }
+    else {
+        // Retrieve the name of the function from the function declaration
+        const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
+        std::string name = function->getNameAsString();
+        
+        // Clang does not provide an easy way to retrieve the location of the function name directly
+        std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
+        for (const Token& token : tokens) {
+            if (token.spelling == name) {
+                m_annotator->insert_annotation("function", token.line, token.column, name.length());
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+```
+Two new checks are added to check if the callee of the expression is an instance of either a `UnresolvedLookupExpr` or `DependentScopeDeclRefExpr` node.
+
+The name and location of the function is retrieved through directly with calls to `getNameInfo` and `getNameLoc`/`getLocation`, respectively.
+As this gives the location of the function name directly (ignoring any qualifiers), we can insert a `function` annotation directly without having to tokenize the range of the whole `CallExpr` node.
+
+Note that the second check only pertains to the case where the `DependentScopeDeclRefExpr` node is a child of a `CallExpr` node.
+As can be seen in the AST, this is not always the case.
+
+However, for this second case, it is still ambiguous what the type of the expression is.
+`T::value_type` may either reference a static member variable or a nested type.
+Both of these have different annotations for syntax highlighting.
+I decided to leave this case unhandled - should the case arise, it will simply require manual annotation.
+
+```text added:{4,10}
+template <typename T>
+concept [[concept,MyConcept]] = requires(T value) {
+    // Ensure that the type can be printed
+    { [[function,print]](value) };
+
+    // Ensure that the type has a member variable named 'foo'
+    { value.foo };
+
+    // Ensure that the type has a member function named 'bar'
+    { T::[[function,bar]]() };
+    
+    // Ambiguous: is this referring to a static class variable or type?
+    { T::value_type };
+};
+```
+
+### Dependent member references
+
+The last node for this section is the `CXXDependentScopeMemberExpr`, which represents a member access where the referenced member cannot be fully resolved.
+For this, a new visitor is added:
+```cpp title:{visitor.hpp}
+class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
+    public:
+        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
+        ~Visitor();
+        
+        // ...
+        
+        // For visiting class members of dependent types
+        bool VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExpr* node);
+        
+        // ...
+};
+```
+
+The implementation of the `VisitCXXDependentScopeMemberExpr` visitor follows a similar pattern as before:
+
+```cpp
+#include "visitor.hpp"
+
+bool Visitor::VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getMemberLoc();
+    
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    const std::string& name = node->getMemberNameInfo().getAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("member-variable", line, column, name.length());
+    
+    return true;
+}
+```
+
+The location of the member variable is retrieved directly by a call to `CXXDependentScopeMemberExpr::getMemberLoc`.
+The name of the member is retrieved through `CXXDependentScopeMemberExpr::getMemberNameInfo`.
+The member is annotated with the `member-variable` annotation, as before.
+```text added:{7}
+template <typename T>
+concept [[concept,MyConcept]] = requires(T value) {
+    // Ensure that the type can be printed
+    { [[function,print]](value) };
+
+    // Ensure that the type has a member variable named 'foo'
+    { value.[[member-variable,foo]] };
+
+    // Ensure that the type has a member function named 'bar'
+    { T::[[function,bar]]() };
+    
+    // Ambiguous: is this referring to a static class variable or type?
+    { T::value_type };
+};
+```
+With the new visitors implemented, we have a complete annotation solution for concepts.
+```text added:{7,10,13}
+#include <concepts> // std::same_as
+#include <iterator> // std::begin, std::end
+
+template <typename T>
+concept [[concept,ForwardIterable]] = requires(T container) {
+    // Ensure the container supports the std::begin and std::end methods
+    { std::[[function,begin]](container) } -> std::[[concept,same_as]]<decltype(std::[[function,end]](container))>;
+    
+    // Ensure the container iterator can be dereferenced
+    { *std::[[function,begin]](container) };
+
+    // Ensure the container iterator can be incremented
+    { ++std::[[function,begin]](container) } -> std::[[concept,same_as]]<decltype(std::[[function,begin]](container))>;
+};
+
+template <typename T>
+void print(const T& value);
+
+// Concept-constrained function specialization for containers
+template <[[concept,ForwardIterable]] T>
+void print(const T& container);
+```
+
+Note that most of these changes also apply to template contexts.
+
+Keen observers will notice that the base class hierarchy is not annotated.
+We can attempt to traverse the base class hierarchy through the underlying `CXXRecordDecl` node:
+```cpp title:{visitor.cpp} added:{17-28}
+#include "visitor.hpp"
+
+bool Visitor::VisitClassTemplateDecl(clang::ClassTemplateDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getLocation();
+    
+    // Skip template class definitions that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // Insert annotation for template class name
+    std::string name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("class-name", line, column, name.length());
+
+    // Try annotating class names in the base class hierarchy...
+    const clang::CXXRecordDecl* templated = node->getTemplatedDecl();
+    for (const clang::CXXBaseSpecifier& base : templated->bases()) {
+        // This returns the fully-qualified name, including namespaces and class names...
+        name = base.getType().getAsString();
+
+        location = base.getBaseTypeLoc();
+        line = source_manager.getSpellingLineNumber(location);
+        column = source_manager.getSpellingColumnNumber(location);
+
+        m_annotator->insert_annotation("class-name", line, column, name.length());
+    }
+    
+    return true;
+}
+```
+This approach iterates through the base class hierarchy retrieved from `CXXRecordDecl::bases`, with the underlying `CXXRecordDecl` node accessed via `ClassTemplateDecl::getTemplatedDecl`.
+However, there are a few issues with this method.
+
+First, the `CXXBaseSpecifier` class doesn't provide an easy way to obtain detailed information about the type it refers to.
+While `CXXBaseSpecifier::getType` (or its variants) can be used to access the underlying `CXXRecordDecl`, these functions ultimately return information about the root type (ignoring any typedefs).
+For example, when working with `std::false_type`, this method returns details about the underlying `std::integral_constant`, which complicates inserting annotations as annotations are based on class name.
+
+An alternative approach, as seen in the code above, works with the top-level type retrieved from `CXXBaseSpecifier::getType`.
+Stringifying this type results in a fully-qualified type name, which can include namespaces and other class names.
+Unfortunately, this approach is also not feasible, as we are looking for just the name of the top-level class.
+
+Luckily, there is a more robust approach that we can take, that we will see later.
+For now, we will skip annotating base class hierarchies entirely.
 
 ## Preprocessor Directives
 
