@@ -3483,127 +3483,141 @@ With the standardization of C++20 came concepts.
 #include <iterator> // std::begin, std::end
 
 template <typename T>
-concept ForwardIterable = requires(T container) {
-    // Ensure the container supports the std::begin and std::end methods
+concept Container = requires(T container, std::size_t index) {
+    // Ensure that the container supports the std::begin and std::end methods
     { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
     
-    // Ensure the container iterator can be dereferenced
+    // Ensure that the container iterator can be dereferenced
     { *std::begin(container) };
 
-    // Ensure the container iterator can be incremented
+    // Ensure that the container iterator can be incremented
     { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
+
+    // Ensure that the container has a public 'data' member variable
+    { container.data };
+    
+    // Ensure that the container member functions 'size', 'capacity', and supports the subscript operator []
+    { container.size() };
+    { container.capacity() };
+    { container[index] };
+    
+    // Ensure that the container defines the necessary types
+    { T::value_type };
+    // ...
 };
 
 template <typename T>
 void print(const T& value);
 
 // Concept-constrained function specialization for containers
-template <ForwardIterable T>
+template <Container T>
 void print(const T& container);
 ```
 
 ```text
-|-ConceptDecl 0x1bea7b28e88 <example.cpp:4:1, line:15:1> line:5:9 ForwardIterable
-| |-TemplateTypeParmDecl 0x1bea7b28de0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
-| `-RequiresExpr 0x1bea7b29dd8 <line:5:27, line:15:1> 'bool'
-|   |-ParmVarDecl 0x1bea7b28ee8 <line:5:36, col:38> col:38 referenced container 'T'
-|   |-CompoundRequirement 0x1bea7b293c8 dependent
-|   | |-CallExpr 0x1bea7b29020 <line:7:7, col:23> '<dependent type>'
-|   | | `-CXXDependentScopeMemberExpr 0x1bea7b28fd8 <col:7, col:17> '<dependent type>' lvalue .begin
-|   | |   `-DeclRefExpr 0x1bea7b28fb8 <col:7> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   | `-ConceptSpecializationExpr 0x1bea7b29338 <col:30, col:68> 'bool' Concept 0x1bea660dbb0 'same_as'
-|   |   |-ImplicitConceptSpecializationDecl 0x1bea7b29248 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|-ConceptDecl 0x1cde7835e98 <example.cpp:4:1, line:26:1> line:5:9 Container
+| |-TemplateTypeParmDecl 0x1cde7835df0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-RequiresExpr 0x1cde7836f08 <line:5:21, line:26:1> 'bool'
+|   |-ParmVarDecl 0x1cde7835ef8 <line:5:30, col:32> col:32 referenced container 'T'
+|   |-ParmVarDecl 0x1cde7835fe8 <col:43, col:55> col:55 referenced index 'std::size_t':'unsigned long long'
+|   |-CompoundRequirement 0x1cde7836588 dependent
+|   | |-CallExpr 0x1cde7836180 <line:7:7, col:27> '<dependent type>'
+|   | | |-UnresolvedLookupExpr 0x1cde78360f0 <col:7, col:12> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1cde6b21cb0 0x1cde6b22798 0x1cde6b22d88 0x1cde6b23fd0 0x1cde6b27f20 0x1cde6b28410
+|   | | `-DeclRefExpr 0x1cde7836160 <col:18> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x1cde78364f8 <col:34, col:76> 'bool' Concept 0x1cde6331e50 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x1cde7836408 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
 |   |   | |-TemplateArgument type 'type-parameter-1-0'
-|   |   | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
-|   |   | `-TemplateArgument type 'decltype(container.end())'
-|   |   |   `-DecltypeType 0x1bea7b290e0 'decltype(container.end())' dependent
-|   |   |     `-CallExpr 0x1bea7b290c0 <example.cpp:7:52, col:66> '<dependent type>'
-|   |   |       `-CXXDependentScopeMemberExpr 0x1bea7b29078 <col:52, col:62> '<dependent type>' lvalue .end
-|   |   |         `-DeclRefExpr 0x1bea7b29058 <col:52> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
-|   |   | `-TemplateTypeParmType 0x1bea7b291d0 'expr-type' dependent depth 1 index 0
-|   |   |   `-TemplateTypeParm 0x1bea7b29168 'expr-type'
-|   |   `-TemplateArgument <col:43, col:67> type 'decltype(container.end())'
-|   |     `-DecltypeType 0x1bea7b29110 'decltype(container.end())' dependent
-|   |       `-CallExpr 0x1bea7b290c0 <col:52, col:66> '<dependent type>'
-|   |         `-CXXDependentScopeMemberExpr 0x1bea7b29078 <col:52, col:62> '<dependent type>' lvalue .end
-|   |           `-DeclRefExpr 0x1bea7b29058 <col:52> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1bea7b29898 dependent
-|   | |-CallExpr 0x1bea7b294a8 <line:8:7, col:27> '<dependent type>'
-|   | | |-UnresolvedLookupExpr 0x1bea7b29418 <col:7, col:12> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1bea6e46220 0x1bea6e46d08 0x1bea6e472f8 0x1bea6e48540 0x1bea6e4d0c0 0x1bea6e4d5b0
-|   | | `-DeclRefExpr 0x1bea7b29488 <col:18> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   | `-ConceptSpecializationExpr 0x1bea7b29808 <col:34, col:76> 'bool' Concept 0x1bea660dbb0 'same_as'
-|   |   |-ImplicitConceptSpecializationDecl 0x1bea7b29718 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
-|   |   | |-TemplateArgument type 'type-parameter-1-0'
-|   |   | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | | `-TemplateTypeParmType 0x1cde6126380 'type-parameter-1-0' dependent depth 1 index 0
 |   |   | `-TemplateArgument type 'decltype(std::end(container))'
-|   |   |   `-DecltypeType 0x1bea7b295b0 'decltype(std::end(container))' dependent
-|   |   |     `-CallExpr 0x1bea7b29580 <example.cpp:8:56, col:74> '<dependent type>'
-|   |   |       |-UnresolvedLookupExpr 0x1bea7b294f0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1bea6e46710 0x1bea6e478e8 0x1bea6e47ed8 0x1bea6e48b00 0x1bea6e4da30 0x1bea6e4deb0
-|   |   |       `-DeclRefExpr 0x1bea7b29560 <col:65> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
+|   |   |   `-DecltypeType 0x1cde78362a0 'decltype(std::end(container))' dependent
+|   |   |     `-CallExpr 0x1cde7836270 <example.cpp:7:56, col:74> '<dependent type>'
+|   |   |       |-UnresolvedLookupExpr 0x1cde78361e0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1cde6b221a0 0x1cde6b23378 0x1cde6b23968 0x1cde6b24590 0x1cde6b28890 0x1cde6b28d10
+|   |   |       `-DeclRefExpr 0x1cde7836250 <col:65> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
 |   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
-|   |   | `-TemplateTypeParmType 0x1bea7b296a0 'expr-type' dependent depth 1 index 0
-|   |   |   `-TemplateTypeParm 0x1bea7b29638 'expr-type'
+|   |   | `-TemplateTypeParmType 0x1cde7836390 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x1cde7836328 'expr-type'
 |   |   `-TemplateArgument <col:47, col:75> type 'decltype(std::end(container))'
-|   |     `-DecltypeType 0x1bea7b295e0 'decltype(std::end(container))' dependent
-|   |       `-CallExpr 0x1bea7b29580 <col:56, col:74> '<dependent type>'
-|   |         |-UnresolvedLookupExpr 0x1bea7b294f0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1bea6e46710 0x1bea6e478e8 0x1bea6e47ed8 0x1bea6e48b00 0x1bea6e4da30 0x1bea6e4deb0
-|   |         `-DeclRefExpr 0x1bea7b29560 <col:65> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1bea7b29968 dependent
-|   | `-UnaryOperator 0x1bea7b29950 <line:11:7, col:24> '<dependent type>' lvalue prefix '*' cannot overflow
-|   |   `-CallExpr 0x1bea7b29930 <col:8, col:24> '<dependent type>'
-|   |     `-CXXDependentScopeMemberExpr 0x1bea7b298e8 <col:8, col:18> '<dependent type>' lvalue .begin
-|   |       `-DeclRefExpr 0x1bea7b298c8 <col:8> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|   `-CompoundRequirement 0x1bea7b29da8 dependent
-|     |-UnaryOperator 0x1bea7b29a20 <line:14:7, col:25> '<dependent type>' lvalue prefix '++' cannot overflow
-|     | `-CallExpr 0x1bea7b29a00 <col:9, col:25> '<dependent type>'
-|     |   `-CXXDependentScopeMemberExpr 0x1bea7b299b8 <col:9, col:19> '<dependent type>' lvalue .begin
-|     |     `-DeclRefExpr 0x1bea7b29998 <col:9> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|     `-ConceptSpecializationExpr 0x1bea7b29d18 <col:32, col:72> 'bool' Concept 0x1bea660dbb0 'same_as'
-|       |-ImplicitConceptSpecializationDecl 0x1bea7b29c28 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
-|       | |-TemplateArgument type 'type-parameter-1-0'
-|       | | `-TemplateTypeParmType 0x1bea63e0c90 'type-parameter-1-0' dependent depth 1 index 0
-|       | `-TemplateArgument type 'decltype(container.begin())'
-|       |   `-DecltypeType 0x1bea7b29ac0 'decltype(container.begin())' dependent
-|       |     `-CallExpr 0x1bea7b29aa0 <example.cpp:14:54, col:70> '<dependent type>'
-|       |       `-CXXDependentScopeMemberExpr 0x1bea7b29a58 <col:54, col:64> '<dependent type>' lvalue .begin
-|       |         `-DeclRefExpr 0x1bea7b29a38 <col:54> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|       |-TemplateArgument type 'expr-type':'type-parameter-1-0'
-|       | `-TemplateTypeParmType 0x1bea7b29bb0 'expr-type' dependent depth 1 index 0
-|       |   `-TemplateTypeParm 0x1bea7b29b48 'expr-type'
-|       `-TemplateArgument <col:45, col:71> type 'decltype(container.begin())'
-|         `-DecltypeType 0x1bea7b29af0 'decltype(container.begin())' dependent
-|           `-CallExpr 0x1bea7b29aa0 <col:54, col:70> '<dependent type>'
-|             `-CXXDependentScopeMemberExpr 0x1bea7b29a58 <col:54, col:64> '<dependent type>' lvalue .begin
-|               `-DeclRefExpr 0x1bea7b29a38 <col:54> 'T' lvalue ParmVar 0x1bea7b28ee8 'container' 'T' non_odr_use_unevaluated
-|-FunctionTemplateDecl 0x1bea7b2a0c8 <line:17:1, line:18:26> col:6 print
-| |-TemplateTypeParmDecl 0x1bea7b29e38 <line:17:11, col:20> col:20 referenced typename depth 0 index 0 T
-| `-FunctionDecl 0x1bea7b2a018 <line:18:1, col:26> col:6 print 'void (const T &)'
-|   `-ParmVarDecl 0x1bea7b29f28 <col:12, col:21> col:21 value 'const T &'
-`-FunctionTemplateDecl 0x1bea7b2a5a8 <line:21:1, line:22:30> col:6 print
-  |-TemplateTypeParmDecl 0x1bea7b2a1c8 <line:21:11, col:27> col:27 referenced Concept 0x1bea7b28e88 'ForwardIterable' depth 0 index 0 T
-  | `-ConceptSpecializationExpr 0x1bea7b2a330 <col:11> 'bool' Concept 0x1bea7b28e88 'ForwardIterable'
-  |   |-ImplicitConceptSpecializationDecl 0x1bea7b2a278 <line:5:9> col:9
+|   |     `-DecltypeType 0x1cde78362d0 'decltype(std::end(container))' dependent
+|   |       `-CallExpr 0x1cde7836270 <col:56, col:74> '<dependent type>'
+|   |         |-UnresolvedLookupExpr 0x1cde78361e0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1cde6b221a0 0x1cde6b23378 0x1cde6b23968 0x1cde6b24590 0x1cde6b28890 0x1cde6b28d10
+|   |         `-DeclRefExpr 0x1cde7836250 <col:65> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde78366a8 dependent
+|   | `-UnaryOperator 0x1cde7836690 <line:10:7, col:28> '<dependent type>' lvalue prefix '*' cannot overflow
+|   |   `-CallExpr 0x1cde7836668 <col:8, col:28> '<dependent type>'
+|   |     |-UnresolvedLookupExpr 0x1cde78365d8 <col:8, col:13> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1cde6b21cb0 0x1cde6b22798 0x1cde6b22d88 0x1cde6b23fd0 0x1cde6b27f20 0x1cde6b28410
+|   |     `-DeclRefExpr 0x1cde7836648 <col:19> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde7836b88 dependent
+|   | |-UnaryOperator 0x1cde78367b0 <line:13:7, col:29> '<dependent type>' lvalue prefix '++' cannot overflow
+|   | | `-CallExpr 0x1cde7836788 <col:9, col:29> '<dependent type>'
+|   | |   |-UnresolvedLookupExpr 0x1cde78366f8 <col:9, col:14> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1cde6b21cb0 0x1cde6b22798 0x1cde6b22d88 0x1cde6b23fd0 0x1cde6b27f20 0x1cde6b28410
+|   | |   `-DeclRefExpr 0x1cde7836768 <col:20> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x1cde7836af8 <col:36, col:80> 'bool' Concept 0x1cde6331e50 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x1cde7836a08 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|   |   | |-TemplateArgument type 'type-parameter-1-0'
+|   |   | | `-TemplateTypeParmType 0x1cde6126380 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | `-TemplateArgument type 'decltype(std::begin(container))'
+|   |   |   `-DecltypeType 0x1cde78368a0 'decltype(std::begin(container))' dependent
+|   |   |     `-CallExpr 0x1cde7836878 <example.cpp:13:58, col:78> '<dependent type>'
+|   |   |       |-UnresolvedLookupExpr 0x1cde78367e8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1cde6b21cb0 0x1cde6b22798 0x1cde6b22d88 0x1cde6b23fd0 0x1cde6b27f20 0x1cde6b28410
+|   |   |       `-DeclRefExpr 0x1cde7836858 <col:69> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
+|   |   | `-TemplateTypeParmType 0x1cde7836990 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x1cde7836928 'expr-type'
+|   |   `-TemplateArgument <col:49, col:79> type 'decltype(std::begin(container))'
+|   |     `-DecltypeType 0x1cde78368d0 'decltype(std::begin(container))' dependent
+|   |       `-CallExpr 0x1cde7836878 <col:58, col:78> '<dependent type>'
+|   |         |-UnresolvedLookupExpr 0x1cde78367e8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1cde6b21cb0 0x1cde6b22798 0x1cde6b22d88 0x1cde6b23fd0 0x1cde6b27f20 0x1cde6b28410
+|   |         `-DeclRefExpr 0x1cde7836858 <col:69> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde7836c20 dependent
+|   | `-CXXDependentScopeMemberExpr 0x1cde7836bd8 <line:16:7, col:17> '<dependent type>' lvalue .data
+|   |   `-DeclRefExpr 0x1cde7836bb8 <col:7> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde7836cd8 dependent
+|   | `-CallExpr 0x1cde7836cb8 <line:19:7, col:22> '<dependent type>'
+|   |   `-CXXDependentScopeMemberExpr 0x1cde7836c70 <col:7, col:17> '<dependent type>' lvalue .size
+|   |     `-DeclRefExpr 0x1cde7836c50 <col:7> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde7836d90 dependent
+|   | `-CallExpr 0x1cde7836d70 <line:20:7, col:26> '<dependent type>'
+|   |   `-CXXDependentScopeMemberExpr 0x1cde7836d28 <col:7, col:17> '<dependent type>' lvalue .capacity
+|   |     `-DeclRefExpr 0x1cde7836d08 <col:7> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x1cde7836e20 dependent
+|   | `-ArraySubscriptExpr 0x1cde7836e00 <line:21:7, col:22> '<dependent type>' lvalue
+|   |   |-DeclRefExpr 0x1cde7836dc0 <col:7> 'T' lvalue ParmVar 0x1cde7835ef8 'container' 'T' non_odr_use_unevaluated
+|   |   `-DeclRefExpr 0x1cde7836de0 <col:17> 'std::size_t':'unsigned long long' lvalue ParmVar 0x1cde7835fe8 'index' 'std::size_t':'unsigned long long' non_odr_use_unevaluated
+|   `-CompoundRequirement 0x1cde7836ed8 dependent
+|     `-DependentScopeDeclRefExpr 0x1cde7836ea0 <line:24:7, col:10> '<dependent type>' lvalue
+|       `-NestedNameSpecifier TypeSpec 'T'
+|-FunctionTemplateDecl 0x1cde7837218 <line:28:1, line:29:26> col:6 print
+| |-TemplateTypeParmDecl 0x1cde7836f90 <line:28:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-FunctionDecl 0x1cde7837168 <line:29:1, col:26> col:6 print 'void (const T &)'
+|   `-ParmVarDecl 0x1cde7837078 <col:12, col:21> col:21 value 'const T &'
+`-FunctionTemplateDecl 0x1cde78376f8 <line:32:1, line:33:30> col:6 print
+  |-TemplateTypeParmDecl 0x1cde7837318 <line:32:11, col:21> col:21 referenced Concept 0x1cde7835e98 'Container' depth 0 index 0 T
+  | `-ConceptSpecializationExpr 0x1cde7837480 <col:11> 'bool' Concept 0x1cde7835e98 'Container'
+  |   |-ImplicitConceptSpecializationDecl 0x1cde78373c8 <line:5:9> col:9
   |   | `-TemplateArgument type 'type-parameter-0-0'
-  |   |   `-TemplateTypeParmType 0x1bea6395e10 'type-parameter-0-0' dependent depth 0 index 0
-  |   `-TemplateArgument <line:21:27> type 'T':'type-parameter-0-0'
-  |     `-TemplateTypeParmType 0x1bea7b2a230 'T' dependent depth 0 index 0
-  |       `-TemplateTypeParm 0x1bea7b2a1c8 'T'
-  `-FunctionDecl 0x1bea7b2a4f8 <line:22:1, col:30> col:6 print 'void (const T &)'
-    `-ParmVarDecl 0x1bea7b2a408 <col:12, col:21> col:21 container 'const T &'
+  |   |   `-TemplateTypeParmType 0x1cde60f1b50 'type-parameter-0-0' dependent depth 0 index 0
+  |   `-TemplateArgument <line:32:21> type 'T':'type-parameter-0-0'
+  |     `-TemplateTypeParmType 0x1cde7837380 'T' dependent depth 0 index 0
+  |       `-TemplateTypeParm 0x1cde7837318 'T'
+  `-FunctionDecl 0x1cde7837648 <line:33:1, col:30> col:6 print 'void (const T &)'
+    `-ParmVarDecl 0x1cde7837558 <col:12, col:21> col:21 container 'const T &'
 ```
 
-From the above AST, there are a few new nodes that we need to visit.
-- `ConceptDecl` nodes, which represent concept definitions, and
-- `ConceptSpecializationExpr` nodes, which represent concept constraint expressions
+Concepts are different from a lot of the other nodes we've visited so far.
+In addition to the `ConceptDecl` and `ConceptSpecializationExpr` nodes, which refer to concept definitions and references, there are also context-dependent nodes such as `UnresolvedLookupExpr`, `DependentScopeDeclRefExpr`, and `CXXDependentScopeMemberExpr` that refer to nodes that cannot be fully resolved due to their dependency on an unknown type `T`.
+These are typical in template and concept definitions where the compiler cannot determine the declaration to use due to type information being unavailable until instantiation.
+For these nodes, despite the full type being unknown, it is still possible to deduce enough information from the AST (for most cases) to apply syntax highlighting.
 
-```cpp title:{visitor.hpp} added:{9,14-18}
+Not all of these nodes require their own visitor function.
+As can be seen from the AST, `UnresolvedLookupExpr` and, in some cases, `DependentScopeDeclRefExpr` nodes, are children of a `CallExpr` node.
+For these, we can instead augment the existing `VisitCallExpr` implementation, in a similar approach to what we did earlier with reusing `CXXRecordDecl` for template class definitions.
+`ConceptDecl`, `ConceptSpecializationExpr`, and `CXXDependentScopeMemberExpr` nodes require their own visitors, so let's implement those now.
+
+```cpp title:{visitor.hpp} added:{9,14-21}
 class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
     public:
         explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
         ~Visitor();
-        
-        // ...
         
         // For visiting function calls
         // For visiting unresolved (dependent) type expressions
@@ -3617,6 +3631,9 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
         // For visiting concept constraint expressions
         bool VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* node);
         
+        // For visiting class members of dependent types
+        bool VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExpr* node);
+        
         // ...
 };
 ```
@@ -3624,7 +3641,7 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
 ### Concept declarations
 
 Concept declarations are captured by `ConceptDecl` nodes.
-```cpp
+```cpp title:{visitor.cpp}
 #include "visitor.hpp"
 
 bool Visitor::VisitConceptDecl(clang::ConceptDecl* node) {
@@ -3645,32 +3662,7 @@ bool Visitor::VisitConceptDecl(clang::ConceptDecl* node) {
     return true;
 }
 ```
-This visitor follows the same pattern as before.
 Concept definitions are annotated with the `concept` annotation.
-
-```text added:{5}
-#include <concepts> // std::same_as
-#include <iterator> // std::begin, std::end
-
-template <typename T>
-concept [[concept,ForwardIterable]] = requires(T container) {
-    // Ensure the container supports the std::begin and std::end methods
-    { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
-    
-    // Ensure the container iterator can be dereferenced
-    { *std::begin(container) };
-
-    // Ensure the container iterator can be incremented
-    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
-};
-
-template <typename T>
-void print(const T& value);
-
-// Concept-constrained function specialization for containers
-template <ForwardIterable T>
-void print(const T& container);
-```
 
 ### Concept constraint expressions
 
@@ -3703,86 +3695,9 @@ bool Visitor::VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* n
 The implementation for the `VisitConceptSpecializationExpr` follows closely to that of `VisitConceptDecl`.
 The name of the concept is retrieved from the declaration via `ConceptSpecializationExpr::getNamedConcept`.
 
-```text added:{7,13,20}
-#include <concepts> // std::same_as
-#include <iterator> // std::begin, std::end
-
-template <typename T>
-concept [[concept,ForwardIterable]] = requires(T container) {
-    // Ensure the container supports the std::begin and std::end methods
-    { std::begin(container) } -> std::[[concept,same_as]]<decltype(std::end(container))>;
-    
-    // Ensure the container iterator can be dereferenced
-    { *std::begin(container) };
-
-    // Ensure the container iterator can be incremented
-    { ++std::begin(container) } -> std::[[concept,same_as]]<decltype(std::begin(container))>;
-};
-
-template <typename T>
-void print(const T& value);
-
-// Concept-constrained function specialization for containers
-template <[[concept,ForwardIterable]] T>
-void print(const T& container);
-```
-This visitor function annotates concept constraints in both concept definitions and template specializations, and any other `constexpr` expressions that reference the concept.
-
-### Dependent expressions
-
-There are a few more nodes that pertain to dependent lookup contexts, such as those in template / concept definitions.
-Consider the following example:
-```cpp
-template <typename T>
-concept MyConcept = requires(T value) {
-    // Ensure that the type can be printed
-    // Assuming the existence of some overloaded function 'print'...
-    { print(value) };
-
-    // Ensure that the type has a member variable named 'foo'
-    { value.foo };
-
-    // Ensure that the type has a member function named 'bar'
-    { T::bar() };
-    
-    // Ambiguous: is this referring to a static class variable or type?
-    { T::value_type };
-};
-```
-With corresponding AST:
-```text
-`-ConceptDecl 0x1f600187ac8 <example.cpp:1:1, line:14:1> line:2:9 MyConcept
-  |-TemplateTypeParmDecl 0x1f6001879e8 <line:1:11, col:20> col:20 referenced typename depth 0 index 0 T
-  `-RequiresExpr 0x1f60199f330 <line:2:21, line:14:1> 'bool'
-    |-ParmVarDecl 0x1f60199ef98 <line:2:30, col:32> col:32 referenced value 'T'
-    |-CompoundRequirement 0x1f60199f0f0 dependent
-    | `-CallExpr 0x1f60199f0c8 <line:4:7, col:18> '<dependent type>'
-    |   |-UnresolvedLookupExpr 0x1f60199f068 <col:7> '<overloaded function type>' lvalue (ADL) = 'print' empty
-    |   `-DeclRefExpr 0x1f60199f0a8 <col:13> 'T' lvalue ParmVar 0x1f60199ef98 'value' 'T' non_odr_use_unevaluated
-    |-CompoundRequirement 0x1f60199f188 dependent
-    | `-CXXDependentScopeMemberExpr 0x1f60199f140 <line:7:7, col:13> '<dependent type>' lvalue .foo
-    |   `-DeclRefExpr 0x1f60199f120 <col:7> 'T' lvalue ParmVar 0x1f60199ef98 'value' 'T' non_odr_use_unevaluated
-    |-CompoundRequirement 0x1f60199f260 dependent
-    | `-CallExpr 0x1f60199f240 <line:10:7, col:14> '<dependent type>'
-    |   `-DependentScopeDeclRefExpr 0x1f60199f208 <col:7, col:10> '<dependent type>' lvalue
-    |     `-NestedNameSpecifier TypeSpec 'T'
-    `-CompoundRequirement 0x1f60199f300 dependent
-      `-DependentScopeDeclRefExpr 0x1f60199f2c8 <line:13:7, col:10> '<dependent type>' lvalue
-        `-NestedNameSpecifier TypeSpec 'T'
-```
-This example demonstrates several instances of expressions that are unable to be fully resolved due to their dependency on an unknown type `T`.
-These typically happen in template contexts where the compiler cannot determine the correct declaration to use and name lookup is deferred until instantiation.
-There are a few nodes we need to process:
-- [`UnresolvedLookupExpr` nodes](), which refer to names whose resolution is ambiguous,
-- [`CXXDependentScopeMemberExpr` nodes](), which refer to member access expressions, and
-- [`DependentScopeDeclRefExpr` nodes](), which represent references to variable declarations (similar to `DeclRefExpr` nodes)
-
-Despite the full type being unknown, it is still possible to deduce enough information from the AST (for most cases) to apply syntax highlighting.
-
 ### Dependent function calls
 
-As can be seen from the AST, `UnresolvedLookupExpr` and, in some cases, `DependentScopeDeclRefExpr` nodes, are children of a `CallExpr` node.
-However, if we execute the `VisitCallExpr` function as is, we get a segmentation fault.
+As can be seen from the AST, `UnresolvedLookupExpr` and, in some cases, `DependentScopeDeclRefExpr` nodes, are children of a `CallExpr` node, which means we can reuse our previous implementation.
 ```cpp
 #include "visitor.hpp"
 
@@ -3811,13 +3726,71 @@ bool Visitor::VisitCallExpr(clang::CallExpr* node) {
     return true;
 }
 ```
+However, if we execute the `VisitCallExpr` function as is, we get a segmentation fault.
 Why is it, then, that the existing `VisitCallExpr` cannot properly handle these nodes?
 The main problem lies in the way the name of the function is retrieved.
 For unresolved nodes, `CallExpr::getCalleeDecl` returns `nullptr`, as due to the unknown type of `T` it is ambiguous which declaration the function refers to.
 
 We must process these nodes separately.
 
-```cpp added:{12-33,46}
+Unresolved expressions result from references whose type is ambiguous and could not be resolved.
+Good examples of this are the `std::begin` and `std::end` functions - the function used differs based on the type of container `T`.
+```cpp added:{12-22,36}
+#include "visitor.hpp"
+
+bool Visitor::VisitCallExpr(clang::CallExpr* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getBeginLoc();
+    
+    // Skip any function calls that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // In template contexts, CallExpr nodes fail to resolve fully due to their dependency on an unknown type `T`.
+    if (const clang::UnresolvedLookupExpr* ule = clang::dyn_cast<clang::UnresolvedLookupExpr>(node->getCallee())) {
+        // An example of an UnresolvedLookupExpr is std::begin(T)
+        std::string name = ule->getNameInfo().getAsString();
+        location = ule->getNameLoc();
+        
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        m_annotator->insert_annotation("function", line, column, name.length());
+    }
+    else {
+        // Retrieve the name of the function from the function declaration
+        const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
+        std::string name = function->getNameAsString();
+        
+        // Clang does not provide an easy way to retrieve the location of the function name directly
+        std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
+        for (const Token& token : tokens) {
+            if (token.spelling == name) {
+                m_annotator->insert_annotation("function", token.line, token.column, name.length());
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+```
+With some dynamic casting, we introduce a separate branch for `UnresolvedLookupExpr` nodes.
+The name and location of the function is retrieved with calls to `UnresolvedLookupExpr::getNameInfo` and `UnresolvedLookupExpr::getNameLoc`.
+This gives us the location of the function name directly (ignoring any qualifying namespaces and/or class names), meaning we can insert a `function` annotation directly without having to tokenize the range of the whole `CallExpr` node.
+
+`DependentScopeDeclRefExpr` nodes are a bit different.
+As can be seen on line 70 of the AST, a `DependentScopeDeclRefExpr` node is not strictly required to be a child of a `CallExpr` node.
+This pertains to line 24 of the code block, which enforces a `T::value_type` constraint on the concept.
+In this example, however, is still ambiguous what the type of the expression is.
+`T::value_type` may either reference a static member variable or a nested type.
+Both of these have different annotations for syntax highlighting.
+I decided to leave this case unhandled - should the case arise, it will simply require manual annotation.
+This also means we don't need to implement another visitor.
+
+For `DependentScopeDeclRefExpr` nodes that are children of a `CallExpr`, we can use a similar approach and augment the `VisitCallExpr` visitor to handle this case specifically.
+```cpp added:{23-33}
 #include "visitor.hpp"
 
 bool Visitor::VisitCallExpr(clang::CallExpr* node) {
@@ -3844,10 +3817,10 @@ bool Visitor::VisitCallExpr(clang::CallExpr* node) {
         // An example of an DependentScopeDeclRefExpr is T::function()
         std::string name = dre->getNameInfo().getAsString();
         location = dre->getLocation();
-        
+
         unsigned line = source_manager.getSpellingLineNumber(location);
         unsigned column = source_manager.getSpellingColumnNumber(location);
-        
+
         m_annotator->insert_annotation("function", line, column, name.length());
     }
     else {
@@ -3868,57 +3841,13 @@ bool Visitor::VisitCallExpr(clang::CallExpr* node) {
     return true;
 }
 ```
-Two new checks are added to check if the callee of the expression is an instance of either a `UnresolvedLookupExpr` or `DependentScopeDeclRefExpr` node.
-
-The name and location of the function is retrieved through directly with calls to `getNameInfo` and `getNameLoc`/`getLocation`, respectively.
-As this gives the location of the function name directly (ignoring any qualifiers), we can insert a `function` annotation directly without having to tokenize the range of the whole `CallExpr` node.
-
-Note that the second check only pertains to the case where the `DependentScopeDeclRefExpr` node is a child of a `CallExpr` node.
-As can be seen in the AST, this is not always the case.
-
-However, for this second case, it is still ambiguous what the type of the expression is.
-`T::value_type` may either reference a static member variable or a nested type.
-Both of these have different annotations for syntax highlighting.
-I decided to leave this case unhandled - should the case arise, it will simply require manual annotation.
-
-```text added:{4,10}
-template <typename T>
-concept [[concept,MyConcept]] = requires(T value) {
-    // Ensure that the type can be printed
-    { [[function,print]](value) };
-
-    // Ensure that the type has a member variable named 'foo'
-    { value.foo };
-
-    // Ensure that the type has a member function named 'bar'
-    { T::[[function,bar]]() };
-    
-    // Ambiguous: is this referring to a static class variable or type?
-    { T::value_type };
-};
-```
+The name and location of the function is retrieved with calls to `DependentScopeDeclRefExpr::getNameInfo` and `DependentScopeDeclRefExpr::getLocation`.
+`DependentScopeDeclRefExpr` that are not children of `CallExpr` nodes are purposefully left unhandled.
 
 ### Dependent member references
 
 The last node for this section is the `CXXDependentScopeMemberExpr`, which represents a member access where the referenced member cannot be fully resolved.
-For this, a new visitor is added:
-```cpp title:{visitor.hpp}
-class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
-    public:
-        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Visitor();
-        
-        // ...
-        
-        // For visiting class members of dependent types
-        bool VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExpr* node);
-        
-        // ...
-};
-```
-
 The implementation of the `VisitCXXDependentScopeMemberExpr` visitor follows a similar pattern as before:
-
 ```cpp
 #include "visitor.hpp"
 
@@ -3943,46 +3872,8 @@ bool Visitor::VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExp
 The location of the member variable is retrieved directly by a call to `CXXDependentScopeMemberExpr::getMemberLoc`.
 The name of the member is retrieved through `CXXDependentScopeMemberExpr::getMemberNameInfo`.
 The member is annotated with the `member-variable` annotation, as before.
-```text added:{7}
-template <typename T>
-concept [[concept,MyConcept]] = requires(T value) {
-    // Ensure that the type can be printed
-    { [[function,print]](value) };
 
-    // Ensure that the type has a member variable named 'foo'
-    { value.[[member-variable,foo]] };
 
-    // Ensure that the type has a member function named 'bar'
-    { T::[[function,bar]]() };
-    
-    // Ambiguous: is this referring to a static class variable or type?
-    { T::value_type };
-};
-```
-With the new visitors implemented, we have a complete annotation solution for concepts.
-```text added:{7,10,13}
-#include <concepts> // std::same_as
-#include <iterator> // std::begin, std::end
-
-template <typename T>
-concept [[concept,ForwardIterable]] = requires(T container) {
-    // Ensure the container supports the std::begin and std::end methods
-    { std::[[function,begin]](container) } -> std::[[concept,same_as]]<decltype(std::[[function,end]](container))>;
-    
-    // Ensure the container iterator can be dereferenced
-    { *std::[[function,begin]](container) };
-
-    // Ensure the container iterator can be incremented
-    { ++std::[[function,begin]](container) } -> std::[[concept,same_as]]<decltype(std::[[function,begin]](container))>;
-};
-
-template <typename T>
-void print(const T& value);
-
-// Concept-constrained function specialization for containers
-template <[[concept,ForwardIterable]] T>
-void print(const T& container);
-```
 
 Note that most of these changes also apply to template contexts.
 
