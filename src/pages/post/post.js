@@ -197,7 +197,7 @@ function IC(props) {
 }
 
 function CodeBlock(props) {
-    let { className, children, options, title, added, removed, modified, hidden, highlighted } = props;
+    let { className, children, options, title, added, removed, hidden, highlighted } = props;
     if (!children) {
         return;
     }
@@ -218,7 +218,6 @@ function CodeBlock(props) {
     // If present, map diff elements back from comma-separated strings to an array of numbers
     added = added ? added.split(",").map(Number) : [];
     removed = removed ? removed.split(",").map(Number) : [];
-    modified = modified ? modified.split(",").map(Number) : [];
     hidden = hidden ? hidden.split(",").map(Number) : [];
     highlighted = highlighted ? highlighted.split(",").map(Number) : [];
     options = JSON.parse(options);
@@ -316,10 +315,6 @@ function CodeBlock(props) {
                 symbol = '-';
                 override = 'removed';
             }
-            // no symbols for modified / highlighted tags
-            else if (modified.includes(i + 1)) {
-                override = 'modified';
-            }
             else if (highlighted.includes(i + 1)) {
                 override = 'highlighted';
             }
@@ -336,10 +331,7 @@ function CodeBlock(props) {
             }
         }
         else {
-            if (modified.includes(i + 1)) {
-                override = 'modified';
-            }
-            else if (highlighted.includes(i + 1)) {
+            if (highlighted.includes(i + 1)) {
                 override = 'highlighted';
             }
 
@@ -444,17 +436,25 @@ function CodeBlock(props) {
     );
 }
 
+function Heading(props) {
+    let { children, depth, position } = props;
+    console.log(children)
+    return <div>
+
+    </div>
+}
+
 
 function parseCodeBlockMetadata() {
     return (tree) => {
         // Traverse the generated AST
+        // Possible sections: code (code blocks), heading (h1, h2, h3, etc.), paragraph (p, span)
         visit(tree, "code", (node) => {
             // Code blocks can have optional metadata that influence how the code block is rendered
             const meta = node.meta || '';
 
             let added = [];
             let removed = [];
-            let modified = [];
             let hidden = [];
             let highlighted = [];
             let lineCount = -1; // -1 means show all lines
@@ -478,16 +478,6 @@ function parseCodeBlockMetadata() {
                 const match = regexp.exec(meta);
                 if (match) {
                     removed.push(...rangeParser(match[1]));
-                }
-            }
-
-            // Modified lines are specified by the modified:{[range]} metadata tag
-            // These lines show up with a yellow background
-            {
-                const regexp = /\bmodified\b:{([-,\d\s]+)}/;
-                const match = regexp.exec(meta);
-                if (match) {
-                    modified.push(...rangeParser(match[1]));
                 }
             }
 
@@ -556,29 +546,146 @@ function parseCodeBlockMetadata() {
                     title: title,
                     added: added.join(","),
                     removed: removed.join(","),
-                    modified: modified.join(","),
-                    hidden: hidden.join(","),
                     highlighted: highlighted.join(","),
+                    hidden: hidden.join(","),
                 },
             };
         });
     };
 }
 
+function extractSectionHeaders(sectionHeaders) {
+    return () => (tree) => {
+        visit(tree, "heading", (node) => {
+            const header = node.children[0].name;
+            sectionHeaders.push({
+                name: header,
+                depth: node.depth
+            });
+        });
+    }
+}
+
+function useDimensions() {
+    // Define breakpoints
+    const getDeviceCategory = (width) => {
+        if (width < 768) return "mobile";
+        if (width < 1024) return "tablet";
+        return "desktop";
+    };
+
+    const [deviceCategory, setDeviceCategory] = useState(getDeviceCategory(window.innerWidth));
+    const prevCategory = useRef(deviceCategory); // Ref to track the previous category
+
+    useEffect(() => {
+        const handleResize = () => {
+            const newCategory = getDeviceCategory(window.innerWidth);
+
+            // Only update state if the category actually changes
+            if (prevCategory.current !== newCategory) {
+                prevCategory.current = newCategory; // Update ref first
+                setDeviceCategory(newCategory);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return deviceCategory;
+}
+
+function SectionHeaders(props) {
+    const { markdownRef } = props;
+
+    const [headers, setHeaders] = useState([]);
+    const [currentHeader, setCurrentHeader] = useState(null)
+
+    // Extract rendered header information
+    useEffect(() => {
+        if (!markdownRef.current) {
+            return;
+        }
+
+        let headers = Array.from(markdownRef.current.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+        headers = headers.map((header) => ({
+            text: header.innerText,
+            depth: parseInt(header.tagName.charAt(1)), // h1 -> 1, h2 -> 2, etc.
+            position: header.getBoundingClientRect().top
+        }));
+
+        setHeaders(headers);
+    }, [markdownRef]);
+
+    console.log(headers)
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollY = window.scrollY;
+            let current = null;
+
+            console.log(scrollY);
+
+            for (const header of headers) {
+                if (scrollY + window.innerHeight / 4 >= header.position) {
+                    current = header;
+                }
+            }
+
+            setCurrentHeader(current);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [headers]);
+
+    if (!headers) {
+        return <div></div>;
+    }
+
+    return <div className="headers">
+        {
+            headers.map((header, index) => {
+                let classNames = ["section-header"];
+                if (currentHeader && currentHeader.text === header.text) {
+                    classNames.push("active");
+                }
+
+                return <span key={index} className={classNames.join(" ")} style={{paddingLeft: `${header.depth * 10}px`}}>
+                    {header.text}
+                </span>
+            })
+        }
+    </div>
+}
+
+function Section(props) {
+    const { children } = props;
+
+    return <div className="section">
+        {children}
+    </div>
+}
+
 export default function Post(props) {
     const {post} = props;
     const [Content, setContent] = useState(null);
+    const category = useDimensions();
+    const markdownRef = useRef(null);
 
     // load post content
     useEffect(() => {
         async function loadPostContent(url) {
             try {
                 const source = await get(url);
+                let headers = [];
 
                 // Compile file content (.mdx)
                 const code = await compile(source, {
                     outputFormat: 'function-body',
-                    remarkPlugins: [parseCodeBlockMetadata]
+                    remarkPlugins: [
+                        parseCodeBlockMetadata,
+                    ]
                 }).then(response => response.toString());
 
                 // Execute compiled source to get MDX content
@@ -600,13 +707,20 @@ export default function Post(props) {
 
     const components = {
         IC: IC,
-        code: CodeBlock
+        code: CodeBlock,
     }
+
+    console.log("rendering with " + category);
 
     return (
         <div className="post">
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-            <Content components={components}></Content>
+            <div className="body">
+                <SectionHeaders markdownRef={markdownRef}></SectionHeaders>
+                <div className="content" ref={markdownRef}>
+                    <Content components={components}></Content>
+                </div>
+            </div>
             <div className="footer"></div>
         </div>
     );

@@ -1,14 +1,13 @@
 
 .post {
     margin: 0 auto;
-    min-width: 1080px;
-    max-width: 1080px;
 
     font-family: "Noto Serif", serif;
     font-weight: 300;
     font-size: 18px;
 
     display: flex;
+    flex: 1;
     flex-direction: column;
     row-gap: 15px;
 }
@@ -18,9 +17,6 @@
     flex-direction: column;
 
     padding-top: 40px;
-
-    min-width: 1080px;
-    max-width: 1080px;
 }
 
 .post .header .back i {
@@ -86,4 +82,45 @@
 
     font-family: 'JetBrains Mono', monospace;
     font-weight: 300;
+}
+
+.post .body {
+    display: grid;
+    grid-template-columns: 1fr var(--width) 1fr;
+
+    max-width: 1800px;
+    margin: 0 auto;
+
+    position: relative;
+}
+
+.post .body .section {
+}
+
+.post .headers {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-direction: column;
+
+    position: sticky;
+    top: 20px;
+    height: fit-content; /* Prevents it from stretching */
+    padding-left: 20px;
+    padding-right: 20px;
+
+    width: 300px;
+}
+
+.section-header {
+    font-weight: inherit;
+    transition: 0.1s;
+}
+
+.section-header.active {
+    font-weight: bold;
+}
+
+.post .content {
+    grid-column: 2 / 3; /* Center column */
+    width: 100%; /* Ensures it doesn’t shrink */
 }

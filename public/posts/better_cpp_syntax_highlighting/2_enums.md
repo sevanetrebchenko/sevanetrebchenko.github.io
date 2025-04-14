@@ -1,5 +1,4 @@
 
-## Enums
 Enums are a great starting point as their declaration is simple and usage is straightforward.
 Consider the following example:
 ```cpp line-numbers:{enabled}
@@ -49,11 +48,11 @@ The AST for this code snippet looks as follows:
 ### Enum Declarations
 
 Enums are represented by two node types: `EnumDecl`, which corresponds to the enum declaration, and `EnumConstantDecl`, which represents the enum values.
-From the `EnumDecl` node, we can infer that the `Level` enum is declared as an enum class, and that the underlying type is defaulted to an int.
+From the `EnumDecl` node in the AST above, we can infer that the `Level` enum is declared as an enum class, and that the underlying type is defaulted to an int.
 If we had explicitly specified the underlying type, such as a `unsigned char` or `std::uint8_t` for a more compact representation, this would have also been reflected in the AST.
 
 Let's set up visitor functions to inspect `EnumDecl` and `EnumConstantDecl` nodes:
-```cpp line-numbers:{enabled} title:{visitor.hpp} added:{9-10}
+```cpp line-numbers:{enabled} title:{visitor.hpp} added:{8-13}
 class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
     public:
         explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
@@ -63,6 +62,8 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
         
         // For visiting enum declarations
         bool VisitEnumDecl(clang::EnumDecl* node);
+        
+        // For visiting enum constants (values)
         bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
         
         // ...
@@ -78,13 +79,15 @@ bool Visitor::VisitEnumDecl(clang::EnumDecl* node) {
     const clang::SourceLocation& location = node->getLocation();
     
     // Skip any enum definitions that do not come from the main file
-    if (source_manager.isInMainFile(location)) {
-        const std::string& name = node->getNameAsString();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        m_annotator->insert_annotation("enum-name", line, column, name.length());
+    if (!source_manager.isInMainFile(location)) {
+        return true;
     }
+    
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("enum-name", line, column, name.length());
 
     return true;
 }
@@ -94,9 +97,9 @@ An `enum-name` annotation is inserted for every `enum` declaration.
 The return value of a visitor function indicates whether we want AST traversal to continue.
 Since we are interested in traversing all the nodes of the AST, this will always be `true`.
 
-As mentioned earlier, the `SourceManager` class maps AST nodes back to their source locations within the translation unit.
-The `source_manager.isInMainFile(location)` check ensures that the node originates from the "main" file we are annotating - the one provided to `runToolOnCodeWithArgs`.
-This prevents annotations from being applied to external headers, and is a recurring pattern in every visitor function.
+As mentioned in the previous post in this series, the `SourceManager` class maps AST nodes back to their source locations within the translation unit.
+The `SourceManager::isInMainFile` check ensures that the node originates from the "main" file we are annotating - the one provided to `runToolOnCodeWithArgs`.
+This prevents annotations from being applied to external headers, and is a recurring pattern in every visitor function we will implement.
 
 The implementation of `VisitEnumConstantDecl` is nearly identical, except that it inserts an `enum-value` annotation instead of `enum-name`.
 ```cpp line-numbers:{enabled} title:{visitor.cpp}
@@ -107,14 +110,16 @@ bool Visitor::VisitEnumConstantDecl(clang::EnumConstantDecl* node) {
     const clang::SourceLocation& location = node->getLocation();
     
     // Skip any enum constant definitions that do not come from the main file
-    if (source_manager.isInMainFile(location)) {
-        const std::string& name = node->getNameAsString();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        m_annotator->insert_annotation("enum-value", line, column, name.length());
+    if (!source_manager.isInMainFile(location)) {
+        return true;
     }
     
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("enum-value", line, column, name.length());
+
     return true;
 }
 ```
@@ -136,27 +141,26 @@ int main() {
     // ...
 }
 ```
-This is not yet complete.
-We will handle references to user-defined types, such as `Level` on lines 9 and 12, in a separate visitor function.
+A good start, but this is not yet complete.
+We will handle annotations of user-defined types, such as the `Level` enum on lines 9 and 12, in a later part of this series.
 The reference to `Error` on line 12, however, is still missing an `enum-value` annotation.
-As this is not a declaration, handling this will require a new visitor function.
+As this is not a declaration, handling this will require implementing a new visitor function.
 
 ### Enum References
 
-References to enum values are captured by a [`DeclRefExpr` node](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details).
+References to enum values are captured by [`DeclRefExpr` nodes](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details).
 These nodes capture expressions that refer to previously declared variables, functions, and types.
 
-We can see this in following line from the AST above, which references the `DeclRefExpr` node on columns 17-24 of line 12 and corresponds to the `Error` enum constant within the call to `log_message`:
-```json
-// log_message(...)
-CallExpr 0x1b642245e98 <line:12:5, col:55> 'void'
-    // Level::Error
-    DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
-    // ...
+We can see this in following line from the AST above, which references the `DeclRefExpr` node on line 12 and corresponds to the `Error` enum constant within the call to `log_message`:
+```text highlighted:{4}
+`-CallExpr 0x1b642245e98 <line:12:5, col:55> 'void'
+  |-ImplicitCastExpr 0x1b642245e80 <col:5> 'void (*)(Level, const char *)' <FunctionToPointerDecay>
+  | `-DeclRefExpr 0x1b642245e00 <col:5> 'void (Level, const char *)' lvalue Function 0x1b642245a28 'log_message' 'void (Level, const char *)'
+  |-DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
 ```
 
-For capturing nodes of this type, we need to set up a new visitor function:
-```cpp line-numbers:{enabled} title:{visitor.hpp} added:{13}
+For visiting `DeclRefExpr` nodes, we need to set up a new visitor function:
+```cpp line-numbers:{enabled} title:{visitor.hpp} added:{14,15}
 class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
     public:
         explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
@@ -166,6 +170,8 @@ class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
         
         // For visiting enum declarations
         bool VisitEnumDecl(clang::EnumDecl* node);
+        
+        // For visiting enum constants (values)
         bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
         
         // For visiting references to enum constants
@@ -202,14 +208,12 @@ bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
     return true;
 }
 ```
-Most of the information we need is retrieved from the *declaration* of the underlying symbol, as it contains details about the type, value, and other attributes of the expression.
+Most of the information we need is retrieved from the *declaration* of the underlying symbol via `DeclRefExpr::getDecl`, as it contains details about the type, value, and other attributes of the expression.
 Other information, such as the source location in the file, is retrieved directly from the `DeclRefExpr` node, as our focus now is to annotate references rather and not declarations (which have already been handled above).
-This is a common pattern that will be applied across several visitor function implementations.
+This is a common pattern that we will utilize for several other visitor functions.
 If the declaration we are inspecting refers to a `EnumConstantDecl` node, we have found a reference to an enum constant and insert the `enum-value` annotation.
 
-`DeclRefExpr` nodes reference more than just enum constants, and we will revisit this visitor function later to handle additional cases.
-
-With the `VisitDeclRefExpr` visitor function implemented, the tool now properly annotates references to enum constants, in addition to enum declarations.
+With the `VisitDeclRefExpr` visitor function implemented, the tool now properly annotates references to enum constants.
 ```text line-numbers:{enabled} added:{6,12}
 enum class [[enum-name,Level]] {
     [[enum-value,Debug]] = 0,
@@ -226,7 +230,7 @@ int main() {
     // ...
 }
 ```
-The final step is to add definitions for the `enum-name` and `enum-value` CSS styles:
+The final step is to add definitions for the `enum-name` and `enum-value` CSS styles for our Markdown renderer to apply during styling:
 ```css
 .language-cpp .enum-name {
     color: rgb(181, 182, 227);
