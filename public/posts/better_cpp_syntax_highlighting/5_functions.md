@@ -712,7 +712,7 @@ However, I opted for a different approach.
 For the sample code snippet above, the C++ `std::chrono` library does not provide an overload to resolve `200ms` into a function that accepts an integer.
 Instead, the following is called:
 ```cpp title:{chrono.h}
-/// Literal suffix for durations of type `std::chrono::milliseconds`
+// Literal suffix for durations of type `std::chrono::milliseconds`
 template <char... _Digits>
 constexpr chrono::milliseconds
 operator""ms() {
@@ -888,7 +888,7 @@ int [[function,main]]() {
     // ...
 }
 ```
-The `plain` CSS style is language-agnostic, and provides the default style to use for code block tokens.
+The `plain` CSS style is language-agnostic, and provides the default style to use for tokens in code blocks.
 
 After defining some new CSS styles, we have a robust solution for proper syntax highlighting of function calls.
 ```css

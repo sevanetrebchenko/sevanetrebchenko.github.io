@@ -352,12 +352,10 @@ int main() {
 If we extend `PrismJS` to highlight *all* tokens that match class names, we may accidentally end up highlighting more than necessary.
 
 While this example may be contrived, it sheds light on the fundamental issue of syntax highlighting with `PrismJS`: it is difficult to reason about the structure of the code by only looking at individual tokens.
-I believe this to be the reason for the issues pointed out above.
-Syntax highlighting for C++ requires additional context.
-Even tokens with the same spelling may need to be highlighted differently based on the context they appear in.
+I believe this to be the fundamental reason for the issues pointed out above.
+Syntax highlighting for C++ simply requires more context.
 What if we want to extract member variables of a given class?
 How do we distinguish between local variables and class members?
-What about types that we don't have definitions for, such as those included from third-party dependencies or the standard library?
 Approaches like using regular expressions or rule-based syntax highlighting quickly grow convoluted, posing a challenge from standpoints in both readability and long-term maintenance.
 
 It makes sense, therefore, that PrismJS skips most this complexity and only annotates tokens it is confidently able to identify.
@@ -815,7 +813,7 @@ Why?
 In some cases, determining the exact location of a symbol is not always straightforward.
 In general, while we usually know what symbol(s) we are looking for, the corresponding AST node does not always provide a direct way to retrieve their location(s).
 It does, however, include a way to retrieve the range of the node - spanning from a start to an end `SourceLocation` - which greatly helps us narrow down our search.
-By tokenizing the source file and storing tokens in a structured manner, we can efficiently retrieve those that fall within the given `SourceRange` of an AST node without having to traverse every token of the file every time.
+By tokenizing the source file and storing tokens in a structured manner, we can efficiently retrieve those that fall within the given `SourceRange` of an AST node without having to traverse every token of the file.
 We can then check against the spelling of the token until we find one that matches that of the symbol we are looking for.
 
 For example, a `CallExpr` node only provides the location of the corresponding function invocation.

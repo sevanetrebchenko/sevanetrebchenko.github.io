@@ -124,7 +124,7 @@ struct Vector3 {
 
 There are a lot of moving parts when it comes to annotating classes.
 Let's break down some of the nodes we will visit in this section:
-- `CXXRecordDecl`, which represents declarations of classes,
+- `CXXRecordDecl`, which represents declarations of structs, unions, and classes,
 - `CXXConstructorDecl` and `CXXDestructorDecl`, which represents class constructors and destructors, respectively,
 - `CXXCtorInitializer`, which represents an element from a constructor initializer list,
 - `CXXMethodDecl`, which represents class member functions,
@@ -186,7 +186,9 @@ bool Visitor::VisitCXXRecordDecl(clang::CXXRecordDecl* node) {
         unsigned line = source_manager.getSpellingLineNumber(location);
         unsigned column = source_manager.getSpellingColumnNumber(location);
         
-        m_annotator->insert_annotation("class-name", line, column, name.length());
+        if (!name.empty()) {
+            m_annotator->insert_annotation("class-name", line, column, name.length());
+        }
     }
     
     return true;
@@ -540,6 +542,103 @@ const Vector3 Vector3::[[member-variable,zero]] = Vector3();
 
 int main() {
     Vector3 zero = Vector3::[[member-variable,zero]];
+    // ...
+}
+```
+
+## Unions
+
+As mentioned earlier, `CXXRecordDecl` nodes also capture unions.
+This allows us to reuse the same visitor logic for annotating union names and members, just as we did for classes and structs.
+```cpp
+union Constant {
+    bool b;
+    char c;
+    int i;
+    float f;
+    double d;
+};
+
+int main() {
+    Constant c { };
+    c.i = 4;
+    // ...
+    
+    c.d = 3.14;
+    // ...
+}
+```
+
+Looking at the generated AST for this code snippet, we see that all relevant nodes already have corresponding visitor implementations.
+```text
+|-CXXRecordDecl 0x1e1093079e8 <example.cpp:1:1, line:7:1> line:1:7 referenced union Constant definition
+| |-DefinitionData pass_in_registers aggregate standard_layout trivially_copyable pod trivial literal has_constexpr_non_copy_move_ctor has_variant_members
+| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
+| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveConstructor exists simple trivial needs_implicit
+| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
+| | |-MoveAssignment exists simple trivial needs_implicit
+| | `-Destructor simple irrelevant trivial constexpr needs_implicit
+| |-CXXRecordDecl 0x1e10ab28758 <col:1, col:7> col:7 implicit union Constant
+| |-FieldDecl 0x1e10ab28818 <line:2:5, col:10> col:10 b 'bool'
+| |-FieldDecl 0x1e10ab28880 <line:3:5, col:10> col:10 c 'char'
+| |-FieldDecl 0x1e10ab288f0 <line:4:5, col:9> col:9 referenced i 'int'
+| |-FieldDecl 0x1e10ab28960 <line:5:5, col:11> col:11 f 'float'
+| `-FieldDecl 0x1e10ab289d0 <line:6:5, col:12> col:12 referenced d 'double'
+`-FunctionDecl 0x1e10ab28aa0 <line:9:1, line:16:1> line:9:5 main 'int ()'
+  `-CompoundStmt 0x1e10ab28f70 <col:12, line:16:1>
+    |-DeclStmt 0x1e10ab28d50 <line:10:5, col:19>
+    | `-VarDecl 0x1e10ab28c38 <col:5, col:18> col:14 used c 'Constant' listinit
+    |   `-InitListExpr 0x1e10ab28ce0 <col:16, col:18> 'Constant' field Field 0x1e10ab28818 'b' 'bool'
+    |-BinaryOperator 0x1e10ab28dd8 <line:11:5, col:11> 'int' lvalue '='
+    | |-MemberExpr 0x1e10ab28d88 <col:5, col:7> 'int' lvalue .i 0x1e10ab288f0
+    | | `-DeclRefExpr 0x1e10ab28d68 <col:5> 'Constant' lvalue Var 0x1e10ab28c38 'c' 'Constant'
+    | `-IntegerLiteral 0x1e10ab28db8 <col:11> 'int' 4
+    `-BinaryOperator 0x1e10ab28f50 <line:14:5, col:11> 'double' lvalue '='
+      |-MemberExpr 0x1e10ab28f00 <col:5, col:7> 'double' lvalue .d 0x1e10ab289d0
+      | `-DeclRefExpr 0x1e10ab28ee0 <col:5> 'Constant' lvalue Var 0x1e10ab28c38 'c' 'Constant'
+      `-FloatingLiteral 0x1e10ab28f30 <col:11> 'double' 3.140000e+00
+```
+
+However, we must take care to exclude anonymous unions and structs from being annotated.
+Fortunately, Clang provides a built-in check via `CXXRecordDecl::isAnonymousStructOrUnion` that we can use for this purpose:
+```cpp
+bool Visitor::VisitCXXRecordDecl(clang::CXXRecordDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    
+    clang::SourceLocation location = node->getLocation();
+    if (source_manager.isInMainFile(location)) {
+        const std::string& name = node->getNameAsString();
+        unsigned line = source_manager.getSpellingLineNumber(location);
+        unsigned column = source_manager.getSpellingColumnNumber(location);
+        
+        // Avoid annotating unnamed (anonymous) record types
+        if (!node->isAnonymousStructOrUnion() && !name.empty()) {
+            m_annotator->insert_annotation("class-name", line, column, name.length());
+        }
+    }
+    
+    return true;
+}
+```
+This removes faulty `[[class-name,]]union { ... }` annotations that would have otherwise been added before anonymous struct and union declarations.
+Declarations and references to union members are handled without any additional modifications by the `VisitFieldDecl` and `VisitMemberExpr` visitor functions.
+
+```cpp
+union [[class-name,Constant]] {
+    bool [[member-variable,b]];
+    char [[member-variable,c]];
+    int [[member-variable,i]];
+    float [[member-variable,f]];
+    double [[member-variable,d]];
+};
+
+int main() {
+    Constant c { };
+    c.[[member-variable,i]] = 4;
+    // ...
+    
+    c.[[member-variable,d]] = 3.14;
     // ...
 }
 ```
