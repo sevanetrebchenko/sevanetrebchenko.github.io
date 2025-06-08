@@ -382,10 +382,10 @@ int [[function,main]]() {
 
 Keen observers will notice two things:
 1. Despite appearing as a `CXXMethodDecl` in the AST, the `distance` class member function declaration is also annotated by this visitor. This is because `CXXMethodDecl` nodes derive from `FunctionDecl`, marking them eligible for being visited by `VisitFunctionDecl`. Note that this behavior extends to non-static class functions, constructors, and destructors.
-2. Function templates are annotated by this visitor. While `FunctionTemplateDecl` nodes do not derive from `FunctionDecl`, each `FunctionTemplateDecl` node in the AST contains a child `FunctionDecl` representing the function declaration / definition itself.
+2. Template function declarations / definitions are also annotated by this visitor. While `FunctionTemplateDecl` nodes do not derive from `FunctionDecl`, each `FunctionTemplateDecl` node in the AST contains a child `FunctionDecl` representing the function declaration / definition itself. An example of this can be seen on line 3 of the AST above, corresponding to the `FunctionDecl` node of the definition of the `equal` template function.
 
 For annotating the names of function declarations and definitions, it would seem the `FunctionDecl` visitor is all we need.
-However, we will still implement a visitor function for `FunctionTemplateDecl` nodes, and revisit it later.
+However, we will still implement a visitor function to visit `FunctionTemplateDecl` nodes, and revisit it later.
 For now, the implementation of the `VisitFunctionTemplateDecl` visitor is identical to `VisitFunctionDecl` and is omitted for brevity.
 
 In regard to `CXXMethodDecl` nodes, the `VisitCXXMethodDecl` visitor function is skipped entirely - for this syntax highlighting solution, class functions, including class constructors and destructors, should be highlighted the same as regular functions.
@@ -399,6 +399,7 @@ I opted for this option, as then the function visitor is self-contained and does
 The logic for this can be seen on lines 12-15 of the `VisitFunctionDecl` implementation.
 
 Finally, the logic for annotating declarations / definitions for overloaded operators is modified slightly to only annotate the operator itself, as the leading `operator` should instead be highlighted as a keyword.
+We will revisit highlighting language keywords in a later post of this series.
 This is done by checking the name of the function being processed begins with the "operator" keyword and adjusting offsets accordingly.
 These functions are also annotated with the `function-operator` annotation.
 
@@ -433,11 +434,13 @@ bool Visitor::VisitCallExpr(clang::CallExpr* node) {
     return true;
 }
 ```
-The name of the function is retrieved from the function declaration.
+The name of the function being annotated is retrieved from the function declaration with the `FunctionDecl::getNameAsString` call.
+The declaration itself is retrieved through the `CallExpr` node with a call to `CallExpr::getCalleeDecl`.
 
 Unlike other AST nodes, the `CallExpr` node does not provide a way to retrieve the location of the start of the function call.
-We can use `CallExpr::getBeginLoc`, but this does not account for any qualifiers on the function call, such as namespaces or classes (in the case of a call to a static class function).
-However, since we know the name of the function, we can simply tokenize the source range of the `CallExpr` node and annotate the token that contains the name of the function with the `function` annotation.
+We can use `CallExpr::getBeginLoc`, but this does not account for any qualifiers on the function call, such as namespaces or classes (in the case of a call to a static class function), and returns the starting position of the full-qualified function.
+This makes it difficult to insert syntax highlighting annotations as function calls may be arbitrarily qualified.
+However, since we have already retrieved the name of the function above, we can simply tokenize the source range of the `CallExpr` node and annotate the token that contains the name of the function with the `function` annotation.
 
 ```text added:{17,39,49}
 #include <cstring> // std::strcmp
@@ -503,7 +506,7 @@ int [[function,main]]() {
 
 ### Built-in operators
 
-Unary, binary, and compound assignment operators are captured under the `UnaryOperator`, `BinaryOperator`, and `CompoundAssignOperator` nodes.
+Unary, binary, and compound assignment operators are captured under the `UnaryOperator`, `BinaryOperator`, and `CompoundAssignOperator` nodes, respectively.
 Unary operators are annotated with the `unary-operator` annotation, while binary and compound assignment operators are annotated with the `binary-operator` annotation.
 
 ```cpp title:{visitor.cpp}
@@ -529,9 +532,9 @@ bool Visitor::VisitUnaryOperator(clang::UnaryOperator* node) {
 ```
 The implementation of this function is largely the same for all 3 node types.
 Each node has a corresponding `getOperatorLoc` member function, which retrieves the source location of the operator.
-The operator itself is retrieved by a call to a static class function `getOpcodeStr`, depending on the type of node being processed.
-For example, this is `BinaryOperator::getOpcodeStr` for binary operator nodes, and `CompoundAssignOperator::getOpcodeStr` for compound assignment operators.
-As such, the implementations of these functions have been omitted for brevity.
+The operator itself is retrieved by a call to a static class function `getOpcodeStr`, qualified based on the type of node being processed.
+For example, this is `BinaryOperator::getOpcodeStr` for binary operator nodes, `CompoundAssignOperator::getOpcodeStr` for compound assignment operators, and `UnaryOperator::getOpCodeStr` for the example above.
+As such, the implementations for the rest of these functions have been omitted for brevity.
 
 ### Overloaded operators
 
@@ -560,11 +563,12 @@ bool Visitor::VisitCXXOperatorCallExpr(clang::CXXOperatorCallExpr* node) {
 The implementation of this visitor is very similar to the other operator visitors.
 The operator itself is retrieved by a call to the `getOperatorSpelling` function, and is annotated with the `function-operator` annotation to match the logic above for overloaded operator declarations / definitions.
 
-Unfortunately, due to the difficulties involved in variadic template functions and fold expressions, overloaded operators are difficult to annotate in these environments.
+Unfortunately, due to the complexities of variadic template functions and fold expressions, overloaded operators are often difficult to annotate in these environments.
 This is primarily due to the ambiguity around operator resolution in template function definitions.
 One possible solution is to iterate through the tokens of a template function definition and annotate those that match operator spellings.
 However, this is difficult to automate, as C++ provides a lot of flexibility when it comes to defining custom operator types.
-Because of this, I decided to leave the annotation process for these to be manual, as I don't personally use many fold expression in my code.
+Because of this, I decided to leave the annotation process for these to be manual.
+I prefer this approach, as I don't use many fold expression in my code.
 
 ```text added:{7,13,17,39,44,46,47}
 #include <cstring> // std::strcmp
@@ -648,29 +652,19 @@ bool Visitor::VisitUserDefinedLiteral(clang::UserDefinedLiteral* node) {
     std::string name = function->getNameAsString();
     name = name.substr(10); // Skip 'operator""' prefix
     
-    std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
-    
-    // Literal operators can only be applied on string or number (integer / floating point) types
-    // This also determines what annotation should be applied to the operator
-    // An alternative approach here would be to use UserDefineLiteral::getLiteralOperatorKind
-    for (const Token& token : tokens) {
-        std::size_t position = token.spelling.find(name);
-        if (position != std::string::npos) {
-            bool is_string_type = token.spelling.find('\'') != std::string::npos || token.spelling.find('"') != std::string::npos;
-            const char* annotation = is_string_type ? "string" : "number";
-            
-            m_annotator->insert_annotation(annotation, token.line, token.column + position, name.length());
-        }
-    }
+    // Insert annotation based on the underlying symbol type
+    // ...
     
     return true;
 }
 ```
-Similar to the approach taken in the `VisitCallExpr` visitor function, the `UserDefinedLiteral` AST node does not provide a way to retrieve the name of the operator, so it must be gotten from the declaration of the function.
-I wanted the annotation of the operator to match the type of symbol it is applied to.
-From the C++ specification, literal operators are only able to be applied to string and number types.
-This is encapsulated in the `UserDefinedLiteral` node, and can be retrieved by a call to `UserDefinedLiteral::getLiteralOperatorKind`.
-Below is a sample approach that can be taken to use this functionality:
+Similar to the approach taken in the `VisitCallExpr` visitor function, the `UserDefinedLiteral` AST node does not provide a direct way to retrieve the name of the operator, so it must be retrieved from the declaration of the function with `FunctionDecl::getNameAsString` call.
+As done for `CallExpr` nodes above, the declaration itself is retrieved through the `UserDefinedLiteral` node with a call to `CallExpr::getCalleeDecl`.
+
+For user-defined literal operators, I wanted the annotation of the operator to match the type of symbol it is applied to.
+From the [C++ specification](https://en.cppreference.com/w/cpp/language/user_literal.html), literal operators are can only be applied to integer, floating-point, character, and string literals.
+
+The kind of literal operator being used can be retrieved by a call to `UserDefinedLiteral::getLiteralOperatorKind`:
 ```cpp
 bool Visitor::VisitUserDefinedLiteral(clang::UserDefinedLiteral* node) {
     // ...
@@ -708,9 +702,9 @@ bool Visitor::VisitUserDefinedLiteral(clang::UserDefinedLiteral* node) {
 }
 ```
 
-However, I opted for a different approach.
-For the sample code snippet above, the C++ `std::chrono` library does not provide an overload to resolve `200ms` into a function that accepts an integer.
-Instead, the following is called:
+However, this approach has some unexpected drawbacks.
+For example, the C++ `std::chrono` library does not provide an overload to resolve `200ms` into a function that accepts an integer.
+Instead, the following overload is called (accepting a variadic list of characters as the digits of the number):
 ```cpp title:{chrono.h}
 // Literal suffix for durations of type `std::chrono::milliseconds`
 template <char... _Digits>
@@ -719,14 +713,50 @@ operator""ms() {
     return __check_overflow<chrono::milliseconds, _Digits...>();
 }
 ```
+Why is this implemented in such a way? Well, I'm not sure.
 There is also an overload that accepts a `long double`.
-For this reason, the logic above processed `200ms` as a literal of characters, marking the `ms` as a `string` instead of a number.
-I was not able to determine a workaround for this, so I used a different approach.
+For this reason, the using the logic above to determine the annotation based on the literal operator as retrieved from `UserDefinedLiteral::getLiteralOperatorKind` processed `200ms` as a literal of characters, marking the `ms` as a `string` instead of a `number`.
+I was not able to determine a workaround for this, so I came up a different approach.
+
 The standard dictates that there must not be a space between the target and literal suffix.
-We can use this to our advantage by manually determining what the type of the target is.
+We can use this to our advantage by manually parsing out the type of the target.
 If the token containing the suffix contains quotations (single or double, both are annotated with `string`), the suffix should also be marked as a string.
 Otherwise, the target is a number (integer or floating point), and the suffix is annotated with `number` instead.
-This logic can be seen on lines 22-30 of the `VisitUserDefinedLiteral` visitor function.
+This logic can be seen on lines 19-29 of the `VisitUserDefinedLiteral` visitor function:
+```cpp added:{19-29}
+#include "visitor.hpp"
+
+bool Visitor::VisitUserDefinedLiteral(clang::UserDefinedLiteral* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    clang::SourceLocation location = node->getUDSuffixLoc();
+    
+    // Skip any literal operators that do not come from the main file
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    // Retrieve the name of the literal operator from the function declaration
+    const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
+    std::string name = function->getNameAsString();
+    name = name.substr(10); // Skip 'operator""' prefix
+    
+    std::span<const Token> tokens = m_tokenizer->get_tokens(node->getSourceRange());
+    
+    // Literal operators can only be applied on string or number (integer / floating point) types
+    // This also determines what annotation should be applied to the operator
+    for (const Token& token : tokens) {
+        std::size_t position = token.spelling.find(name);
+        if (position != std::string::npos) {
+            bool is_string_type = token.spelling.find('\'') != std::string::npos || token.spelling.find('"') != std::string::npos;
+            const char* annotation = is_string_type ? "string" : "number";
+            
+            m_annotator->insert_annotation(annotation, token.line, token.column + position, name.length());
+        }
+    }
+    
+    return true;
+}
+```
 
 ```text added:{53,56}
 #include <cstring> // std::strcmp
