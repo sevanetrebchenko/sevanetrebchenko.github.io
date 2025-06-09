@@ -31,6 +31,22 @@
             "date": "03-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/2_enums.md",
             "last_modified_time": "2025-04-02T08:57:28.896Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Qualifiers",
+            "abstract": "",
+            "tags": [
+                "c",
+                "c++",
+                "python",
+                "javascript",
+                "programming",
+                "website",
+                "clang"
+            ],
+            "date": "03-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_qualifiers.md",
+            "last_modified_time": "2025-06-08T21:12:17.952Z"
         }
     ]
 }

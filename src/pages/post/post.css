@@ -73,8 +73,9 @@
 .post > h6 {
     margin: 0;
 }
-.post > pre {
-    margin: 0;
+
+.post p {
+    padding: 5px 0;
 }
 
 .post .inline {

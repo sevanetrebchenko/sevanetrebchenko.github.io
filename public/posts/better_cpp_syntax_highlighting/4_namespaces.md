@@ -220,10 +220,11 @@ bool Visitor::VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node) {
     }
     
     if (const clang::NamespaceDecl* n = node->getNominatedNamespace()) {
+        // using namespace ...
         std::unordered_set<std::string> namespaces = extract_namespaces(n->getDeclContext());
         
         // extract_namespaces checks for NamespaceDecl nodes, but this node is a UsingDirectiveDecl
-        // Include it in the namespace chain 
+        // Include this namespace in the namespace chain
         namespaces.insert(n->getNameAsString());
         
         // Tokenize the node range and annotate all tokens containing namespace names
