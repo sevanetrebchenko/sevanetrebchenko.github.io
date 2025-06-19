@@ -46,7 +46,23 @@
             ],
             "date": "03-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/10_qualifiers.md",
-            "last_modified_time": "2025-06-08T21:12:17.952Z"
+            "last_modified_time": "2025-06-09T08:26:06.969Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 11: Preprocessor",
+            "abstract": "",
+            "tags": [
+                "c",
+                "c++",
+                "python",
+                "javascript",
+                "programming",
+                "website",
+                "clang"
+            ],
+            "date": "03-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/11_preprocessor.md",
+            "last_modified_time": "2025-06-18T02:59:21.897Z"
         }
     ]
 }
