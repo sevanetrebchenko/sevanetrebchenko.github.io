@@ -72,6 +72,9 @@ Annotating a macro definition consists of 4 parts:
 
 Consider the following example:
 ```cpp
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 #define ASSERT(EXPRESSION, MESSAGE, ...) \
     do { \
         if (!(EXPRESSION)) { \
@@ -127,6 +130,9 @@ void Preprocessor::MacroDefined(const clang::Token& name, const clang::MacroDire
 ```
 Macro definitions are annotated with the `macro-name` annotation.
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 #define [[macro-name,ASSERT]](EXPRESSION, MESSAGE, ...) \
     do { \
         if (!(EXPRESSION)) { \
@@ -174,6 +180,9 @@ void Preprocessor::MacroDefined(const clang::Token& name, const clang::MacroDire
 ```
 Macro arguments are annotated with the `macro-argument` annotation.
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 #define [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
     do { \
         if (!([[macro-argument,EXPRESSION]])) { \
@@ -356,6 +365,9 @@ void Preprocessor::MacroDefined(const clang::Token& name, const clang::MacroDire
 ```
 
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
     do { \
         if (!([[macro-argument,EXPRESSION]])) { \
@@ -383,7 +395,10 @@ class Preprocessor final : public clang::PPCallbacks {
 };
 ```
 Now that we've established the `ASSERT` macro, it would be useful to annotate references to it as we sprinkle asserts throughout our hypothetical codebase.
-```cpp
+```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 #define ASSERT(EXPRESSION, MESSAGE, ...) \
     do { \
         if (!(EXPRESSION)) { \
@@ -430,6 +445,9 @@ This advanced behavior is not necessary for simple syntax highlighting, so we wo
 
 As with macro definitions, macro references are annotated with the `macro-name` annotation.
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
     do { \
         if (!([[macro-argument,EXPRESSION]])) { \
@@ -517,6 +535,9 @@ class Preprocessor final : public clang::PPCallbacks {
 We can expand the `ASSERT` macro definition so that its substitution is a noop on non-debug builds.
 One of the most common ways this is done is scoping the "real" assertion logic within a check that is only active when `NDEBUG` is defined.
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 #ifndef NDEBUG
     #define ASSERT(EXPRESSION, MESSAGE, ...) \
         do { \
@@ -526,7 +547,7 @@ One of the most common ways this is done is scoping the "real" assertion logic w
             } \
         } while (false)
 #else
-    #define ASSERT(EXPRESSION, MESSAGE, ...) do { } while (false)
+    // ...
 #endif
 ```
 While this example uses only 3 of the 6 conditional compilation directives outlined above.
@@ -603,6 +624,9 @@ void Preprocessor::MacroUndefined(const clang::Token& name, const clang::MacroDe
 
 After implementing these hooks, we are now able to properly annotate the example from earlier.
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 [[preprocessor-directive,#]][[preprocessor-directive,ifndef]] [[macro-name,NDEBUG]]
     [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
         do { \
@@ -612,6 +636,7 @@ After implementing these hooks, we are now able to properly annotate the example
             } \
         } while (false)
 [[preprocessor-directive,#]][[preprocessor-directive,else]]
+    // Inactive branch, no annotations here...
     #define ASSERT(EXPRESSION, MESSAGE, ...) do { } while (false)
 [[preprocessor-directive,#]][[preprocessor-directive,endif]]
 ```
@@ -645,19 +670,6 @@ class Preprocessor final : public clang::PPCallbacks {
         // ...
 };
 ```
-```text
-#if !defined(NDEBUG)
-    #define ASSERT(EXPRESSION, MESSAGE, ...) \
-        do { \
-            if (!(EXPRESSION)) { \
-                std::source_location location = std::source_location::current(); \
-                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
-            } \
-        } while (false)
-#else
-    // ...
-#endif
-```
 
 The implementation for this visitor is similar to ones we've seen before.
 ```cpp
@@ -683,7 +695,28 @@ void Preprocessor::Defined(const clang::Token& name, const clang::MacroDefinitio
 }
 ```
 Unfortunately, there is no way to retrieve the location of the `defined` directive itself, so we must resort to the tokenization approach.
+
+To showcase this visitor, let's rewrite the example used in this post to use the `defined` directive:
 ```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
+#if !defined(NDEBUG)
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
+        do { \
+            if (!(EXPRESSION)) { \
+                std::source_location location = std::source_location::current(); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
+            } \
+        } while (false)
+#else
+    // ...
+#endif
+```
+```text
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
 [[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
     [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
         do { \
@@ -766,6 +799,24 @@ void Preprocessor::InclusionDirective(clang::SourceLocation hash_location, const
 The most significant difference for this visitor is that the file being included is be annotated as a string (including the enclosing quotes).
 One caveat here is that the `filename` parameter contains the name of the included file with quotes for `#include "..."` statements, but omits the angle brackets for `#include <...>` statements, which must be explicitly handled for annotating the filename as a string.
 
+With this visitor implemented, our tool now properly visits both kinds of include statements.
+```text
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,<]][[string,source_location]][[string,>]] // std::source_location
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,"utils/logging.hpp"]]
+
+[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
+    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+        do { \
+            if (!([[macro-argument,EXPRESSION]])) { \
+                std::source_location location = std::source_location::current(); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+            } \
+        } while (false)
+[[preprocessor-directive,#]][[preprocessor-directive,else]]
+    #define ASSERT(EXPRESSION, MESSAGE, ...) do { } while (false)
+[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+```
+
 ## `#pragma`
 
 `#pragma` preprocessor directives provide compiler-specific instructions, which means they come in many different shapes and forms.
@@ -794,6 +845,46 @@ void Preprocessor::PragmaDirective(clang::SourceLocation location, clang::Pragma
 }
 ```
 Any other tokens for the directive will require manual annotation.
+
+Let's augment the example from earlier with a `#pragma` preprocessor directive.
+```text
+#pragma once
+
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
+
+#if !defined(NDEBUG)
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
+        do { \
+            if (!(EXPRESSION)) { \
+                std::source_location location = std::source_location::current(); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
+            } \
+        } while (false)
+#else
+    // ...
+#endif
+```
+Running this code through our tool yields the following result:
+```text
+[[preprocessor-directive,#]][[preprocessor-directive,pragma]] once
+
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,<]][[string,source_location]][[string,>]] // std::source_location
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,"utils/logging.hpp"]]
+
+[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
+    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+        do { \
+            if (!([[macro-argument,EXPRESSION]])) { \
+                std::source_location location = std::source_location::current(); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+            } \
+        } while (false)
+[[preprocessor-directive,#]][[preprocessor-directive,else]]
+    // ...
+[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+```
+Despite not having a visitor specifically for this directive, the generic `PragmaDirective` visitor is still able to properly detect and process it.
 
 ## Unsupported directives
 
