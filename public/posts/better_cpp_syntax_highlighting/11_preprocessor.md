@@ -56,16 +56,12 @@ We can set up visiting macro definitions by overriding the `MacroDefined` hook:
 ```cpp
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
+        // ...
+
         // For visiting macro definitions
         void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
         
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 Annotating a macro definition consists of 4 parts:
@@ -255,7 +251,6 @@ std::span<const Token> Tokenizer::get_tokens(clang::SourceLocation start, clang:
             }
         }
 
-
         offset = i;
         break;
     }
@@ -379,19 +374,12 @@ Macro invocations are handled by the `MacroExpands` preprocessor hook.
 ```cpp added:{9-10}
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
+        // ...
         
         // For visiting macro references
         void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
         
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 Now that we've established the `ASSERT` macro, it would be useful to annotate references to it as we sprinkle asserts throughout our hypothetical codebase.
@@ -473,22 +461,12 @@ Visiting these preprocessor directives requires implementing the `MacroUndefined
 ```cpp
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro undefinitions
-        void MacroUndefined(const clang::Token& name, const clang::MacroDefinition& definition, const clang::MacroDirective* directive) override;
+        // ...
         
         // For visiting macro references
         void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
         
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 The target of an `#undef` directive must be a macro, meaning that the implementation of this visitor closely mirrors that of `MacroDefined`.
@@ -521,18 +499,8 @@ Each directive has a corresponding hook that we need to implement.
 ```cpp added:{15-23}
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro undefinitions
-        void MacroUndefined(const clang::Token& name, const clang::MacroDefinition& definition, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro references
-        void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
-        
+        // ...
+
         // For visiting conditional compilation directives
         void If(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value) override;
         void Elif(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value, clang::SourceLocation if_location) override;
@@ -542,11 +510,8 @@ class Preprocessor final : public clang::PPCallbacks {
         void Elifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
         void Else(clang::SourceLocation location, clang::SourceLocation if_location) override;
         void Endif(clang::SourceLocation location, clang::SourceLocation if_location) override;
-        
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+
+        // ...
 };
 ```
 We can expand the `ASSERT` macro definition so that its substitution is a noop on non-debug builds.
@@ -672,35 +637,12 @@ For annotating this directive, we must set up another visitor.
 ```cpp
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro undefinitions
-        void MacroUndefined(const clang::Token& name, const clang::MacroDefinition& definition, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro references
-        void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
-        
-        // For visiting conditional compilation directives
-        void If(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value) override;
-        void Elif(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value, clang::SourceLocation if_location) override;
-        void Ifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Ifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Else(clang::SourceLocation location, clang::SourceLocation if_location) override;
-        void Endif(clang::SourceLocation location, clang::SourceLocation if_location) override;
-        
+        // ...
+
         // For visiting the 'defined' directive
         void Defined(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range) override;
         
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 ```text
@@ -763,41 +705,23 @@ Setting up our visitor to handle `#include` directives requires implementing the
 ```cpp
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
-        
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro undefinitions
-        void MacroUndefined(const clang::Token& name, const clang::MacroDefinition &MD, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro references
-        void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
-        
-        // For visiting conditional compilation directives
-        void If(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value) override;
-        void Elif(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value, clang::SourceLocation directive_location) override;
-        void Ifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Ifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Else(clang::SourceLocation location, clang::SourceLocation directive_location) override;
-        void Endif(clang::SourceLocation location, clang::SourceLocation directive_location) override;
-        
-        // For visiting the 'defined' directive
-        void Defined(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range) override;
-        
+        // ...
+
         // For visiting file / module includes
-        void InclusionDirective(clang::SourceLocation hash_location, const clang::Token& name, clang::StringRef filename, bool angled,
-                                clang::CharSourceRange, clang::OptionalFileEntryRef, clang::StringRef, clang::StringRef, const clang::Module*, bool, clang::SrcMgr::CharacteristicKind) override;
+        void InclusionDirective(clang::SourceLocation hash_location, 
+                                const clang::Token& name, 
+                                clang::StringRef filename,
+                                bool angled,
+                                // Unused parameters...
+                                clang::CharSourceRange,
+                                clang::OptionalFileEntryRef,
+                                clang::StringRef,
+                                clang::StringRef,
+                                const clang::Module*,
+                                bool,
+                                clang::SrcMgr::CharacteristicKind) override;
         
-    private:
-        void annotate_directive(clang::SourceLocation location);
-        
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 This function accepts a number of parameters as it's set up to handle both `#include` and `#import` directives (for supporting C++20 modules).
@@ -849,41 +773,12 @@ To keep things simple, we will just provide a definition for the generic `Pragma
 ```cpp
 class Preprocessor final : public clang::PPCallbacks {
     public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
+        // ...
         
-        // For visiting macro definitions
-        void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
+        // Generic function for visiting '#pragma' directives
+        void PragmaDirective(clang::SourceLocation location, clang::PragmaIntroducerKind introducer) override;
         
-        // For visiting macro undefinitions
-        void MacroUndefined(const clang::Token& name, const clang::MacroDefinition &MD, const clang::MacroDirective* directive) override;
-        
-        // For visiting macro references
-        void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
-        
-        // For visiting conditional compilation directives
-        void If(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value) override;
-        void Elif(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value, clang::SourceLocation directive_location) override;
-        void Ifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Ifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Elifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-        void Else(clang::SourceLocation location, clang::SourceLocation directive_location) override;
-        void Endif(clang::SourceLocation location, clang::SourceLocation directive_location) override;
-        
-        // For visiting the 'defined' directive
-        void Defined(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range) override;
-        
-        // For visiting file / module includes
-        void InclusionDirective(clang::SourceLocation hash_location, const clang::Token& name, clang::StringRef filename, bool angled,
-                                clang::CharSourceRange, clang::OptionalFileEntryRef, clang::StringRef, clang::StringRef, const clang::Module*, bool, clang::SrcMgr::CharacteristicKind) override;
-        
-    private:
-        void annotate_directive(clang::SourceLocation location);
-        
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+        // ...
 };
 ```
 The implementation of this function only annotates the `#pragma` preprocessor directive using the `annotate_directive` function.
@@ -900,6 +795,4 @@ void Preprocessor::PragmaDirective(clang::SourceLocation location, clang::Pragma
 ```
 Any other tokens for the directive will require manual annotation.
 
-Unfortunately, if the macro is not used in the code snippet, it will be preprocessed out from the rest of the file for the ASTFrontendAction to parse, and the macro body will not contain annotations.
-Similar to what we've seen with almost all AST node visitors, the first order of business is to check 
 PrismJS actually does this for us, but fortunately one does not affect the other.
