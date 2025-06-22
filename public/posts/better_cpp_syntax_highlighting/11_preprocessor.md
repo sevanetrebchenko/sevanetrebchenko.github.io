@@ -795,4 +795,12 @@ void Preprocessor::PragmaDirective(clang::SourceLocation location, clang::Pragma
 ```
 Any other tokens for the directive will require manual annotation.
 
-PrismJS actually does this for us, but fortunately one does not affect the other.
+## Unsupported directives
+
+Keen readers will notice that there are several preprocessor directives that were omitted from this post.
+Some examples of these are:
+- `#error`, which is used to intentionally generate a compiler error, typically to catch unsupported configurations or missing/incorrect conditions during preprocessing
+- `#line`, which is used to change the current line number (and optionally file name) reported by the compiler for diagnostic or debug information in generated code
+
+At the time of writing this post, these preprocessor directives do not have a corresponding visitor in Clang.
+Annotating these would require manual tokenization and parsing of the source file according to the format of each directive.
