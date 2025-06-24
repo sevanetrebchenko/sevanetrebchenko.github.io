@@ -109,12 +109,7 @@ enum class [[enum-name,Level]] {
     [[enum-value,Fatal]] = Error,
 };
 
-void log_message(Level level, const char* message);
-
-int main() {
-    log_message(Level::Error, "something bad happened");
-    // ...
-}
+// ...
 ```
 This is a good start, but not yet complete.
 The reference to `Error` on line 6 and the use of `Level::Error` in `main` are not declarations, so we'll need a new visitor to handle them.
@@ -159,15 +154,13 @@ If it's an `EnumConstantDecl`, we insert an `enum-value` annotation.
 
 With this visitor implemented, we can now properly annotate both enum declarations and usages:
 ```text line-numbers:{enabled} added:{6,12}
-enum class [[enum-name,Level]] {
-    [[enum-value,Debug]] = 0,
-    [[enum-value,Info]],
-    [[enum-value,Warning]],
-    [[enum-value,Error]],
-    [[enum-value,Fatal]] = [[enum-value,Error]],
+enum class Level {
+    Debug = 0,
+    Info,
+    Warning,
+    Error,
+    Fatal = [[enum-value,Error]],
 };
-
-void log_message(Level level, const char* message);
 
 int main() {
     log_message(Level::[[enum-value,Error]], "something bad happened");
