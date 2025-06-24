@@ -49,7 +49,7 @@ The AST for this snippet looks like this:
 
 Enums are represented by two node types in the AST: `EnumDecl` for the declaration itself, and `EnumConstantDecl` for each enumerator value.
 From the `EnumDecl` node above, we can infer that `Level` is declared as an enum class, and that it's underlying type is an int.
-If we had explicitly set this to a type like `unsigned char` or `std::uint8_t`, this would be reflected in the AST.
+If we had explicitly set this to a type like `unsigned char` or `std::uint8_t`, this would be also reflected in the AST.
 
 We'll set up visitors for both `EnumDecl` and `EnumConstantDecl` nodes:
 ```cpp line-numbers:{enabled} title:{visitor.hpp}
@@ -117,8 +117,7 @@ int main() {
 }
 ```
 This is a good start, but not yet complete.
-We still need to annotate references to enum values, such as on lines 6 and 12.
-There aren't declarations, so we'll need to add a new visitor.
+The reference to `Error` on line 6 and the use of `Level::Error` in `main` are not declarations, so we'll need a new visitor to handle them.
 
 ### Enum References
 
@@ -129,7 +128,7 @@ Line 21 from the AST captures the reference to `Level::Error` inside the `main` 
 DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
 ```
 
-We'll add a new visitor to handle these nodes:
+We'll add a new visitor for `DeclRefExpr` nodes.
 ```cpp
 bool VisitDeclRefExpr(clang::DeclRefExpr* node);
 ```
