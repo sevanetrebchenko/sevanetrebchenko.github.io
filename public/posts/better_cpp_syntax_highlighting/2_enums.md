@@ -45,7 +45,7 @@ The AST for this snippet looks like this:
         `-StringLiteral 0x1b642245dd0 <col:31> 'const char[23]' lvalue "something bad happened"
 ```
 
-### Enum Declarations
+## Enum Declarations
 
 Enums are represented by two node types in the AST: `EnumDecl` for the declaration itself, and `EnumConstantDecl` for each enumerator value.
 From the `EnumDecl` node above, we can infer that `Level` is declared as an enum class, and that it's underlying type is an int.
@@ -81,7 +81,7 @@ The return value of a visitor function indicates whether we want AST traversal t
 Since we are interested in traversing all the nodes of the AST, this will always be `true`.
 
 As mentioned in the previous post in this series, the `SourceManager` class maps AST nodes back to their source locations within the translation unit.
-The `SourceManager::isInMainFile` check ensures that the node originates from the "main" file we are annotating - the one provided to `runToolOnCodeWithArgs`.
+The `isInMainFile()` check ensures that the node originates from the "main" file we are annotating - the one provided to `runToolOnCodeWithArgs`.
 This prevents annotations from being applied to external headers, and is a recurring pattern in every visitor we will implement.
 
 The visitor for `EnumConstantDecl` nodes is nearly identical, except that it inserts an `enum-value` annotation instead of `enum-name`:
@@ -114,7 +114,7 @@ enum class [[enum-name,Level]] {
 This is a good start, but not yet complete.
 The reference to `Error` on line 6 and the use of `Level::Error` in `main` are not declarations, so we'll need a new visitor to handle them.
 
-### Enum References
+## Enum References
 
 References to enum values are captured by [`DeclRefExpr` nodes](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details), which represent expressions that refer to previously declared variables, functions, and types.
 
@@ -149,7 +149,7 @@ bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
     return true;
 }
 ```
-We use `DeclRefExpr::getDecl` to retrieve information about the underlying declaration being referenced.
+We use the `getDecl()` function to retrieve information about the underlying declaration being referenced.
 If it's an `EnumConstantDecl`, we insert an `enum-value` annotation.
 
 With this visitor implemented, we can now properly annotate both enum declarations and usages:

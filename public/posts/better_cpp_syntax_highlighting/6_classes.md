@@ -1,12 +1,12 @@
 
-## Classes
-
-Let's start moving into some more complex cases.
-
+Classes introduce significantly more complexity than enums or namespaces, but the same core principles apply.
+Consider the following example:
 ```cpp
 #include <cmath> // std::sqrt
 
 struct Vector3 {
+    static const Vector3 zero;
+
     Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
     Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
     ~Vector3() { }
@@ -20,10 +20,16 @@ struct Vector3 {
     float z;
 };
 
-// ...
-```
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
 
-```text
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
+```
+And corresponding AST:
+```text show-lines:{20} 
 |-CXXRecordDecl 0x25279df1b98 <example.cpp:3:1, line:17:1> line:3:8 referenced struct Vector3 definition
 | |-DefinitionData standard_layout has_user_declared_ctor can_const_default_init
 | | |-DefaultConstructor exists non_trivial user_provided defaulted_is_constexpr
@@ -122,85 +128,58 @@ struct Vector3 {
             `-NestedNameSpecifier TypeSpec 'Vector3'
 ```
 
-There are a lot of moving parts when it comes to annotating classes.
-Let's break down some of the nodes we will visit in this section:
-- `CXXRecordDecl`, which represents declarations of structs, unions, and classes,
-- `CXXConstructorDecl` and `CXXDestructorDecl`, which represents class constructors and destructors, respectively,
-- `CXXCtorInitializer`, which represents an element from a constructor initializer list,
-- `CXXMethodDecl`, which represents class member functions,
-- `FieldDecl`, which represents declarations of class member variables,
-- `MemberExpr`, which represents expressions that reference class member variables,
-- `VarDecl`, which represents static class member declarations and out of line definitions, and
-- `DeclRefExpr`, which represents references to static class member variables
+Classes involve multiple interconnected AST node types, each representing different aspects of the class definition and usage.
+The nodes we'll encounter in this section include:
+- `CXXRecordDecl` for class, struct, and union declarations
+- `CXXConstructorDecl` and `CXXDestructorDecl` for constructors and destructors
+- `CXXCtorInitializer` for elements in constructor initializer lists
+- `CXXMethodDecl` for class member function declarations
+- `FieldDecl` for class member variable declarations
+- `MemberExpr` for expressions that reference member variables
+- `VarDecl` for static member declarations and out-of-line definitions
+- `DeclRefExpr` for references to static member functions
 
-Of course, we need to set up a few new visitor functions:
-```cpp title:{visitor.hpp} added:{9,14-30}
-class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
-    public:
-        explicit Visitor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Visitor();
-        
-        // ...
-        
-        // For visiting references to enum constants
-        // For visiting references to static class member variable
-        bool VisitDeclRefExpr(clang::DeclRefExpr* node);
-        
-        // ...
-        
-        // For visiting class declarations
-        bool VisitCXXRecordDecl(clang::CXXRecordDecl* node);
-        
-        // For visiting class constructors
-        bool VisitCXXConstructorDecl(clang::CXXConstructorDecl* node);
-        
-        // For visiting class destructors
-        bool VisitCXXDestructorDecl(clang::CXXDestructorDecl* node);
-        
-        // For visiting class member variables
-        bool VisitFieldDecl(clang::FieldDecl* node);
-        
-        // For visiting references to class member variables (within class member functions)
-        bool VisitMemberExpr(clang::MemberExpr* node);
-        
-        // For visiting static class member variable declarations / definitions
-        bool VisitVarDecl(clang::VarDecl* node);
-        
-        // ...
-};
+We'll need to extend our visitor with several new visitor functions to handle these node types:
+```cpp
+bool VisitCXXRecordDecl(clang::CXXRecordDecl* node);
+bool VisitCXXConstructorDecl(clang::CXXConstructorDecl* node);
+bool VisitCXXDestructorDecl(clang::CXXDestructorDecl* node);
+bool VisitFieldDecl(clang::FieldDecl* node);
+bool VisitMemberExpr(clang::MemberExpr* node);
 ```
 
-### Class definitions
+## Class definitions
 
-Class definitions are captured by `CXXRecordDecl` nodes.
-Setting up a visitor function for this node is optional, as PrismJS is accurately able to capture these symbols.
-```cpp title:{visitor.cpp}
-#include "visitor.hpp"
-
+Declarations of classes, structs, and unions are represented by `CXXRecordDEecl` nodes.
+The implementation of this visitor follows the same pattern we've seen before:
+```cpp
 bool Visitor::VisitCXXRecordDecl(clang::CXXRecordDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    // Check to ensure this node originates from the file we are annotating
+    // ...
     
-    clang::SourceLocation location = node->getLocation();
-    if (source_manager.isInMainFile(location)) {
-        const std::string& name = node->getNameAsString();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        if (!name.empty()) {
-            m_annotator->insert_annotation("class-name", line, column, name.length());
-        }
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    // Avoid annotating unnamed (anonymous) record types
+    if (!node->isAnonymousStructOrUnion() && !name.empty()) {
+        m_annotator->insert_annotation("class-name", line, column, name.length());
     }
     
     return true;
 }
 ```
-This function follows the same pattern as we've seen before.
-A `class-name` annotation is inserted for each class declaration.
+Clang provides the `isAnonymousStructOrUnion()` check to help us exclude anonymous classes from being annotated.
+This removes faulty `[[class-name,]]struct { ... }` annotations that would have otherwise been inserted.
 
+With this visitor implemented, the tool properly annotates class, struct, and union declarations.
+This inserts a `class-name` annotation for each type definition:
 ```text added:{3}
 #include <cmath> // std::sqrt
 
 struct [[class-name,Vector3]] {
+    static const Vector3 zero;
+
     Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
     Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
     ~Vector3() { }
@@ -213,36 +192,40 @@ struct [[class-name,Vector3]] {
     float y;
     float z;
 };
+
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
+
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
 ```
 
 ### Member variable declarations
 
-Next up are class member variable declarations, which are captured by `FieldDecl` nodes.
+Member variable declarations like the `x`, `y`, and `z` fields of our `Vector3` class are represented by `FieldDecl` nodes.
+The implementation is similar to our previous visitors:
 ```cpp title:{visitor.cpp}
-#include "visitor.hpp"
-
 bool Visitor::VisitFieldDecl(clang::FieldDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    const clang::SourceLocation& location = node->getLocation();
+    // Check to ensure this node originates from the file we are annotating
+    // ...
     
-    // Skip nodes not in the main file
-    if (source_manager.isInMainFile(location)) {
-        const std::string& name = node->getNameAsString();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        m_annotator->insert_annotation("member-variable", line, column, name.length());
-    }
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
     
+    m_annotator->insert_annotation("member-variable", line, column, name.length());
     return true;
 }
 ```
-The `member-variable` annotation is inserted for member variable definitions.
-
+With this visitor in place, a `member-variable` annotation is inserted for each member variable declaration.
 ```text added:{12-14}
 #include <cmath> // std::sqrt
 
-struct [[class-name,Vector3]] {
+struct Vector3 {
+    static const Vector3 zero;
+
     Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
     Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
     ~Vector3() { }
@@ -255,47 +238,38 @@ struct [[class-name,Vector3]] {
     float [[member-variable,y]];
     float [[member-variable,z]];
 };
+
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
+
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
 ```
 
 ### Member variable references
 
-References to member variables are captured by `MemberExpr` nodes.
-```cpp title:{visitor.cpp}
-#include "visitor.hpp"
+The `x`, `y`, and `z` references inside the `length()` function are captured as `MemberExpr` nodes.
+Similar to member variable declarations, these identifiers benefit significantly from semantic highlighting as they're often indistinguishable from local variables or function parameters without additional context.
 
-bool Visitor::VisitMemberExpr(clang::MemberExpr* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    clang::SourceLocation location = node->getMemberLoc();
-    
-    // Skip any references to class member variables that do not come from the main file
-    if (!source_manager.isInMainFile(location)) {
-        return true;
-    }
-        
-    const clang::ValueDecl* member = node->getMemberDecl();
-    std::string name = member->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(source_location);
-    unsigned column = source_manager.getSpellingColumnNumber(source_location);
-    
-    if (name.empty()) {
-        // Empty variable names reference anonymous types and should be skipped
-        return true;
-    }
-    
-    m_annotator->insert_annotation("member-variable", line, column, name.length());
-    return true;
-}
+We can retrieve the name of the member from the underlying declaration:
+```cpp
+const clang::ValueDecl* member = node->getMemberDecl();
+const std::string& name = member->getNameAsString();
 ```
-Most of the implementation of this visitor function follows the same patterns we've seen before, with two exceptions.
-For one, the source location is retrieved using the `MemberExpr::getMemberLoc` helper function, which returns the location of the member taking into account any access operators.
-For example, an access like `obj.m_member` or `obj->m_member` returns the location of `m_member`.
-Second, we get the name of the member from its declaration as returned by `MemberExpr::getMemberDecl`.
-This is used to ensure that the annotation is applied to only the length of the member variable.
-
+We get the declaration through `getMemberDecl()` and extract its name using `getNameAsString()`.
+The `getMemberLoc()` function returns the location of the member name, accounting for access operators like `.` and `->`.
+```cpp
+m_annotator->insert_annotation("member-variable", line, column, name.length());
+```
+References to member variables are also annotated with the `member-variable` annotation.
 ```text modified:{9}
 #include <cmath> // std::sqrt
 
-struct [[class-name,Vector3]] {
+struct Vector3 {
+    static const Vector3 zero;
+
     Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
     Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
     ~Vector3() { }
@@ -304,140 +278,13 @@ struct [[class-name,Vector3]] {
         return std::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
     }
     
-    float [[member-variable,x]];
-    float [[member-variable,y]];
-    float [[member-variable,z]];
-};
-```
-
-### Constructors and initializer lists
-Despite annotating references to member variables with the `VisitMemberExpr` function, you'll notice that references to the `x`, `y`, and `z` member variables in the constructor initializer list have not been annotated.
-This is due to the fact that these nodes are represented by `CXXCtorInitializer` nodes, and not `MemberExpr`.
-Furthermore, this is actually not a valid node that we can visit with a visitor function and AST traversal.
-Instead, constructor member initializer lists must be accessed as children of the `CXXConstructorDecl` node, which we have a visitor function for:
-```cpp title:{visitor.cpp} line-numbers:{enabled}
-#include "visitor.hpp"
-
-bool Visitor::VisitCXXConstructorDecl(clang::CXXConstructorDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    clang::SourceLocation location = node->getBeginLoc();
-    
-    // Skip any class constructors that do not come from the main file
-    if (!source_manager.isInMainFile(location)) {
-        return true;
-    }
-    
-    // Skip implicit constructors
-    if (node->isImplicit()) {
-        return true;
-    }
-        
-    // Insert annotations for all member variables in the constructor initializer list
-    for (const clang::CXXCtorInitializer* initializer : node->inits()) {
-        location = initializer->getSourceLocation();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        if (initializer->isBaseInitializer()) {
-            // Base class initialization
-            // Annotation is handled elsewhere
-            continue;
-        }
-        
-        std::string name = initializer->getMember()->getNameAsString();
-        m_annotator->insert_annotation("member-variable", line, column, name.length());
-    }
-    
-    return true;
-}
-```
-Once we verify that the input node references a symbol
-Depending on whether we enabled traversal of implicit constructors and destructors with `shouldVisitImplicitCode`, this is where we can see this.
-Functions generated by the compiler are not present in the file we passed to the tool, meaning we should skip these definitions to avoid inserting annotations for tokens that don't exist.
-
-This visitor function iterates over all initializers in the constructor initializer list and adds a `member-variable` annotation.
-Once again, we retrieve the name of the member using its declaration as returned by `CXXCtorInitializer::getMember`.
-This is used to ensure that the annotation is applied to only the length of the member variable.
-
-One important thing to note is that base class initializers also get captured by the `CXXCtorInitializer` node.
-For now, we skip these with a `CXXCtorInitializer::isBaseInitializer` check on line 23 - we will revisit this later when we add annotations for classes.
-
-```text added:{4,5}
-#include <cmath> // std::sqrt
-
-struct [[class-name,Vector3]] {
-    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
-    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
-    ~Vector3() { }
-    
-    [[nodiscard]] float length() const {
-        return std::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
-    }
-    
-    float [[member-variable,x]];
-    float [[member-variable,y]];
-    float [[member-variable,z]];
-};
-```
-For now, there is nothing to do in the destructor visitor.
-
-### Static class members
-Both static class member declarations and out-of-line definitions are captured by `VarDecl` nodes:
-```cpp title:{visitor.cpp}
-#include "visitor.hpp"
-
-bool Visitor::VisitVarDecl(clang::VarDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    const clang::SourceLocation& location = node->getLocation();
-    
-    // Skip any VarDecl nodes that do not come from the main file
-    if (!source_manager.isInMainFile(location)) {
-        return true;
-    }
-    
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    if (node->isStaticDataMember()) {
-        // Check VarDecl::hasDefinition to only visit static class member variables that have definitions
-        // Otherwise, statics that are not constexpr must be defined outside the class
-        // An exception to this is if VarDecl::hasConstantInitialization, in which case the declaration and definition are on the same line
-        // Example: static const int a = 42;
-        // For the purposes of syntax highlighting, however, both declarations and definitions are visited, so the distinction between the two does not mean much here
-        m_annotator->insert_annotation("member-variable", line, column, name.length());
-    }
-
-    return true;
-}
-```
-`VarDecl` nodes capture more than static class member variables.
-We can easily make sure we are processing static member variables with the `VarDecl::isStaticDataMember` check.
-This function visits both declarations and definitions outside the class (for non-`constexpr` static class members).
-
-Static member variables are highlighted as member variables with the `member-variable` annotation.
-
-```text added:{4,20}
-#include <cmath> // std::sqrt
-
-struct [[class-name,Vector3]] {
-    static const Vector3 [[member-variable,zero]];
-    
-    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
-    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
-    ~Vector3() { }
-    
-    [[nodiscard]] float length() const {
-        return std::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
-    }
-    
-    float [[member-variable,x]];
-    float [[member-variable,y]];
-    float [[member-variable,z]];
+    float x;
+    float y;
+    float z;
 };
 
-// Const class static members must be initialized out of line
-const Vector3 Vector3::[[member-variable,zero]] = Vector3();
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
 
 int main() {
     Vector3 zero = Vector3::zero;
@@ -445,27 +292,147 @@ int main() {
 }
 ```
 
-### Static class member references
-References to static class members are caught under `DeclRefExpr` nodes.
-We have seen this node before when annotating enum constants, so we will be augmenting the visitor function to also account for static member variables.
-```cpp title:{visitor.cpp} added:{18,19,25-28}
-#include "visitor.hpp"
+## Constructors and initializer lists
 
-bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    const clang::SourceLocation& location = node->getLocation();
+Not all references to member variables are handled by the `VisitMemberExpr` function - the `x`, `y`, and `z` references in the constructor initializer list remain unhandled.
+This happens because initializer list entries are represented by `CXXCtorInitializer` nodes and not `MemberExpr`.
+However, `CXXCtorInitializer` isn't a node that we can visit directly through the usual traversal of the AST.
+Instead, we need to access initializers as children of the parent `CXXConstructorDecl` node, which represents the constructor definition.
+
+In our `VisitCXXConstructorDecl` visitor, initializers can be iterated over using the `inits()` function:
+```cpp
+// Skip compiler-generated constructors
+if (node->isImplicit()) {
+    return true;
+}
+
+for (const clang::CXXCtorInitializer* initializer : node->inits()) {
+    location = initializer->getSourceLocation();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
     
-    // Skip any DeclRefExpr nodes that do not come from the main file
-    if (!source_manager.isInMainFile(location)) {
-        return true;
+    if (initializer->isBaseInitializer()) {
+        // Base class initialization is handled separately
+        continue;
+    }
+    
+    std::string name = initializer->getMember()->getNameAsString();
+    m_annotator->insert_annotation("member-variable", line, column, name.length());
+}
+```
+The `isImplicit()` check is crucial here - compiler-generated constructors don't exist in our source code, so attempting to annotate them will fail.
+We also skip base class initializers (for now), since those require different handling that we'll address when annotating references to types.
+
+The name of the member variable is retrieved from its declaration, accessed by the `getMember()` function.
+As before, initializers for member variables are annotated with `member-variable`.
+
+Because constructors were already processed in the `FunctionDecl` visitor, we don't need to do any additional annotation here.
+
+With this visitor implemented, here is what our example now looks like:
+```text added:{4,5}
+#include <cmath> // std::sqrt
+
+struct Vector3 {
+    static const Vector3 zero;
+
+    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
+    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
+    ~Vector3() { }
+    
+    [[nodiscard]] float length() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+    
+    float x;
+    float y;
+    float z;
+};
+
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
+
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
+```
+
+## Static class members
+
+Static class members present a unique challenge for syntax highlighting - they are declared within the class but often require separate definitions outside of it.
+Both scenarios are captured by `VarDecl` nodes, but we need to distinguish them from regular variable declarations.
+
+Let's augment our existing `VisitVarDecl` implementation from a previous post to handle static class members: 
+```cpp
+bool Visitor::VisitVarDecl(clang::VarDecl* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    if (node->isStaticDataMember()) {
+        m_annotator->insert_annotation("member-variable", line, column, name.length());
+    }
+    
+    if (node->isDirectInit()) {
+        // Direct (functional) initialization should not be annotated as a function call
+        m_annotator->insert_annotation("plain", line, column, name.length());
     }
 
+    return true;
+}
+```
+Static class members are annotated with `member-variable`, just as instance member variables.
+The `isStaticDataMember()` check ensures that we only apply the annotation to static class member declarations.
+With this visitor implemented, here is what our example now looks like:
+```text added:{4,20}
+#include <cmath> // std::sqrt
+
+struct Vector3 {
+    static const Vector3 [[member-variable,zero]];
+
+    Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
+    ~Vector3() { }
+    
+    [[nodiscard]] float length() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+    
+    float x;
+    float y;
+    float z;
+};
+
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = Vector3();
+
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
+```
+
+## Static class member references
+
+Similar to enumeration values from an earlier post, references to static class members are captured by `DeclRefExpr` nodes.
+Let's augment our existing `VisitDeclRefExpr` visitor to also handle static class members:
+
+References to static class members are caught under `DeclRefExpr` nodes.
+We have seen this node before when annotating enum constants, so we will be augmenting the visitor function to also account for static member variables.
+```cpp added:{11-12,18-21}
+bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
     unsigned line = source_manager.getSpellingLineNumber(location);
     unsigned column = source_manager.getSpellingColumnNumber(location);
     
     if (clang::ValueDecl* decl = node->getDecl()) {
         const std::string& name = decl->getNameAsString();
-        
+
         bool is_member_variable = decl->isCXXClassMember();
         bool is_static = !decl->isCXXInstanceMember();
 
@@ -482,29 +449,30 @@ bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
     return true;
 }
 ```
-This function now also checks if a `DeclRefExpr` node references a class member (`DeclRefExpr::isCXXClassMember`) that is static (not an instance member, `DeclRefExpr::isCXXInstanceMember`) and *not* a function (`DeclRefExpr::isFunctionOrFunctionTemplate`).
-If all checks pass, the node is confirmed to reference a static class member and is annotated as a `member-variable`.
+As before, we retrieve information about the underlying declaration with `getDecl()`.
+With a combination of the `isCXXClassMember()`, `isCXXInstanceMember()`, and `isFunctionOrFunctionTemplate()` checks, we can isolate only references to static class members variables.
+As before, these are annotated with `member-variable`.
 
-```text added:{23}
+```text added:{20,23}
 #include <cmath> // std::sqrt
 
-struct [[class-name,Vector3]] {
-    static const Vector3 [[member-variable,zero]];
-    
-    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
-    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
+struct Vector3 {
+    static const Vector3 zero;
+
+    Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
     ~Vector3() { }
     
     [[nodiscard]] float length() const {
-        return std::sqrt([[member-variable,x]] * [[member-variable,x]] + [[member-variable,y]] * [[member-variable,y]] + [[member-variable,z]] * [[member-variable,z]]);
+        return std::sqrt(x * x + y * y + z * z);
     }
     
-    float [[member-variable,x]];
-    float [[member-variable,y]];
-    float [[member-variable,z]];
+    float x;
+    float y;
+    float z;
 };
 
-// Const class static members must be initialized out of line
+// Const static class members must be initialized out of line
 const Vector3 Vector3::[[member-variable,zero]] = Vector3();
 
 int main() {
@@ -512,12 +480,15 @@ int main() {
     // ...
 }
 ```
+
+## Styling
 The final step is to add a definition for the `member-variable` CSS style:
 ```css
 .language-cpp .member-variable {
     color: rgb(152, 118, 170);
 }
 ```
+
 ```cpp
 #include <cmath> // std::sqrt
 
@@ -542,103 +513,6 @@ const Vector3 Vector3::[[member-variable,zero]] = Vector3();
 
 int main() {
     Vector3 zero = Vector3::[[member-variable,zero]];
-    // ...
-}
-```
-
-## Unions
-
-As mentioned earlier, `CXXRecordDecl` nodes also capture unions.
-This allows us to reuse the same visitor logic for annotating union names and members, just as we did for classes and structs.
-```cpp
-union Constant {
-    bool b;
-    char c;
-    int i;
-    float f;
-    double d;
-};
-
-int main() {
-    Constant c { };
-    c.i = 4;
-    // ...
-    
-    c.d = 3.14;
-    // ...
-}
-```
-
-Looking at the generated AST for this code snippet, we see that all relevant nodes already have corresponding visitor implementations.
-```text
-|-CXXRecordDecl 0x1e1093079e8 <example.cpp:1:1, line:7:1> line:1:7 referenced union Constant definition
-| |-DefinitionData pass_in_registers aggregate standard_layout trivially_copyable pod trivial literal has_constexpr_non_copy_move_ctor has_variant_members
-| | |-DefaultConstructor exists trivial constexpr needs_implicit defaulted_is_constexpr
-| | |-CopyConstructor simple trivial has_const_param needs_implicit implicit_has_const_param
-| | |-MoveConstructor exists simple trivial needs_implicit
-| | |-CopyAssignment simple trivial has_const_param needs_implicit implicit_has_const_param
-| | |-MoveAssignment exists simple trivial needs_implicit
-| | `-Destructor simple irrelevant trivial constexpr needs_implicit
-| |-CXXRecordDecl 0x1e10ab28758 <col:1, col:7> col:7 implicit union Constant
-| |-FieldDecl 0x1e10ab28818 <line:2:5, col:10> col:10 b 'bool'
-| |-FieldDecl 0x1e10ab28880 <line:3:5, col:10> col:10 c 'char'
-| |-FieldDecl 0x1e10ab288f0 <line:4:5, col:9> col:9 referenced i 'int'
-| |-FieldDecl 0x1e10ab28960 <line:5:5, col:11> col:11 f 'float'
-| `-FieldDecl 0x1e10ab289d0 <line:6:5, col:12> col:12 referenced d 'double'
-`-FunctionDecl 0x1e10ab28aa0 <line:9:1, line:16:1> line:9:5 main 'int ()'
-  `-CompoundStmt 0x1e10ab28f70 <col:12, line:16:1>
-    |-DeclStmt 0x1e10ab28d50 <line:10:5, col:19>
-    | `-VarDecl 0x1e10ab28c38 <col:5, col:18> col:14 used c 'Constant' listinit
-    |   `-InitListExpr 0x1e10ab28ce0 <col:16, col:18> 'Constant' field Field 0x1e10ab28818 'b' 'bool'
-    |-BinaryOperator 0x1e10ab28dd8 <line:11:5, col:11> 'int' lvalue '='
-    | |-MemberExpr 0x1e10ab28d88 <col:5, col:7> 'int' lvalue .i 0x1e10ab288f0
-    | | `-DeclRefExpr 0x1e10ab28d68 <col:5> 'Constant' lvalue Var 0x1e10ab28c38 'c' 'Constant'
-    | `-IntegerLiteral 0x1e10ab28db8 <col:11> 'int' 4
-    `-BinaryOperator 0x1e10ab28f50 <line:14:5, col:11> 'double' lvalue '='
-      |-MemberExpr 0x1e10ab28f00 <col:5, col:7> 'double' lvalue .d 0x1e10ab289d0
-      | `-DeclRefExpr 0x1e10ab28ee0 <col:5> 'Constant' lvalue Var 0x1e10ab28c38 'c' 'Constant'
-      `-FloatingLiteral 0x1e10ab28f30 <col:11> 'double' 3.140000e+00
-```
-
-However, we must take care to exclude anonymous unions and structs from being annotated.
-Fortunately, Clang provides a built-in check via `CXXRecordDecl::isAnonymousStructOrUnion` that we can use for this purpose:
-```cpp
-bool Visitor::VisitCXXRecordDecl(clang::CXXRecordDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    
-    clang::SourceLocation location = node->getLocation();
-    if (source_manager.isInMainFile(location)) {
-        const std::string& name = node->getNameAsString();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-        
-        // Avoid annotating unnamed (anonymous) record types
-        if (!node->isAnonymousStructOrUnion() && !name.empty()) {
-            m_annotator->insert_annotation("class-name", line, column, name.length());
-        }
-    }
-    
-    return true;
-}
-```
-This removes faulty `[[class-name,]]union { ... }` annotations that would have otherwise been added before anonymous struct and union declarations.
-Declarations and references to union members are handled without any additional modifications by the `VisitFieldDecl` and `VisitMemberExpr` visitor functions.
-
-```cpp
-union [[class-name,Constant]] {
-    bool [[member-variable,b]];
-    char [[member-variable,c]];
-    int [[member-variable,i]];
-    float [[member-variable,f]];
-    double [[member-variable,d]];
-};
-
-int main() {
-    Constant c { };
-    c.[[member-variable,i]] = 4;
-    // ...
-    
-    c.[[member-variable,d]] = 3.14;
     // ...
 }
 ```
