@@ -65,12 +65,7 @@ namespace [[namespace-name,math]] {
     }
 }
 
-int main() {
-    using namespace math;
-    namespace utils = math::utility;
-
-    // ...
-}
+// ...
 ```
 
 ### Namespace aliases
@@ -115,18 +110,7 @@ for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
 ```
 This ensures that both the alias and full namespace chain are annotated correctly:
 ```text added:{9}
-namespace [[namespace-name,math]] {
-    namespace [[namespace-name,utility]] {
-        // ...
-    }
-}
-
-int main() {
-    using namespace math;
-    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
-
-    // ...
-}
+namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
 ```
 
 ### `using namespace` directives
@@ -145,19 +129,8 @@ if (const clang::NamespaceDecl* n = node->getNominatedNamespace()) {
 }
 ```
 With this visitor implemented, we are now able to annotate namespaces in `using namespace` directives:
-```text added:{8}
-namespace [[namespace-name,math]] {
-    namespace [[namespace-name,utility]] {
-        // ...
-    }
-}
-
-int main() {
-    using namespace [[namespace-name,math]];
-    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
-
-    // ...
-}
+```text
+using namespace [[namespace-name,math]];
 ```
 
 ## Styling 
