@@ -65,73 +65,90 @@ namespace [[namespace-name,math]] {
     }
 }
 
-// ...
+int main() {
+    using namespace math;
+    namespace utils = math::utility;
+
+    // ...
+}
 ```
 
 ### Namespace aliases
 
 For `NamespaceAliasDecl` nodes, which represent namespace aliases, we annotate both the alias and the referenced namespaces.
-Annotating the alias is easy:
+First, we annotate the alias itself:
 ```cpp
-const std::string& name = node->getNameAsString();
+std::string name = node->getNameAsString();
+
+clang::SourceLocation location = node->getAliasLoc();
+unsigned line = source_manager.getSpellingLineNumber(location);
+unsigned column = source_manager.getSpellingColumnNumber(location);
+
 m_annotator->insert_annotation("namespace-name", line, column, name.length());
 ```
+The alias location is retrieved via `getAliasLoc()`.
 
-Annotating the aliased namespace, however, is more involved - we need to walk the hierarchy of enclosing namespaces to reconstruct the fully-qualified name.
-We can do this by using the `getDeclContext()` function (available on all `Decl` nodes) which provides access to the parent declaration context.
-
-We retrieve the aliased namespace via `getAliasedNamespace()`:
+Next, we annotate the namespace being aliased by accessing its `NamedDecl`.
 ```cpp
 const clang::NamedDecl* aliased = node->getAliasedNamespace();
-std::unordered_set<std::string> namespaces = extract_namespaces(aliased->getDeclContext());
-namespaces.insert(aliased->getNameAsString());
+name = aliased->getNameAsString();
+
+clang::SourceLocation location = node->getTargetNameLoc();
+unsigned line = source_manager.getSpellingLineNumber(location);
+unsigned column = source_manager.getSpellingColumnNumber(location);
+
+m_annotator->insert_annotation("namespace-name", line, column, name.length());
 ```
-The `extract_namespaces` function walks up AST through the `DeclContext`, adding the names of any parent `NamespaceDecl` nodes to a set.
-The parent node is accessed through the `getParent()` function of the `DeclContext`.
-```cpp
-std::unordered_set<std::string> extract_namespaces(const clang::DeclContext* context) {
-    std::unordered_set<std::string> namespaces;
-    while (context) {
-        if (const clang::NamespaceDecl* n = clang::dyn_cast<clang::NamespaceDecl>(context)) {
-            namespaces.insert(n->getNameAsString());
-        }
-        context = context->getParent();
-    }
-    return namespaces;
-}
-```
-Once we have the full set of namespace names, we tokenize the source range of the alias and annotate any tokens that match one of the names:
-```cpp
-for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-    if (namespaces.contains(token.spelling)) {
-        m_annotator->insert_annotation("namespace-name", token.line, token.column, token.spelling.length());
+The location of the alias target is retrieved via `getTargetNameLoc()`.
+Both instances are annotated as a `namespace-name`.
+
+With this visitor implemented, we can now properly annotate namespace aliases:
+```text
+namespace math {
+    namespace utility {
+        // ...
     }
 }
-```
-This ensures that both the alias and full namespace chain are annotated correctly:
-```text added:{9}
-namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
+
+int main() {
+    using namespace math;
+    namespace [[namespace-name,utils]] = math::[[namespace-name,utility]];
+
+    // ...
+}
 ```
 
 ### `using namespace` directives
 
 The `UsingDirectiveDecl` node handles `using namespace` directives.
-These follow the same structure as annotations for namespace aliases, instead using the declaration of the nominated namespace retrieved by a call to `getNominatedNamespace()`:
+These follow the same pattern as namespace aliases but access the target namespace through `getNominatedNamespace()`:
 ```cpp
-if (const clang::NamespaceDecl* n = node->getNominatedNamespace()) {
-    std::unordered_set<std::string> namespaces = extract_namespaces(n->getDeclContext());
-    namespaces.insert(n->getNameAsString());
-    for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-        if (namespaces.contains(token.spelling)) {
-            m_annotator->insert_annotation("namespace-name", token.line, token.column, token.spelling.length());
-        }
+const clang::NamespaceDecl* decl = node->getNominatedNamespace();
+std::string name = decl->getNameAsString();
+
+unsigned line = source_manager.getSpellingLineNumber(location);
+unsigned column = source_manager.getSpellingColumnNumber(location);
+
+m_annotator->insert_annotation("namespace-name", line, column, name.length());
+```
+With this visitor implemented, we are able to annotate namespaces in `using namespace` directives:
+```text
+namespace math {
+    namespace utility {
+        // ...
     }
 }
+
+int main() {
+    using namespace [[namespace-name,math]];
+    namespace utils = math::utility;
+
+    // ...
+}
 ```
-With this visitor implemented, we are now able to annotate namespaces in `using namespace` directives:
-```text
-using namespace [[namespace-name,math]];
-```
+
+You'll notice that in both examples, qualifiers on namespace aliases and `using namespace` directives (such as `math::utility`) remain unannotated.
+We will handle these when we look at generic qualifier processing in a later post in this series.
 
 ## Styling 
 The final step is to add a definition for the `namespace-name` CSS style:
@@ -150,8 +167,9 @@ namespace [[namespace-name,math]] {
 
 int main() {
     using namespace [[namespace-name,math]];
-    namespace [[namespace-name,utils]] = [[namespace-name,math]]::[[namespace-name,utility]];
+    namespace [[namespace-name,utils]] = math::[[namespace-name,utility]];
 
     // ...
 }
 ```
+
