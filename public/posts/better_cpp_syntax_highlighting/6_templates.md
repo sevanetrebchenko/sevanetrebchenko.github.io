@@ -114,112 +114,99 @@ Consider the following example:
 
 template <typename T>
 concept Container = requires(T container, std::size_t index) {
-    // Ensure that the container supports the std::begin and std::end methods
     { std::begin(container) } -> std::same_as<decltype(std::end(container))>;
-    
-    // Ensure that the container iterator can be dereferenced
     { *std::begin(container) };
-
-    // Ensure that the container iterator can be incremented
-    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
-
-    // Ensure that the container has a public 'data' member variable
+    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))&>;
     { container.data };
-    
-    // Ensure that the container has 'size' and 'capacity' member functions
     { container.size() };
     { container.capacity() };
-    
-    // Ensure that the container defines the necessary types
-    { T::value_type };
-    
-    // ...
+    typename T::value_type;
 };
 
-// Concept-constrained function for containers
 template <Container T>
 void print(const T& container);
 ```
 And corresponding AST:
 ```text
-|-ConceptDecl 0x1d5da359e88 <example.cpp:4:1, line:26:1> line:5:9 Container
-| |-TemplateTypeParmDecl 0x1d5da359de0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
-| `-RequiresExpr 0x1d5da35ae68 <line:5:21, line:26:1> 'bool'
-|   |-ParmVarDecl 0x1d5da359ee8 <line:5:30, col:32> col:32 referenced container 'T'
-|   |-ParmVarDecl 0x1d5da359fd8 <col:43, col:55> col:55 index 'std::size_t':'unsigned long long'
-|   |-CompoundRequirement 0x1d5da35a578 dependent
-|   | |-CallExpr 0x1d5da35a170 <line:7:7, col:27> '<dependent type>'
-|   | | |-UnresolvedLookupExpr 0x1d5da35a0e0 <col:7, col:12> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1d5d965f2f0 0x1d5d965fdd8 0x1d5d96603c8 0x1d5d9661610 0x1d5d9665560 0x1d5d9665a50
-|   | | `-DeclRefExpr 0x1d5da35a150 <col:18> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   | `-ConceptSpecializationExpr 0x1d5da35a4e8 <col:34, col:76> 'bool' Concept 0x1d5d8e9c420 'same_as'
-|   |   |-ImplicitConceptSpecializationDecl 0x1d5da35a3f8 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|-ConceptDecl 0x2076bca2e88 <example.cpp:4:1, line:13:1> line:5:9 Container
+| |-TemplateTypeParmDecl 0x2076bca2de0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
+| `-RequiresExpr 0x2076bca3eb8 <line:5:21, line:13:1> 'bool'
+|   |-ParmVarDecl 0x2076bca2ee8 <line:5:30, col:32> col:32 referenced container 'T'
+|   |-ParmVarDecl 0x2076bca2fd8 <col:43, col:55> col:55 index 'std::size_t':'unsigned long long'
+|   |-CompoundRequirement 0x2076bca3578 dependent
+|   | |-CallExpr 0x2076bca3170 <line:6:7, col:27> '<dependent type>'
+|   | | |-UnresolvedLookupExpr 0x2076bca30e0 <col:7, col:12> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x2076afc6eb0 0x2076afc7998 0x2076afc7f88 0x2076afc91d0 0x2076afcdd50 0x2076afce240
+|   | | `-DeclRefExpr 0x2076bca3150 <col:18> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x2076bca34e8 <col:34, col:76> 'bool' Concept 0x2076a79c080 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x2076bca33f8 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
 |   |   | |-TemplateArgument type 'type-parameter-1-0'
-|   |   | | `-TemplateTypeParmType 0x1d5d8c93640 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | | `-TemplateTypeParmType 0x2076a549950 'type-parameter-1-0' dependent depth 1 index 0
 |   |   | `-TemplateArgument type 'decltype(std::end(container))'
-|   |   |   `-DecltypeType 0x1d5da35a290 'decltype(std::end(container))' dependent
-|   |   |     `-CallExpr 0x1d5da35a260 <example.cpp:7:56, col:74> '<dependent type>'
-|   |   |       |-UnresolvedLookupExpr 0x1d5da35a1d0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1d5d965f7e0 0x1d5d96609b8 0x1d5d9660fa8 0x1d5d9661bd0 0x1d5d9665ed0 0x1d5d9666350
-|   |   |       `-DeclRefExpr 0x1d5da35a240 <col:65> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
+|   |   |   `-DecltypeType 0x2076bca3290 'decltype(std::end(container))' dependent
+|   |   |     `-CallExpr 0x2076bca3260 <example.cpp:6:56, col:74> '<dependent type>'
+|   |   |       |-UnresolvedLookupExpr 0x2076bca31d0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x2076afc73a0 0x2076afc8578 0x2076afc8b68 0x2076afc9790 0x2076afce6c0 0x2076afceb40
+|   |   |       `-DeclRefExpr 0x2076bca3240 <col:65> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
 |   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
-|   |   | `-TemplateTypeParmType 0x1d5da35a380 'expr-type' dependent depth 1 index 0
-|   |   |   `-TemplateTypeParm 0x1d5da35a318 'expr-type'
+|   |   | `-TemplateTypeParmType 0x2076bca3380 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x2076bca3318 'expr-type'
 |   |   `-TemplateArgument <col:47, col:75> type 'decltype(std::end(container))'
-|   |     `-DecltypeType 0x1d5da35a2c0 'decltype(std::end(container))' dependent
-|   |       `-CallExpr 0x1d5da35a260 <col:56, col:74> '<dependent type>'
-|   |         |-UnresolvedLookupExpr 0x1d5da35a1d0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x1d5d965f7e0 0x1d5d96609b8 0x1d5d9660fa8 0x1d5d9661bd0 0x1d5d9665ed0 0x1d5d9666350
-|   |         `-DeclRefExpr 0x1d5da35a240 <col:65> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1d5da35a698 dependent
-|   | `-UnaryOperator 0x1d5da35a680 <line:10:7, col:28> '<dependent type>' lvalue prefix '*' cannot overflow
-|   |   `-CallExpr 0x1d5da35a658 <col:8, col:28> '<dependent type>'
-|   |     |-UnresolvedLookupExpr 0x1d5da35a5c8 <col:8, col:13> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1d5d965f2f0 0x1d5d965fdd8 0x1d5d96603c8 0x1d5d9661610 0x1d5d9665560 0x1d5d9665a50
-|   |     `-DeclRefExpr 0x1d5da35a638 <col:19> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1d5da35ab78 dependent
-|   | |-UnaryOperator 0x1d5da35a7a0 <line:13:7, col:29> '<dependent type>' lvalue prefix '++' cannot overflow
-|   | | `-CallExpr 0x1d5da35a778 <col:9, col:29> '<dependent type>'
-|   | |   |-UnresolvedLookupExpr 0x1d5da35a6e8 <col:9, col:14> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1d5d965f2f0 0x1d5d965fdd8 0x1d5d96603c8 0x1d5d9661610 0x1d5d9665560 0x1d5d9665a50
-|   | |   `-DeclRefExpr 0x1d5da35a758 <col:20> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   | `-ConceptSpecializationExpr 0x1d5da35aae8 <col:36, col:80> 'bool' Concept 0x1d5d8e9c420 'same_as'
-|   |   |-ImplicitConceptSpecializationDecl 0x1d5da35a9f8 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
+|   |     `-DecltypeType 0x2076bca32c0 'decltype(std::end(container))' dependent
+|   |       `-CallExpr 0x2076bca3260 <col:56, col:74> '<dependent type>'
+|   |         |-UnresolvedLookupExpr 0x2076bca31d0 <col:56, col:61> '<overloaded function type>' lvalue (no ADL) = 'end' 0x2076afc73a0 0x2076afc8578 0x2076afc8b68 0x2076afc9790 0x2076afce6c0 0x2076afceb40
+|   |         `-DeclRefExpr 0x2076bca3240 <col:65> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x2076bca3698 dependent
+|   | `-UnaryOperator 0x2076bca3680 <line:7:7, col:28> '<dependent type>' lvalue prefix '*' cannot overflow
+|   |   `-CallExpr 0x2076bca3658 <col:8, col:28> '<dependent type>'
+|   |     |-UnresolvedLookupExpr 0x2076bca35c8 <col:8, col:13> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x2076afc6eb0 0x2076afc7998 0x2076afc7f88 0x2076afc91d0 0x2076afcdd50 0x2076afce240
+|   |     `-DeclRefExpr 0x2076bca3638 <col:19> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x2076bca3bd8 dependent
+|   | |-UnaryOperator 0x2076bca37a0 <line:8:7, col:29> '<dependent type>' lvalue prefix '++' cannot overflow
+|   | | `-CallExpr 0x2076bca3778 <col:9, col:29> '<dependent type>'
+|   | |   |-UnresolvedLookupExpr 0x2076bca36e8 <col:9, col:14> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x2076afc6eb0 0x2076afc7998 0x2076afc7f88 0x2076afc91d0 0x2076afcdd50 0x2076afce240
+|   | |   `-DeclRefExpr 0x2076bca3758 <col:20> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   | `-ConceptSpecializationExpr 0x2076bca3b48 <col:36, col:81> 'bool' Concept 0x2076a79c080 'same_as'
+|   |   |-ImplicitConceptSpecializationDecl 0x2076bca3a58 <C:/MSYS2/mingw64/include/c++/14.2.0/concepts:62:13> col:13
 |   |   | |-TemplateArgument type 'type-parameter-1-0'
-|   |   | | `-TemplateTypeParmType 0x1d5d8c93640 'type-parameter-1-0' dependent depth 1 index 0
-|   |   | `-TemplateArgument type 'decltype(std::begin(container))'
-|   |   |   `-DecltypeType 0x1d5da35a890 'decltype(std::begin(container))' dependent
-|   |   |     `-CallExpr 0x1d5da35a868 <example.cpp:13:58, col:78> '<dependent type>'
-|   |   |       |-UnresolvedLookupExpr 0x1d5da35a7d8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1d5d965f2f0 0x1d5d965fdd8 0x1d5d96603c8 0x1d5d9661610 0x1d5d9665560 0x1d5d9665a50
-|   |   |       `-DeclRefExpr 0x1d5da35a848 <col:69> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
+|   |   | | `-TemplateTypeParmType 0x2076a549950 'type-parameter-1-0' dependent depth 1 index 0
+|   |   | `-TemplateArgument type 'decltype(std::begin(container)) &'
+|   |   |   `-LValueReferenceType 0x2076bca38f0 'decltype(std::begin(container)) &' dependent
+|   |   |     `-DecltypeType 0x2076bca3890 'decltype(std::begin(container))' dependent
+|   |   |       `-CallExpr 0x2076bca3868 <example.cpp:8:58, col:78> '<dependent type>'
+|   |   |         |-UnresolvedLookupExpr 0x2076bca37d8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x2076afc6eb0 0x2076afc7998 0x2076afc7f88 0x2076afc91d0 0x2076afcdd50 0x2076afce240
+|   |   |         `-DeclRefExpr 0x2076bca3848 <col:69> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
 |   |   |-TemplateArgument type 'expr-type':'type-parameter-1-0'
-|   |   | `-TemplateTypeParmType 0x1d5da35a980 'expr-type' dependent depth 1 index 0
-|   |   |   `-TemplateTypeParm 0x1d5da35a918 'expr-type'
-|   |   `-TemplateArgument <col:49, col:79> type 'decltype(std::begin(container))'
-|   |     `-DecltypeType 0x1d5da35a8c0 'decltype(std::begin(container))' dependent
-|   |       `-CallExpr 0x1d5da35a868 <col:58, col:78> '<dependent type>'
-|   |         |-UnresolvedLookupExpr 0x1d5da35a7d8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x1d5d965f2f0 0x1d5d965fdd8 0x1d5d96603c8 0x1d5d9661610 0x1d5d9665560 0x1d5d9665a50
-|   |         `-DeclRefExpr 0x1d5da35a848 <col:69> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1d5da35ac10 dependent
-|   | `-CXXDependentScopeMemberExpr 0x1d5da35abc8 <line:16:7, col:17> '<dependent type>' lvalue .data
-|   |   `-DeclRefExpr 0x1d5da35aba8 <col:7> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1d5da35acc8 dependent
-|   | `-CallExpr 0x1d5da35aca8 <line:19:7, col:22> '<dependent type>'
-|   |   `-CXXDependentScopeMemberExpr 0x1d5da35ac60 <col:7, col:17> '<dependent type>' lvalue .size
-|   |     `-DeclRefExpr 0x1d5da35ac40 <col:7> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   |-CompoundRequirement 0x1d5da35ad80 dependent
-|   | `-CallExpr 0x1d5da35ad60 <line:20:7, col:26> '<dependent type>'
-|   |   `-CXXDependentScopeMemberExpr 0x1d5da35ad18 <col:7, col:17> '<dependent type>' lvalue .capacity
-|   |     `-DeclRefExpr 0x1d5da35acf8 <col:7> 'T' lvalue ParmVar 0x1d5da359ee8 'container' 'T' non_odr_use_unevaluated
-|   `-CompoundRequirement 0x1d5da35ae38 dependent
-|     `-DependentScopeDeclRefExpr 0x1d5da35ae00 <line:23:7, col:10> '<dependent type>' lvalue
-|       `-NestedNameSpecifier TypeSpec 'T'
-`-FunctionTemplateDecl 0x1d5da35b2d8 <line:29:1, line:30:30> col:6 print
-  |-TemplateTypeParmDecl 0x1d5da35af00 <line:29:11, col:21> col:21 referenced Concept 0x1d5da359e88 'Container' depth 0 index 0 T
-  | `-ConceptSpecializationExpr 0x1d5da35b060 <col:11> 'bool' Concept 0x1d5da359e88 'Container'
-  |   |-ImplicitConceptSpecializationDecl 0x1d5da35afa8 <line:5:9> col:9
+|   |   | `-TemplateTypeParmType 0x2076bca39e0 'expr-type' dependent depth 1 index 0
+|   |   |   `-TemplateTypeParm 0x2076bca3980 'expr-type'
+|   |   `-TemplateArgument <col:49, col:80> type 'decltype(std::begin(container)) &'
+|   |     `-LValueReferenceType 0x2076bca3920 'decltype(std::begin(container)) &' dependent
+|   |       `-DecltypeType 0x2076bca38c0 'decltype(std::begin(container))' dependent
+|   |         `-CallExpr 0x2076bca3868 <col:58, col:78> '<dependent type>'
+|   |           |-UnresolvedLookupExpr 0x2076bca37d8 <col:58, col:63> '<overloaded function type>' lvalue (no ADL) = 'begin' 0x2076afc6eb0 0x2076afc7998 0x2076afc7f88 0x2076afc91d0 0x2076afcdd50 0x2076afce240
+|   |           `-DeclRefExpr 0x2076bca3848 <col:69> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x2076bca3c70 dependent
+|   | `-CXXDependentScopeMemberExpr 0x2076bca3c28 <line:9:7, col:17> '<dependent type>' lvalue .data
+|   |   `-DeclRefExpr 0x2076bca3c08 <col:7> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x2076bca3d28 dependent
+|   | `-CallExpr 0x2076bca3d08 <line:10:7, col:22> '<dependent type>'
+|   |   `-CXXDependentScopeMemberExpr 0x2076bca3cc0 <col:7, col:17> '<dependent type>' lvalue .size
+|   |     `-DeclRefExpr 0x2076bca3ca0 <col:7> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   |-CompoundRequirement 0x2076bca3de0 dependent
+|   | `-CallExpr 0x2076bca3dc0 <line:11:7, col:26> '<dependent type>'
+|   |   `-CXXDependentScopeMemberExpr 0x2076bca3d78 <col:7, col:17> '<dependent type>' lvalue .capacity
+|   |     `-DeclRefExpr 0x2076bca3d58 <col:7> 'T' lvalue ParmVar 0x2076bca2ee8 'container' 'T' non_odr_use_unevaluated
+|   `-TypeRequirement 0x2076bca3ea0 dependent
+|     `-DependentNameType 0x2076bca3e50 'typename T::value_type' dependent
+`-FunctionTemplateDecl 0x2076bca4328 <line:15:1, line:16:30> col:6 print
+  |-TemplateTypeParmDecl 0x2076bca3f50 <line:15:11, col:21> col:21 referenced Concept 0x2076bca2e88 'Container' depth 0 index 0 T
+  | `-ConceptSpecializationExpr 0x2076bca40b0 <col:11> 'bool' Concept 0x2076bca2e88 'Container'
+  |   |-ImplicitConceptSpecializationDecl 0x2076bca3ff8 <line:5:9> col:9
   |   | `-TemplateArgument type 'type-parameter-0-0'
-  |   |   `-TemplateTypeParmType 0x1d5d8c63420 'type-parameter-0-0' dependent depth 0 index 0
-  |   `-TemplateArgument <line:29:21> type 'T':'type-parameter-0-0'
-  |     `-TemplateTypeParmType 0x1d5da35af60 'T' dependent depth 0 index 0
-  |       `-TemplateTypeParm 0x1d5da35af00 'T'
-  `-FunctionDecl 0x1d5da35b228 <line:30:1, col:30> col:6 print 'void (const T &)'
-    `-ParmVarDecl 0x1d5da35b138 <col:12, col:21> col:21 container 'const T &'
+  |   |   `-TemplateTypeParmType 0x2076a50baf0 'type-parameter-0-0' dependent depth 0 index 0
+  |   `-TemplateArgument <line:15:21> type 'T':'type-parameter-0-0'
+  |     `-TemplateTypeParmType 0x2076bca3fb0 'T' dependent depth 0 index 0
+  |       `-TemplateTypeParm 0x2076bca3f50 'T'
+  `-FunctionDecl 0x2076bca4278 <line:16:1, col:30> col:6 print 'void (const T &)'
+    `-ParmVarDecl 0x2076bca4188 <col:12, col:21> col:21 container 'const T &'
 ```
 
 Concept-related declarations and expressions are represented by several node types:
@@ -270,7 +257,7 @@ concept [[concept,Container]] = requires(T container, std::size_t index) {
     { *std::begin(container) };
 
     // Ensure that the container iterator can be incremented
-    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
+    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))&>;
 
     // Ensure that the container has a public 'data' member variable
     { container.data };
@@ -280,7 +267,7 @@ concept [[concept,Container]] = requires(T container, std::size_t index) {
     { container.capacity() };
     
     // Ensure that the container defines the necessary types
-    { T::value_type };
+    typename T::value_type;
     
     // ...
 };
@@ -374,7 +361,7 @@ concept Container = requires(T container, std::size_t index) {
     { container.[[function,capacity]]() };
     
     // Ensure that the container defines the necessary types
-    { T::value_type };
+    typename T::value_type;
     
     // ...
 };
@@ -418,7 +405,7 @@ concept Container = requires(T container, std::size_t index) {
     { *std::begin(container) };
 
     // Ensure that the container iterator can be incremented
-    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))>;
+    { ++std::begin(container) } -> std::same_as<decltype(std::begin(container))&>;
 
     // Ensure that the container has a public 'data' member variable
     { container.[[member-variable,data]] };
@@ -428,7 +415,7 @@ concept Container = requires(T container, std::size_t index) {
     { container.capacity() };
     
     // Ensure that the container defines the necessary types
-    { T::value_type };
+    typename T::value_type;
     
     // ...
 };
@@ -469,7 +456,7 @@ concept [[concept,Container]] = requires(T container, std::size_t index) {
     { container.[[function,capacity]]() };
     
     // Ensure that the container defines the necessary types
-    { T::value_type };
+    typename T::value_type;
     
     // ...
 };
