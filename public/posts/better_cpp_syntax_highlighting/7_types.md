@@ -87,6 +87,7 @@ bool Visitor::VisitTypeLoc(clang::TypeLoc node) {
     }
 
     unsigned column = source_manager.getSpellingColumnNumber(location);
+    line = source_manager.getSpellingLineNumber(location);
     m_annotator->insert_annotation(annotation, line, column, name.length());
 
     return true;
@@ -149,7 +150,9 @@ if (clang::EnumTypeLoc e = node.getAs<clang::EnumTypeLoc>()) {
     annotation = "enum-name";
 
     const clang::EnumDecl* decl = e.getDecl();
-    name = decl->getNameAsString();
+    if (decl) {
+        name = decl->getNameAsString();
+    }
 }
 ```
 The `getAs()` function works similarly to dynamic casting - it safely checks if the `TypeLoc` node is of the requested type and returns null otherwise.
@@ -186,7 +189,9 @@ if (clang::RecordTypeLoc r = node.getAs<clang::RecordTypeLoc>()) {
     location = node.getBeginLoc();
     
     const clang::RecordDecl* decl = r.getDecl();
-    name = decl->getNameAsString();
+    if (decl) {
+        name = decl->getNameAsString();
+    }
 }
 ```
 There are considered types, so we'll continue using the default `class-name` annotation.
@@ -272,15 +277,16 @@ With this in place, we can safely check the current immediate parent of our `Rec
 if (clang::RecordTypeLoc r = node.getAs<clang::RecordTypeLoc>()) {
     location = node.getBeginLoc();
 
-    const clang::RecordDecl* decl = r.getDecl();
-    name = decl->getNameAsString();
-
-    // Skip 'class-name' annotations if the immediate parent is a constructor call
     const clang::DynTypedNode& parent = m_parents.back();
-    if (const clang::CXXConstructExpr* constructor = parent.get<clang::CXXConstructExpr>()) {
-        if (!constructor->isListInitialization()) {
+    if (const clang::CXXConstructExpr* contructor = parent.get<clang::CXXConstructExpr>()) {
+        if (!contructor->isListInitialization()) {
             return true;
         }
+    }
+
+    const clang::RecordDecl* decl = r.getDecl();
+    if (decl) {
+        name = decl->getNameAsString();
     }
 }
 ```
@@ -310,7 +316,9 @@ if (clang::TypedefTypeLoc t = node.getAs<clang::TypedefTypeLoc>()) {
     location = node.getBeginLoc();
     
     const clang::TypedefNameDecl* decl = t.getTypedefNameDecl();
-    name = decl->getNameAsString();
+    if (decl) {
+        name = decl->getNameAsString();
+    }
 }
 ```
 We retrieve the source location from the `TypeLoc` node and the name of the alias from its declaration.
