@@ -450,7 +450,7 @@ bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
 }
 ```
 As before, we retrieve information about the underlying declaration with `getDecl()`.
-With a combination of the `isCXXClassMember()`, `isCXXInstanceMember()`, and `isFunctionOrFunctionTemplate()` checks, we can isolate only references to static class members variables.
+With a combination of the `isCXXClassMember()`, `isCXXInstanceMember()`, and `isFunctionOrFunctionTemplate()` checks, we can isolate only references to static members variables.
 As before, these are annotated with `member-variable`.
 
 ```text added:{20,23}
