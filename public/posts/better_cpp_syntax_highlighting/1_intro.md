@@ -698,7 +698,7 @@ namespace [[namespace-name,math]] {
 }
 ```
 These annotations exist only in the Markdown source.
-When processed, they are removed, and the enclosed tokens are assigned the corresponding CSS styles.
+When processed by the website frontend, they are removed, and the enclosed tokens are assigned the corresponding CSS styles.
 For the purposes of syntax highlighting, these styles simply correspond to the color these elements should have:
 ```css
 .language-cpp .function {
@@ -716,94 +716,151 @@ It follows that there should be a corresponding CSS style for every annotation t
 If you are interested, I've written a [short post]() about how this is implemented in the renderer (the same one being used for this post!).
 
 #### The `Annotator`
-All logic for inserting annotations is contained within the `Annotator` class:
-```cpp line-numbers:{enabled} title:{annotator.hpp}
-#include <unordered_map> // std::unordered_map
-#include <vector> // std::vector
-#include <string> // std::string
-
-struct [[class-name,Annotation]] {
-    [[function,Annotation]](const char[[punctuation,*]] name, unsigned start, unsigned length);
-    [[punctuation,~]][[function,Annotation]]();
-
-    const char[[punctuation,*]] [[member-variable,name]];
-    unsigned [[member-variable,start]];
-    unsigned [[member-variable,length]];
+All logic for inserting annotations is handled by the `Annotator` class:
+```cpp
+struct Annotation {
+    Annotation(const char* name, unsigned offset, unsigned length);
+    ~Annotation();
+    
+    const char* name;
+    unsigned offset;
+    unsigned length;
 };
 
-class [[class-name,Annotator]] {
-    public[[punctuation,:]]
-        explicit [[function,Annotator]]([[namespace-name,std]]::[[class-name,string]] file);
-        [[punctuation,~]][[function,Annotator]]();
-    
-        void insert_annotation(const char[[punctuation,*]] name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
+class Annotator {
+    public:
+        explicit Annotator(std::string source);
+        ~Annotator();
+        
+        void insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
         void annotate();
-
-    private[[punctuation,:]]
-        [[namespace-name,std]]::[[class-name,string]] [[member-variable,m_file]];
-        [[namespace-name,std]]::[[class-name,unordered_map]][[punctuation,<]]unsigned, [[namespace-name,std]]::[[class-name,vector]][[punctuation,<]][[class-name,Annotation]][[punctuation,>]][[punctuation,>]] [[member-variable,m_annotations]];
+        
+    private:
+        void compute_line_lengths();
+        [[nodiscard]] std::size_t compute_offset(unsigned line, unsigned column) const;
+    
+        std::string m_source;
+        std::vector<unsigned> m_line_lengths;
+        std::vector<Annotation> m_annotations;
 };
 ```
-This class stores annotations in the `m_annotations` map, which associates a line number to a list of annotations for that line.
-
-The `insert_annotation` function simply registers a new `Annotation` with the given name and source location.
-Annotations cannot be overwritten unless `overwrite` flag is explicitly specified - two annotations cannot correspond to the same token, as it would create ambiguity regarding which CSS style should be applied.
-```cpp line-numbers:{enabled} title:{annotator.cpp}
-#include "annotator.hpp"
-
-void [[class-name,Annotator]]::[[function,insert_annotation]](const char[[punctuation,*]] name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+Annotations are registered through `insert_annotation()` and stored in the `m_annotations` vector.
+Annotations typically correspond to unique tokens in the source file.
+The `insert_annotation()` function calculates the character offset in the file for the given source location using `compute_offset()` and appends the annotation.
+```cpp
+void Annotator::insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite) {
+    std::size_t offset = compute_offset(line, column);
+    
     // Do not add duplicate annotations of the same name at the same location
-    // Note: line and column numbers returned from Clang's AST start with 1
-    for ([[class-name,Annotation]][[punctuation,&]] annotation [[punctuation,:]] [[member-variable,m_annotations]][[operator,[]]line - 1[[operator,]]]) {
-        if (annotation.[[member-variable,start]] == (column - 1)) {
+    for (Annotation& annotation : m_annotations) {
+        if (annotation.offset == offset) {
             if (overwrite) {
-                annotation.[[member-variable,name]] = name;
-                annotation.[[member-variable,length]] = length;
+                annotation.name = name;
+                annotation.length = length;
             }
-
+            
+            return;
+        }
+        else if (offset > annotation.offset && offset < annotation.offset + annotation.length) {
+            utils::logging::error("Inserting annotation in the middle of another annotation!");
             return;
         }
     }
-
-    [[member-variable,m_annotations]][[operator,[]]line - 1[[operator,]]].[[function,emplace_back]](name, column - 1, length);
+    
+    m_annotations.emplace_back(name, offset, length);
 }
 ```
+The `overwrite` flag allows for existing annotations to be overwritten when necessary.
+Multiple annotations cannot correspond to the same token as it would create ambiguity regarding which CSS style should be applied.
+Partial overlaps - where an annotation would sit inside another - are rejected entirely to preserve correctness.
+This is a rare condition, and typically indicates a problem with the code that's calling `insert_annotation()`.
 
-After AST traversal is complete, the final annotated source file is generated by a call to `annotate`.
-```cpp title:{annotator.cpp}
-#include "annotator.hpp"
-
-void [[class-name,Annotator]]::[[function,annotate]]() {
+The `compute_offset()` function calculates the absolute character position for a given line and column:
+```cpp
+std::size_t Annotator::compute_offset(unsigned line, unsigned column) {
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < line; ++i) {
+        offset += m_line_lengths[i];
+    }
+    return offset + column;
+}
+```
+To support this, the length of each line (including newline characters) is precomputed during initialization:
+```cpp
+Annotator::Annotator(const std::string& file) {
     // Read source file contents
-    [[namespace-name,std]]::[[class-name,vector]][[punctuation,<]][[namespace-name,std]]::[[class-name,string]][[punctuation,>]] lines = [[function,read]]([[member-variable,m_file]]);
+    m_file = read(file);
+    compute_line_lengths();
+}
 
-    for (auto[[punctuation,&]] [line, annotations] [[punctuation,:]] [[member-variable,m_annotations]]) {
-        // Insert annotations in reverse order so that positions of subsequent annotation are not affected
-        [[namespace-name,std]]::[[function,sort]](annotations.[[function,begin]](), annotations.[[function,end]](), [](const [[class-name,Annotation]][[punctuation,&]] a, const [[class-name,Annotation]][[punctuation,&]] b) -> bool {
-            return a.[[member-variable,start]] < b.[[member-variable,start]];
-        });
+void Annotator::compute_line_lengths() {
+    std::size_t start = 0;
 
-        // Precompute the final length of the string
-
-        // Insert annotations
-        for (const [[class-name,Annotation]][[punctuation,&]] annotation [[punctuation,:]] annotations) {
-            [[namespace-name,std]]::[[class-name,string]] src = lines[[operator,[]]line[[operator,]]].[[function,substr]](annotation.[[member-variable,start]], annotation.[[member-variable,length]]);
-
-            // Annotation format: [[{AnnotationType},{Tokens}]]
-            lines[[operator,[]]line[[operator,]]].[[function,replace]](annotation.[[member-variable,start]], annotation.[[member-variable,length]], [[namespace-name,utils]]::[[function,format]]("[[{},{}]]", annotation.[[member-variable,name]], src));
+    // Traverse through the string and count lengths of lines separated by newlines
+    for (std::size_t i = 0; i < m_file.size(); ++i) {
+        if (m_file[i] == '\n') {
+            // Include newline character in line length calculation
+            m_line_lengths.push_back(i - start + 1);
+            start = i + 1;
         }
     }
 
-    // Write modified output file contents
-    [[function,write]]("result.txt", lines);
+    // Add any trailing characters
+    if (start < m_file.size()) {
+        m_line_lengths.push_back(m_file.size() - start);
+    }
 }
 ```
-Before being inserted, all annotations for a line are sorted by their location in **reverse order**.
-Since the children of an AST node are not guaranteed to be on the same level of the AST, determining the order (and location) of annotations for these nodes is not straightforward.
-Additionally, adding an annotation modifies the length of the line, which shifts the positions of any annotations that follow.
-Sorting the annotations beforehand removes the need to adjust offsets after each insertion.
+Newlines and carriage returns are included in the line lengths to ensure offsets remain accurate across different platforms.
 
-Once the annotations are inserted, the modified file is written out and saved to disk.
+##### `annotate()`
+
+After AST traversal is complete, a call to `annotate()` generates the final annotated file.
+The full source for this function can be viewed [here]().
+
+The first step is to sort the annotations by their offsets:
+```cpp
+std::sort(m_annotations.begin(), m_annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
+    return a.offset < b.offset;
+});
+```
+Since nodes in the AST are not guaranteed to be visited in the same order as their counterparts appear in the code, annotations are typically added to the `Annotator` out of order.
+
+To avoid expensive reallocations, the final length of the file (including all annotations) is precomputed and allocated at once:
+```cpp
+std::size_t length = m_source.length();
+for (const Annotation& annotation : m_annotations) {
+    // Annotation format: [[{AnnotationType},{Tokens}]]
+    // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
+    length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+}
+std::string file;
+file.reserve(length);
+```
+This takes advantage of the fact that annotations follow a consistent pattern when inserted into the file: `[[{AnnotationType},{Tokens}]]`, and is efficient because it avoids reallocating the file as the contents grow in size.
+
+Annotations are then inserted sequentially:
+```cpp
+std::size_t position = 0;
+for (const Annotation& annotation : m_annotations) {
+    // Copy the part before the annotation
+    file.append(m_source, position, annotation.offset - position);
+    
+    // Insert annotation
+    file.append("[[");
+    file.append(annotation.name);
+    file.append(",");
+    file.append(m_source, annotation.offset, annotation.length);
+    file.append("]]");
+
+    // Move offset into 'src'
+    position = annotation.offset + annotation.length;
+}
+
+// Copy the remaining part of the line
+file.append(m_source, position, m_source.length() - position);
+```
+The annotated file is then written out and saved to disk.
 The generated code snippet can now be embedded directly into a Markdown source file, where annotations will be processed by the renderer for syntax highlighting.
 
 ### Tokenization
@@ -951,3 +1008,5 @@ The resulting `std::span` contains a view of all tokens that overlap the given r
 If `start` or `end` does not align with a token boundary, any tokens that straddle the range - either starting before but extending past `start`, or starting before but continuing past `end` - are also included.
 
 The `Annotator` and `Tokenizer` are added as member variables of the `ASTFrontendAction` class.
+Not all annotations we are interested are handled by the `ASTFrontendAction`.
+In this case, we'll need to ability to pass references to the `Annotator` and `Tokenizer` around so that annotations are inserted into the same resulting file.

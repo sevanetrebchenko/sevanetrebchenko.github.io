@@ -150,7 +150,7 @@ bool VisitMemberExpr(clang::MemberExpr* node);
 
 ## Class definitions
 
-Declarations of classes, structs, and unions are represented by `CXXRecordDEecl` nodes.
+Declarations of classes, structs, and unions are represented by `CXXRecordDecl` nodes.
 The implementation of this visitor follows the same pattern we've seen before:
 ```cpp
 bool Visitor::VisitCXXRecordDecl(clang::CXXRecordDecl* node) {
@@ -483,7 +483,7 @@ int main() {
 
 ## Temporary objects
 
-The final node type we need to handle is `CXXTemporaryObjectExpr`, which represents the construction of temporary object.
+The final node type we need to handle is `CXXTemporaryObjectExpr`, which represents the construction of temporary objects.
 In the example we've been using throughout this post, this applies to the definition of the `Vector3::zero` static class member.
 
 Generally speaking, these nodes appear in a variety of contexts, such as:
@@ -556,10 +556,13 @@ int main() {
 ```
 
 ## Styling
-The final step is to add a definition for the `member-variable` CSS style:
+The final step is to add definitions for the `class-name` and `member-variable` CSS styles:
 ```css
 .language-cpp .member-variable {
     color: rgb(152, 118, 170);
+}
+.language-cpp .class-name {
+    color: rgb(181, 182, 227);
 }
 ```
 
