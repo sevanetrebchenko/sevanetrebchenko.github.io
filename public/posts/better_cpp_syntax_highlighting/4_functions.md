@@ -404,6 +404,26 @@ We retrieve the operator symbol using the static `getOpcodeStr()` function.
 The implementations of `VisitBinaryOperator` and `VisitCompoundAssignOperator` follow the same pattern, using their respective `getOpcodeStr()` functions.
 Unary operators are annotated with `unary-operator`, while binary and compound assignment operators with `binary-operator`.
 
+Another type of built-in operator is the array subscript operator, represented by the `ArraySubscriptExpr` AST node.
+Handling this requires setting up a dedicated visitor, as these nodes are not visited by other operator visitors.
+```cpp
+bool Visitor::VisitArraySubscriptExpr(clang::ArraySubscriptExpr* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
+        if (token.spelling == "[" || token.spelling == "]") {
+            m_annotator->insert_annotation("operator", token.line, token.column, 1);
+        }
+    }
+    
+    return true;
+}
+```
+Unlike most other operators, Clang does not provide a direct way of retrieving the locations of both the opening and closing brackets.
+Functions like `getExprLoc()` only return the location of the expression the operator is applied to, and not the operator symbols themselves.
+To work around this, we simply tokenize the source range of the node and manually annotate both the `[` and `]` tokens as operators.
+
 ### Overloaded operators
 
 `CXXOperatorCallExpr` nodes represent calls to overloaded operators.
@@ -418,11 +438,25 @@ bool Visitor::VisitCXXOperatorCallExpr(clang::CXXOperatorCallExpr* node) {
     unsigned line = source_manager.getSpellingLineNumber(location);
     unsigned column = source_manager.getSpellingColumnNumber(location);
     
-    m_annotator->insert_annotation("function-operator", line, column, op.length());
+    if (op == "[]") {
+        // Special handling for array subscript operator
+        for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
+            if (token.spelling == "[" || token.spelling == "]") {
+                m_annotator->insert_annotation("function-operator", token.line, token.column, 1);
+            }
+        }
+    }
+    else {
+        m_annotator->insert_annotation("function-operator", line, column, op.length());
+    }
+    
     return true;
 }
 ```
 We use `getOperatorSpelling()` to retrieve the operator symbol and annotate it with `function-operator` to match our handling of overloaded operator declarations from earlier.
+
+Overloaded array subscript operators are handled separately from other overloaded operators, as these require two annotations instead of one.
+Similar to what we did when annotating `ArraySubscriptExpr` nodes in the previous section, we tokenize the source range of the function call and manually annotate both the `[` and `]` tokens with the `function-operator` tag.
 
 Note that overloaded operators in template contexts (particularly with fold expressions) can introduce challenges for annotation due to ambiguity around operator resolution.
 One possible solution is to iterate through the tokens of a template function definition and annotate those that match operator spellings.
