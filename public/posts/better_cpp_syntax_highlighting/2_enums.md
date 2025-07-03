@@ -52,27 +52,27 @@ From the `EnumDecl` node above, we can infer that `Level` is declared as an enum
 If we had explicitly set this to a type like `unsigned char` or `std::uint8_t`, this would be also reflected in the AST.
 
 We'll set up visitors for both `EnumDecl` and `EnumConstantDecl` nodes:
-```cpp line-numbers:{enabled} title:{visitor.hpp}
-bool VisitEnumDecl(clang::EnumDecl* node);
-bool VisitEnumConstantDecl(clang::EnumConstantDecl* node);
+```cpp title:{visitor.hpp}
+[[keyword,bool]] [[function,VisitEnumDecl]]([[namespace-name,clang]]::[[class-name,EnumDecl]]* node);
+[[keyword,bool]] [[function,VisitEnumConstantDecl]]([[namespace-name,clang]]::[[class-name,EnumConstantDecl]]* node);
 ```
 The implementation of `VisitEnumDecl` looks like this:
 ```cpp line-numbers:{enabled} title:{visitor.cpp}
-bool Visitor::VisitEnumDecl(clang::EnumDecl* node) {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    const clang::SourceLocation& location = node->getLocation();
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitEnumDecl]]([[namespace-name,clang]]::[[class-name,EnumDecl]]* node) {
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceManager]]& source_manager = [[member-variable,m_context]]->[[function,getSourceManager]]();
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& source_location = node->[[function,getLocation]]();
     
     // Skip any enum definitions that do not come from the main file
-    if (!source_manager.isInMainFile(location)) {
-        return true;
+    [[keyword,if]] ([[unary-operator,!]]source_manager.[[function,isInMainFile]](source_location)) {
+        [[keyword,return]] [[keyword,true]];
     }
     
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = node->[[function,getNameAsString]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](source_location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](source_location);
     
-    m_annotator->insert_annotation("enum-name", line, column, name.length());
-    return true;
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("enum-name", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 This inserts an `enum-name` annotation for every enum declaration.
@@ -86,20 +86,20 @@ This prevents annotations from being applied to external headers, and is a recur
 
 The visitor for `EnumConstantDecl` nodes is nearly identical, except that it inserts an `enum-value` annotation instead of `enum-name`:
 ```cpp line-numbers:{enabled} title:{visitor.cpp}
-bool Visitor::VisitEnumConstantDecl(clang::EnumConstantDecl* node) {
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitEnumConstantDecl]]([[namespace-name,clang]]::[[class-name,EnumConstantDecl]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = node->[[function,getNameAsString]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](source_location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](source_location);
     
-    m_annotator->insert_annotation("enum-value", line, column, name.length());
-    return true;
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("enum-value", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 
-With both visitors implemented, our annotations look like this:
+With both visitors implemented, our tool produces the following output:
 ```text line-numbers:{enabled}
 enum class [[enum-name,Level]] {
     [[enum-value,Debug]] = 0,
@@ -109,51 +109,56 @@ enum class [[enum-name,Level]] {
     [[enum-value,Fatal]] = Error,
 };
 
-// ...
+void log_message(Level level, const char* message);
+
+int main() {
+    log_message(Level::Error, "something bad happened");
+    // ...
+}
 ```
-This is a good start, but not yet complete.
-The reference to `Error` on line 6 and the use of `Level::Error` in `main` are not declarations, so we'll need a new visitor to handle them.
+This is a good start, but it's not yet complete.
+The references to `Error` on line 6 and 12 are not declarations, so we'll need a new visitor to annotate these.
 
 ## Enum References
 
 References to enum values are captured by [`DeclRefExpr` nodes](https://clang.llvm.org/doxygen/classclang_1_1DeclRefExpr.html#details), which represent expressions that refer to previously declared variables, functions, and types.
-
-Line 21 from the AST captures the reference to `Level::Error` inside the `main` function from the example above.
+This is confirmed by line 21 of the AST, which represents the `Level::Error` reference in `main()`:
 ```text
 DeclRefExpr 0x1b642245d40 <col:17, col:24> 'Level' EnumConstant 0x1b642245708 'Error' 'Level'
 ```
 
-We'll add a new visitor for `DeclRefExpr` nodes.
-```cpp
-bool VisitDeclRefExpr(clang::DeclRefExpr* node);
+We'll add a new visitor for `DeclRefExpr` nodes:
+```cpp title:{visitor.hpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitDeclRefExpr]]([[namespace-name,clang]]::[[class-name,DeclRefExpr]]* node);
 ```
 
 The implementation of `VisitDeclRefExpr` is very similar to the `VisitEnumDecl` and `VisitEnumConstantDecl` visitor functions:
-```cpp
-bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitDeclRefExpr]]([[namespace-name,clang]]::[[class-name,DeclRefExpr]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
-    
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    if (clang::ValueDecl* decl = node->getDecl()) {
-        const std::string& name = decl->getNameAsString();
 
-        if (const clang::EnumConstantDecl* ec = clang::dyn_cast<clang::EnumConstantDecl>(decl)) {
-            // Found a reference to an enum constant
-            m_annotator->insert_annotation("enum-value", line, column, name.length());
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[keyword,if]] ([[namespace-name,clang]]::[[class-name,ValueDecl]]* decl = node->[[function,getDecl]]()) {
+        [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = decl->[[function,getNameAsString]]();
+        
+        [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,EnumConstantDecl]]* ec = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,EnumConstantDecl]]>(decl)) {
+            [[member-variable,m_annotator]]->[[function,insert_annotation]]("enum-value", line, column, name.[[function,length]]());
         }
+
+        [[function,visit_qualifiers]](decl->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
     }
-    
-    return true;
+
+    [[keyword,return]] [[keyword,true]];
 }
 ```
-We use the `getDecl()` function to retrieve information about the underlying declaration being referenced.
-If it's an `EnumConstantDecl`, we insert an `enum-value` annotation.
+We use `getDecl()` to retrieve information about the underlying declaration being referenced.
+If it's an `EnumConstantDecl`, we insert an `enum-value` annotation for the node.
 
-With this visitor implemented, we can now properly annotate both enum declarations and usages:
-```text line-numbers:{enabled} added:{6,12}
+With this visitor implemented, we are able to annotate references to enum constants as well:
+```text added:{6,10}
 enum class Level {
     Debug = 0,
     Info,
@@ -195,3 +200,9 @@ int main() {
     // ...
 }
 ```
+
+---
+
+We've configured the first (of many!) visitors to handle enum declarations and references to enum constants, and established some common patterns that we'll use throughout this series.
+In the [next post](), we'll expand our tool to annotate namespaces.
+Thanks for reading!

@@ -1000,5 +1000,6 @@ In this case, we'll need to ability to pass references to the `Annotator` and `T
 
 ---
 
+We've completed the necessary setup to be able to traverse the AST.
+In the [next post](), we'll walk through a few basic visitor implementations to get familiarized with the process of extracting data from and annotating AST nodes.
 Thanks for reading!
-In the [next post](), we'll walk through a few basic visitor implementations to get familiarized with the process of extracting data from AST nodes.
