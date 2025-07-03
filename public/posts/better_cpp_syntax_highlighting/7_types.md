@@ -485,7 +485,7 @@ int main() {
 
 ### Dependent type names
 
-The final node we’ll cover is `DependentNameTypeLoc`, which represents type names that cannot be fully resolved at parse time due to their dependency on an unknown type parameter.
+The final `TypeLoc` node we’ll cover is `DependentNameTypeLoc`, which represents type names that cannot be fully resolved at parse time due to their dependency on an unknown type parameter.
 These nodes are typically encountered in template or concept contexts.
 A good example of this comes from the `Container` concept in our earlier snippet, specifically this requirement:
 ```cpp

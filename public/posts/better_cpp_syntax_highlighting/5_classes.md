@@ -702,3 +702,89 @@ int main() {
     // ...
 }
 ```
+
+## Type aliases
+
+Type aliases are loosely coupled with classes, so we'll cover them in this section.
+`typedef` declarations are represented by `TypedefDecl` nodes, while `using` declarations are represented by `TypeAliasDecl` nodes.
+Functionally, both constructs serve the same purpose: defining an alias for an existing type.
+
+For example, we can extend our example from earlier even further and allow our users to reference members of the `Vector3` struct through different type aliases altogether:
+```text
+struct Vector3 {
+    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
+    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
+    ~Vector3() { }
+    
+    union {
+        // For access as coordinates
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        
+        // For access as color components
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+    };
+};
+
+// Type aliases
+typedef Vector3 Color;
+using Position = Vector3;
+```
+
+Although `typedef` and `using` are represented by different AST nodes, both are annotated in the same way.
+For this reason, only the implementation of `VisitTypedefDecl` is shown below:
+```cpp
+bool Visitor::VisitTypedefDecl(clang::TypedefDecl* node) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    const clang::SourceLocation& location = node->getLocation();
+
+    if (!source_manager.isInMainFile(location)) {
+        return true;
+    }
+    
+    const std::string& name = node->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(location);
+    unsigned column = source_manager.getSpellingColumnNumber(location);
+    
+    m_annotator->insert_annotation("class-name", line, column, name.length());
+    return true;
+}
+```
+Type aliases are annotated with the `class-name` tag.
+The implementation of `VisitTypeAliasDecl` is identical and omitted for brevity, but can be found [here]().
+
+With both visitors implemented, `typedef` and `using` declarations are properly annotated:
+```text
+struct Vector3 {
+    Vector3() : [[member-variable,x]](0.0f), [[member-variable,y]](0.0f), [[member-variable,z]](0.0f) { }
+    Vector3(float x, float y, float z) : [[member-variable,x]](x), [[member-variable,y]](y), [[member-variable,z]](z) { }
+    ~Vector3() { }
+    
+    union {
+        // For access as coordinates
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        
+        // For access as color components
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+    };
+};
+
+// Type aliases
+typedef Vector3 [[class-name,Color]];
+using [[class-name,Position]] = Vector3;
+```
