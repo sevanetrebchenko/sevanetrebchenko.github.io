@@ -193,7 +193,6 @@ struct [[class-name,Vector3]] {
     float z;
 };
 
-// Const static class members must be initialized out of line
 const Vector3 Vector3::zero = Vector3();
 
 int main() {
@@ -239,7 +238,6 @@ struct Vector3 {
     float [[member-variable,z]];
 };
 
-// Const static class members must be initialized out of line
 const Vector3 Vector3::zero = Vector3();
 
 int main() {
@@ -283,7 +281,6 @@ struct Vector3 {
     float z;
 };
 
-// Const static class members must be initialized out of line
 const Vector3 Vector3::zero = Vector3();
 
 int main() {
@@ -299,13 +296,20 @@ This happens because initializer list entries are represented by `CXXCtorInitial
 However, `CXXCtorInitializer` isn't a node that we can visit directly through the usual traversal of the AST.
 Instead, we need to access initializers as children of the parent `CXXConstructorDecl` node, which represents the constructor definition.
 
-In our `VisitCXXConstructorDecl` visitor, initializers can be iterated over using the `inits()` function:
 ```cpp
-// Skip compiler-generated constructors
-if (node->isImplicit()) {
-    return true;
-}
+bool Visitor::VisitCXXConstructorDecl(clang::CXXConstructorDecl* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    if (node->isImplicit()) {
+        return true;
+    }
+```
+The `isImplicit()` check is crucial here - compiler-generated constructors don't exist in our source code, so attempting to annotate them will fail.
+We also skip base class initializers (for now), since those require different handling that we'll address when annotating references to types.
 
+Individual initializer expressions can be iterated over using the `inits()` function:
+```cpp
 for (const clang::CXXCtorInitializer* initializer : node->inits()) {
     location = initializer->getSourceLocation();
     unsigned line = source_manager.getSpellingLineNumber(location);
@@ -320,16 +324,110 @@ for (const clang::CXXCtorInitializer* initializer : node->inits()) {
     m_annotator->insert_annotation("member-variable", line, column, name.length());
 }
 ```
-The `isImplicit()` check is crucial here - compiler-generated constructors don't exist in our source code, so attempting to annotate them will fail.
-We also skip base class initializers (for now), since those require different handling that we'll address when annotating references to types.
-
-The name of the member variable is retrieved from its declaration, accessed by the `getMember()` function.
+The name of the member variable is retrieved from its declaration using `getMember()`.
 As before, initializers for member variables are annotated with `member-variable`.
 
-Because constructors were already processed in the `FunctionDecl` visitor, we don't need to do any additional annotation here.
+This approach works well for typical class members, but fails to deal with anonymous structs or unions.
+Consider an improvement made to the `Vector3` class to allow for representing RGB colors:
+```cpp
+#include <cmath> // std::sqrt
 
-With this visitor implemented, here is what our example now looks like:
-```text added:{4,5}
+struct Vector3 {
+    static const Vector3 zero;
+
+    Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
+    ~Vector3() { }
+    
+    [[nodiscard]] float length() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+    
+    union {
+        // For access as coordinates
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        
+        // For access as color components
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+    };
+};
+
+const Vector3 Vector3::zero = Vector3();
+
+int main() {
+    Vector3 zero = Vector3::zero;
+    // ...
+}
+```
+In this case, members get *promoted* as part of the `Vector3` definition.
+However, `getMember()` returns null for member variables that are of an anonymous type.
+To get around this, we'll introduce a new `collect_members()` function that collects the names of all available members of a class:
+```cpp
+void collect_members(const clang::CXXRecordDecl* record, std::unordered_set<std::string>& members) {
+    if (!record) {
+        return;
+    }
+    
+    for (const clang::FieldDecl* field : record->fields()) {
+        if (field->isAnonymousStructOrUnion()) {
+            const clang::CXXRecordDecl* nested = field->getType()->getAsCXXRecordDecl();
+            collect_members(nested, members);
+        }
+        else {
+            members.insert(field->getNameAsString());
+        }
+    }
+}
+```
+This function recurses over all nested type definitions, gathering both explicit members and those implicitly promoted through anonymous structs or unions.
+In `VisitCXXConstructorDecl`, this function is called with the declaration of the enclosing class:
+```cpp
+clang::DeclContext* context = node->getDeclContext();
+while (context && !clang::dyn_cast<clang::CXXRecordDecl>(context)) {
+    context = context->getParent();
+}
+
+if (!context) {
+    // Unable to find enclosing class declaration
+    return true;
+}
+
+clang::CXXRecordDecl* parent = clang::dyn_cast<clang::CXXRecordDecl>(context);
+std::unordered_set<std::string> members;
+collect_members(parent, members);
+```
+To do this, we'll walk up the declaration hierarchy of a given AST node, which can be accessed through the node's `DeclContext` chain.
+This is essentially stepping up the branches of the AST towards the root node.
+The next parent is accessed through the `getParent()` function.
+
+Then, we can augment our annotation logic to detect when the initialized member originates from an anonymous context using `isIndirectMemberInitializer()`:
+```cpp
+if (initializer->isMemberInitializer()) {
+    clang::FieldDecl* member = initializer->getMember();
+    std::string name = member->getNameAsString();
+    m_annotator->insert_annotation("member-variable", line, column, name.length());
+}
+else if (initializer->isIndirectMemberInitializer()) {
+    std::string name = m_tokenizer->get_tokens(initializer->getSourceRange())[0].spelling;
+    if (members.contains(name)) {
+        m_annotator->insert_annotation("member-variable", line, column, name.length());
+    }
+}
+```
+Instead of `getMember()`, we'll instead retrieve the name of the member through direct tokenization, taking advantage of the fact that the first token in the initializer's source range will always be the name of the member being initialized.
+
+Annotating the name of the constructor was already done in the `FunctionDecl` visitor, so we don't need to do any additional processing here.
+
+With this visitor implemented, both direct member initializations and promoted member initializations are properly annotated in constructor initializer lists:
+```text
 #include <cmath> // std::sqrt
 
 struct Vector3 {
@@ -343,12 +441,23 @@ struct Vector3 {
         return std::sqrt(x * x + y * y + z * z);
     }
     
-    float x;
-    float y;
-    float z;
+    union {
+        // For access as coordinates
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        
+        // For access as color components
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+    };
 };
 
-// Const static class members must be initialized out of line
 const Vector3 Vector3::zero = Vector3();
 
 int main() {
