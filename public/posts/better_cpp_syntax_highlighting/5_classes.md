@@ -421,7 +421,7 @@ Similar to enumeration values from an earlier post, references to static class m
 Let's augment our existing `VisitDeclRefExpr` visitor to also handle static class members:
 
 References to static class members are caught under `DeclRefExpr` nodes.
-We have seen this node before when annotating enum constants, so we will be augmenting the visitor function to also account for static member variables.
+We have an existing definition for this visitor from when we annotated enum constants:
 ```cpp added:{11-12,18-21}
 bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
     // Check to ensure this node originates from the file we are annotating
@@ -451,7 +451,7 @@ bool Visitor::VisitDeclRefExpr(clang::DeclRefExpr* node) {
 ```
 As before, we retrieve information about the underlying declaration with `getDecl()`.
 With a combination of the `isCXXClassMember()`, `isCXXInstanceMember()`, and `isFunctionOrFunctionTemplate()` checks, we can isolate only references to static members variables.
-As before, these are annotated with `member-variable`.
+As before, these are annotated with the `member-variable` tag.
 
 ```text added:{20,23}
 #include <cmath> // std::sqrt
@@ -477,6 +477,80 @@ const Vector3 Vector3::[[member-variable,zero]] = Vector3();
 
 int main() {
     Vector3 zero = Vector3::[[member-variable,zero]];
+    // ...
+}
+```
+
+## Temporary objects
+
+The final node type we need to handle is `CXXTemporaryObjectExpr`, which represents the construction of temporary object.
+In the example we've been using throughout this post, this applies to the definition of the `Vector3::zero` static class member.
+
+Generally speaking, these nodes appear in a variety of contexts, such as:
+- Direct temporary construction
+```cpp
+Vector3 v = Vector3(...);
+```
+- Passing a temporary as a function argument
+```cpp
+foo(Vector3(...));
+```
+- Returning a temporary from a function
+```cpp
+return Vector3(...);
+```
+Despite appearing as constructor calls, all of these are represented by `CXXTemporaryObjectExpr` nodes and do not generate `CallExpr` nodes as one might expect.
+Without a dedicated visitor, references to these constructors would go unannotated.
+
+The implementation of the `VisitCXXTemporaryObjectExpr` visitor is straightforward:
+```cpp
+bool Visitor::VisitCXXTemporaryObjectExpr(clang::CXXTemporaryObjectExpr* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+
+    if (clang::CXXConstructorDecl* constructor = node->getConstructor()) {
+        std::string name = constructor->getNameAsString();
+        
+        for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
+            if (token.spelling == name && !node->isListInitialization()) {
+                m_annotator->insert_annotation("function", token.line, token.column, token.spelling.length());
+            }
+        }
+    }
+    
+    return true;
+}
+```
+We retrieve the type name of the object being constructed from the `CXXConstructorDecl` associated with the expression.
+As with other function calls, constructor calls are annotated using the `function` tag.
+The `isListInitialization()` check ensures we skip brace-initialized constructors like `Vector3 { }`, as those should instead be annotated as types.
+We'll handle this in a later post.
+
+With this visitor in place, temporary constructor calls are properly annotated:
+```text added:{20,23}
+#include <cmath> // std::sqrt
+
+struct Vector3 {
+    static const Vector3 zero;
+
+    Vector3() : x(0.0f), y(0.0f), z(0.0f) { }
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) { }
+    ~Vector3() { }
+    
+    [[nodiscard]] float length() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+    
+    float x;
+    float y;
+    float z;
+};
+
+// Const static class members must be initialized out of line
+const Vector3 Vector3::zero = [[function,Vector3]]();
+
+int main() {
+    Vector3 zero = Vector3::zero;
     // ...
 }
 ```

@@ -437,15 +437,17 @@ int main() {
 Most qualifier annotations pertaining to classes are already handled by the updates made earlier, but static class member definitions still require attention.
 Consider the following example:
 ```text
-struct Vector3 {
-    static const Vector3 zero;
-    
-    float x;
-    float y;
-    float z;
-};
+namespace math {
+    struct Vector3 {
+        static const Vector3 zero;
+        
+        float x;
+        float y;
+        float z;
+    };
+}
 
-const Vector3 Vector3::zero = Vector3();
+const math::Vector3 math::Vector3::zero = math::Vector3();
 ```
 
 Static class member definitions are handled by the `VisitVarDecl` visitor:
@@ -466,29 +468,61 @@ bool Visitor::VisitVarDecl(clang::VarDecl* node) {
 Unfortunately, there is no direct way to retrieve the source range of *just* the qualified member name.
 The best candidate, `node->getTypeSpecStartLoc()`, points to the start of the type, not the member itself:
 ```text
-const Vector3 Vector3::zero = Vector3();
-      ^       ^       
-      |       what we want
-   start of type
+const math::Vector3 math::Vector3::zero = math::Vector3();
+      ^             ^       
+      |             what we want
+start of type spec
 ```
 To annotate only the qualifiers on the member name, we'll offset the range by the length of the fully-qualified typename, obtained via `node->getType().getUnqualifiedType().getAsString()`.
 The `getUnqualifiedType()` call ensures that qualifiers like `const`, `volatile`, or references / pointers are stripped away, leaving only the name of the type.
 
 With this approach, we can annotate just the qualifiers on the member:
 ```text
-struct Vector3 {
-    static const Vector3 zero;
-    
-    float x;
-    float y;
-    float z;
-};
+namespace math {
+    struct Vector3 {
+        static const Vector3 zero;
+        
+        float x;
+        float y;
+        float z;
+    };
+}
 
-const Vector3 [[class-name,Vector3]]::zero = Vector3();
+const math::Vector3 [[namespace-name,math]]::[[class-name,Vector3]]::zero = math::Vector3();
 ```
-Annotations for references to the static member itself, such as `Vector3::zero`, are already handled by the qualifier logic added to `VisitDeclRefExpr` earlier.
+Annotations for references to the static member itself are already handled by the qualifier logic added to `VisitDeclRefExpr` earlier.
 
-We also need to extend `VisitMemberExpr` to account for explicit qualifiers on class member variables, such as accessing a member from a base class:
+Similarly, we'll update the `VisitCXXTemporaryObjectExpr` visitor to annotate qualifiers for temporary object constructors themselves (such as the initialization of static class member `Vector3::zero` to `math::Vector3()`).
+This is a simple addition to the visitor:
+```cpp
+bool Visitor::VisitCXXTemporaryObjectExpr(clang::CXXTemporaryObjectExpr* node) {
+    if (clang::CXXConstructorDecl* constructor = node->getConstructor()) {
+        // Annotate constructor call
+        // ...
+                
+        visit_qualifiers(constructor->getDeclContext(), node->getSourceRange());
+    }
+    
+    return true;
+}
+```
+This change ensures that annotations are consistent for any namespace or class qualifiers that appear before a temporary constructor call.
+Now, **all** constructor calls (whether for temporary objects or otherwise) have uniform qualifier annotations.
+```text
+namespace math {
+    struct Vector3 {
+        static const Vector3 zero;
+        
+        float x;
+        float y;
+        float z;
+    };
+}
+
+const math::Vector3 math::Vector3::zero = [[namespace-name,math]]::Vector3();
+```
+
+Finally, we'll extend `VisitMemberExpr` to account for explicit qualifiers on class member variables, such as accessing a member from a base class:
 ```text
 struct Base {
     float value;
