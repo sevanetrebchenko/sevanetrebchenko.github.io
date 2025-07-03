@@ -8,7 +8,7 @@ However, I quickly discovered that PrismJS struggles with properly highlighting 
 
 Consider the following example, which showcases a variety of C++20 features I commonly use.
 Syntax highlighting is handled exclusively by PrismJS:
-```cpp line-numbers:{enabled} show-lines:{20}
+```cpp line-numbers:{enabled} show-lines:{30}
 #include <stdexcept> // std::runtime_error, std::out_of_range
 #include <vector> // std::vector
 #include <string> // std::string, std::to_string
@@ -335,7 +335,7 @@ Once the source code is parsed into tokens, each token is tagged with a set of C
 
 Due to the complexity of C++ syntax, however, such an approach is not feasible.
 It is perfectly valid, for example, for a variable to have the same name as a class (given the class definition is properly scoped):
-```cpp line-numbers:{enabled}
+```cpp
 namespace detail {
 
     struct MyClass { 
@@ -369,7 +369,7 @@ We can view the AST of a given file with Clang by running the following command:
 clang -Xclang -ast-dump -fsyntax-only -std=c++20 example.cpp
 ```
 To better understand the structure of an AST, let's take a look at (a simplified version of) the one generated for the code snippet at the start of this post:
-```json
+```json show-lines:{30}
 TranslationUnitDecl 0x18b64668268 <<invalid sloc>> <invalid sloc>
 
 // namespace utility { ... }
@@ -529,53 +529,44 @@ One such interface, `ASTFrontendAction`, provides an easy way to traverse the AS
 During traversal, we can extract relevant information about the AST nodes we care about and use it to add annotations for syntax highlighting.
 
 Let's start by defining our `ASTFrontendAction`:
-```cpp line-numbers:{enabled}
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendAction.h>
-
-struct [[class-name,SyntaxHighlighter]] final [[plain,:]] public [[namespace-name,clang]]::[[class-name,ASTFrontendAction]] {
-    [[namespace-name,std]]::[[class-name,unique_ptr]][[plain,<]][[namespace-name,clang]]::[[class-name,ASTConsumer]][[plain,>]] CreateASTConsumer([[namespace-name,clang]]::[[class-name,CompilerInstance]][[plain,&]] compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) override;
+```cpp line-numbers:{enabled} title:{action.hpp}
+[[keyword,class]] [[class-name,SyntaxHighlighter]] [[keyword,final]] : [[keyword,public]] [[namespace-name,clang]]::[[class-name,ASTFrontendAction]] {
+    [[keyword,public]]:
+        [[namespace-name,std]]::[[class-name,unique_ptr]]<[[namespace-name,clang]]::[[class-name,ASTConsumer]]> [[function,CreateASTConsumer]]([[namespace-name,clang]]::[[class-name,CompilerInstance]]& compiler,
+                                                              [[namespace-name,clang]]::[[class-name,StringRef]] file) [[keyword,override]];
+        // ...
 };
 ```
 
 ### Creating an `ASTConsumer`
 
-The `ASTFrontendAction` interface requires implementing the `CreateASTConsumer` function, which returns an `ASTConsumer` instance.
+The `ASTFrontendAction` interface requires implementing the `CreateASTConsumer()` function, which returns an `ASTConsumer` instance.
 As the name suggests, the `ASTConsumer` is responsible for consuming (processing) the AST.
 
 Our `ASTConsumer` is defined as follows:
-```cpp line-numbers:{enabled}
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/AST/ASTConsumer.h>
-#include <string> // std::string
-
-class Consumer final : public clang::ASTConsumer {
-    public:
-        explicit Consumer(clang::CompilerInstance& compiler, clang::StringRef filepath);
-        ~Consumer() override;
-        
-    private:
-        void HandleTranslationUnit(clang::ASTContext& context) override;
-        
-        clang::ASTContext* m_context;
-        std::string m_filepath;
+```cpp line-numbers:{enabled} title:{consumer.hpp}
+[[keyword,class]] [[class-name,Consumer]] [[keyword,final]] : [[keyword,public]] [[namespace-name,clang]]::[[class-name,ASTConsumer]] {
+    [[keyword,public]]:
+        [[function,Consumer]]();
+        [[function,~Consumer]]() [[keyword,override]];
+    
+    [[keyword,private]]:
+        [[keyword,void]] [[function,HandleTranslationUnit]]([[namespace-name,clang]]::[[class-name,ASTContext]]& context) [[keyword,override]];
 };
 ```
 
-The `ASTConsumer` interface provides multiple entry points for traversal, but for our use case only `HandleTranslationUnit` is necessary.
+The `ASTConsumer` interface provides multiple entry points for traversal, but for our use case only `HandleTranslationUnit()` is necessary.
 This function is called by the `ASTFrontendAction` with an `ASTContext` for the translation unit of the file being processed.
 
 The `ASTContext` is essential for retrieving semantic information about the nodes of an AST.
 It provides access to type details, declaration contexts, and utility classes like `SourceManager`, which maps nodes back to their source locations (as AST nodes do not store this information directly).
 As we will see, this information is crucial for inserting syntax highlighting annotations in the correct locations.
 
-We simply instantiate and return an instance of our `ASTConsumer` from the `CreateASTConsumer` function of the `ASTFrontendAction`.
-```cpp line-numbers:{enabled}
-#include "action.hpp"
-#include "parser.hpp"
-
-[[namespace-name,std]]::[[class-name,unique_ptr]][[plain,<]][[namespace-name,clang]]::[[class-name,ASTConsumer]][[plain,>]] [[class-name,SyntaxHighlighter]]::CreateASTConsumer([[namespace-name,clang]]::[[class-name,CompilerInstance]][[plain,&]] compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) {
-    return [[namespace-name,std]]::[[function,make_unique]][[plain,<]][[class-name,Parser]][[plain,>]](compiler, file.str());
+We simply instantiate and return an instance of our `ASTConsumer` from the `CreateASTConsumer()` function of the `ASTFrontendAction`.
+```cpp line-numbers:{enabled} title:{action.cpp}
+[[namespace-name,std]]::[[class-name,unique_ptr]]<[[namespace-name,clang]]::[[class-name,ASTConsumer]]> [[class-name,SyntaxHighlighter]]::[[function,CreateASTConsumer]]([[namespace-name,clang]]::[[class-name,CompilerInstance]]& compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) {
+    [[namespace-name,clang]]::[[class-name,ASTContext]]& context = compiler.[[function,getASTContext]]();
+    [[keyword,return]] [[namespace-name,std]]::[[function,make_unique]]<[[class-name,Consumer]]>([[unary-operator,&]]m_annotator, m_tokenizer);
 }
 ```
 
@@ -583,11 +574,11 @@ We simply instantiate and return an instance of our `ASTConsumer` from the `Crea
 
 The final missing piece is the [`RecursiveASTVisitor`](https://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html), which handles visiting individual AST nodes.
 It provides `Visit{NodeType}` visitor hooks for most AST node types.
-Here are a few examples of `Visit` function declarations for common AST nodes:
-```cpp line-numbers:{enabled}
-bool VisitNamespaceDecl([[namespace-name,clang]]::[[class-name,NamespaceDecl]][[plain,*]] node); // For visiting namespaces
-bool VisitFunctionDecl([[namespace-name,clang]]::[[class-name,FunctionDecl]][[plain,*]] node); // For visiting functions
-bool VisitCXXRecordDecl([[namespace-name,clang]]::[[class-name,CXXRecordDecl]][[plain,*]] node); // For visiting C++ classes
+Here are a few examples of visitor function declarations for common AST nodes:
+```cpp
+[[keyword,bool]] [[function,VisitNamespaceDecl]]([[namespace-name,clang]]::[[class-name,NamespaceDecl]]* node); // For visiting namespaces
+[[keyword,bool]] [[function,VisitFunctionDecl]]([[namespace-name,clang]]::[[class-name,FunctionDecl]]* node); // For visiting functions
+[[keyword,bool]] [[function,VisitCXXRecordDecl]]([[namespace-name,clang]]::[[class-name,CXXRecordDecl]]* node); // For visiting C++ class, struct, and union types
 // etc.
 ```
 The main exception to this pattern are `TypeLoc` nodes, which are passed by value instead of by pointer.
@@ -595,90 +586,88 @@ The return value determines whether traversal of the AST should continue.
 By default, the implementation simply returns `true`, making it perfectly safe to omit `Visit` function definitions of any node types we are not interested in processing.
 
 Our `RecursiveASTVisitor` is defined as follows:
-```cpp line-numbers:{enabled}
-class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
-    public:
-        explicit Visitor(clang::ASTContext* context, Parser* parser);
-        ~Visitor();
+```cpp line-numbers:{enabled} title:{visitor.hpp}
+[[keyword,class]] [[class-name,Visitor]] [[keyword,final]] : [[keyword,public]] [[namespace-name,clang]]::[[class-name,RecursiveASTVisitor]]<[[class-name,Visitor]]> {
+    [[keyword,public]]:
+        [[keyword,explicit]] [[function,Visitor]]([[namespace-name,clang]]::[[class-name,ASTContext]]* context);
+        [[function,~Visitor]]();
         
         // Visitor definitions here...
         
-    private:
-        clang::ASTContext* m_context;
-        Parser* m_parser;
+    [[keyword,private]]:
+        [[namespace-name,clang]]::[[class-name,ASTContext]]* [[member-variable,m_context]];
 };
 ```
-It takes in the `ASTContext` from the `ASTConsumer` for retrieving node source locations, and the `Parser` for adding annotations.
-We will explore the visitor function implementations in more detail later on.
+It takes in the `ASTContext` from the `ASTConsumer` for retrieving node source locations during traversal.
+We will explore concrete visitor function implementations in more detail later on.
 
-The traversal of the AST is kicked off in `HandleTranslationUnit` from our `ASTConsumer`.
+The traversal of the AST is kicked off in `HandleTranslationUnit()` from our `ASTConsumer`.
 By calling `TraverseDecl` with the root `TranslationUnitDecl` node (obtained from the `ASTContext`), we can traverse the entire AST:
-```cpp line-numbers:{enabled}
-void [[class-name,Parser]]::HandleTranslationUnit([[namespace-name,clang]]::[[class-name,ASTContext]][[plain,&]] context) {
-    [[class-name,Visitor]] visitor { &context, this };
-    visitor.TraverseDecl(context.getTranslationUnitDecl());
+```cpp line-numbers:{enabled} title:{consumer.cpp}
+[[keyword,void]] [[class-name,Consumer]]::[[function,HandleTranslationUnit]]([[namespace-name,clang]]::[[class-name,ASTContext]]& context) {
+    // Traverse all the nodes in the translation unit using the C++ API, starting from the root
+    [[class-name,Visitor]] visitor { [[unary-operator,&]]context };
+    visitor.[[function,TraverseDecl]](context.[[function,getTranslationUnitDecl]]());
 }
 ```
 
 #### Configuring the traversal behavior (optional)
 
 The `RecursiveASTVisitor` also provides functions to control the behavior of the traversal itself.
-For example, overriding `shouldTraversePostOrder` to return `true` switches the traversal from the default preorder to postorder.
+For example, overriding `shouldTraversePostOrder()` to return `true` switches the traversal from the default preorder to postorder.
 ```cpp line-numbers:{enabled} added:{6-9}
-class Visitor final : public clang::RecursiveASTVisitor<Visitor> {
-    public:
-        explicit Visitor(clang::ASTContext* context, Parser* parser);
-        ~Visitor();
+[[keyword,class]] [[class-name,Visitor]] [[keyword,final]] : [[keyword,public]] [[namespace-name,clang]]::[[class-name,RecursiveASTVisitor]]<[[class-name,Visitor]]> {
+    [[keyword,public]]:
+        [[keyword,explicit]] [[function,Visitor]]([[namespace-name,clang]]::[[class-name,ASTContext]]* context);
+        [[function,~Visitor]]();
         
-        bool shouldTraversePostOrder() const {
+        [[keyword,bool]] [[function,shouldTraversePostOrder]]() [[keyword,const]] {
             // Configure the visitor to perform a postorder traversal of the AST
-            return true;
+            [[keyword,return]] [[keyword,true]];
         }
         
-    private:
-        // ...
+    [[keyword,private]]:
+        [[namespace-name,clang]]::[[class-name,ASTContext]]* [[member-variable,m_context]];
 };
 ```
 Other functions modify traversal behavior in different ways.
-For example, `shouldVisitTemplateInstantiations` enables visiting template instantiations, while `shouldVisitImplicitCode` allows traversal of implicit constructors and destructors generated by the compiler.
+For example, `shouldVisitTemplateInstantiations()` enables visiting template instantiations, while `shouldVisitImplicitCode()` allows traversal of implicit constructors and destructors generated by the compiler.
 
 ### Putting it all together
 
-Finally, we invoke the tool using `runToolOnCodeWithArgs`, specifying the `ASTFrontendAction`, source code, and any additional [command line arguments](https://clang.llvm.org/docs/ClangCommandLineReference.html):
+Finally, we invoke the tool using `runToolOnCodeWithArgs()`, specifying the `ASTFrontendAction`, source code, and any additional [command line arguments](https://clang.llvm.org/docs/ClangCommandLineReference.html):
 ```cpp line-numbers:{enabled}
-#include "action.hpp"
-
-#include <clang/Tooling/Tooling.h>
-
-#include <string> // std::string
-#include <vector> // std::vector
-#include <fstream> // std::ifstream
-#include <memory> // std::make_unique
-
-int main(int argc, char[[plain,*]] argv[]) {
-    // ...
+[[keyword,int]] [[function,main]]([[keyword,int]] argc, [[keyword,char]]* argv[]) {
+    [[keyword,if]] (argc [[binary-operator,<]] 2) {
+        [[namespace-name,utils]]::[[namespace-name,logging]]::[[function,error]]("no input file provided");
+        [[keyword,return]] 1;
+    }
+    
+    [[keyword,const]] [[keyword,char]]* filepath = argv[[operator,[]]1[[operator,]]];
     
     // Read file contents
-    [[namespace-name,std]]::[[class-name,ifstream]] file(argv[[operator,[]]1[[operator,]]]);
-    if (!file.is_open()) {
-        // ... 
-        return 1;
+    [[namespace-name,std]]::[[class-name,ifstream]] [[plain,file]](filepath);
+    [[keyword,if]] ([[unary-operator,!]]file.[[function,is_open]]()) {
+        [[namespace-name,utils]]::[[namespace-name,logging]]::[[function,error]]("failed to open file {}", filepath);
+        [[keyword,return]] 1;
     }
-    [[namespace-name,std]]::[[class-name,string]] source { [[namespace-name,std]]::[[class-name,istreambuf_iterator]][[plain,<]]char[[plain,>]](file), [[namespace-name,std]]::[[class-name,istreambuf_iterator]][[plain,<]]char[[plain,>]]() };
     
-    [[namespace-name,std]]::[[class-name,vector]][[plain,<]][[namespace-name,std]]::[[class-name,string]][[plain,>]] compilation_flags {
+    [[namespace-name,std]]::[[class-name,string]] content { [[namespace-name,std]]::[[class-name,istreambuf_iterator]]<[[keyword,char]]>(file), [[namespace-name,std]]::[[class-name,istreambuf_iterator]]<[[keyword,char]]>() };
+    
+    [[namespace-name,std]]::[[class-name,vector]]<[[namespace-name,std]]::[[class-name,string]]> compilation_flags {
         "-std=c++20",
         "-fsyntax-only", // Included by default
         
         // Project include directories, additional compilation flags, etc.
+        // ...
     };
-        
+    
     // runToolOnCodeWithArgs returns 'true' if the tool was successfully executed
-    return ![[namespace-name,clang]]::[[namespace-name,tooling]]::runToolOnCodeWithArgs([[namespace-name,std]]::make_unique[[plain,<]][[class-name,SyntaxHighlighter]][[plain,>]](), source, compilation_flags, filepath);
+    [[keyword,return]] ![[namespace-name,clang]]::[[namespace-name,tooling]]::[[function,runToolOnCodeWithArgs]]([[namespace-name,std]]::[[function,make_unique]]<[[class-name,SyntaxHighlighter]]>(content), content, compilation_flags, filepath);
 }
 ```
 
-### Inserting annotations
+## Inserting annotations
 
 One of the other responsibilities of our `ASTConsumer` is adding syntax highlighting annotations to the source code.
 An annotation follows the structure: `[[{AnnotationType},{Tokens}]]`, where `AnnotationType` determines the CSS class applied to one or more `Tokens`.
@@ -687,12 +676,12 @@ The annotations are embedded directly into the source code and later extracted f
 Annotations provide hints to the Markdown renderer on how to apply syntax highlighting to symbols `PrismJS` cannot accurately identify.
 For example, the following snippet demonstrates a few common C++ annotation types: `namespace-name` for namespaces, `class-name` for classes, and `function` for functions.
 ```text
-namespace [[namespace-name,math]] {
-    struct [[class-name,Vector3]] {
+[[keyword,namespace]] [[namespace-name,math]] {
+    [[keyword,struct]] [[class-name,Vector3]] {
         // ... 
     };
     
-    float [[function,dot]](const [[class-name,Vector3]]& a, const [[class-name,Vector3]]& b) {
+    [[keyword,float]] [[function,dot]]([[keyword,const]] [[class-name,Vector3]]& a, [[keyword,const]] [[class-name,Vector3]]& b) {
         // ... 
     }
 }
@@ -705,6 +694,10 @@ For the purposes of syntax highlighting, these styles simply correspond to the c
     color: rgb(255, 198, 109);
 }
 
+.language-cpp .keyword {
+  color: rgb(206, 136, 70);
+}
+
 .language-cpp .class-name,
 .language-cpp .namespace-name {
     color: rgb(181, 182, 227);
@@ -713,61 +706,61 @@ For the purposes of syntax highlighting, these styles simply correspond to the c
 As we traverse the AST, we will define additional annotation types as needed.
 It follows that there should be a corresponding CSS style for every annotation type.
 
-If you are interested, I've written a [short post]() about how this is implemented in the renderer (the same one being used for this post!).
+If you are interested, I've written a [short post]() about how this is implemented in the renderer itself (the same one being used for this post!).
 
-#### The `Annotator`
+### The `Annotator`
 All logic for inserting annotations is handled by the `Annotator` class:
-```cpp
-struct Annotation {
-    Annotation(const char* name, unsigned offset, unsigned length);
-    ~Annotation();
+```cpp line-numbers:{enabled} title:{annotator.hpp}
+[[keyword,struct]] [[class-name,Annotation]] {
+    [[function,Annotation]]([[keyword,const]] [[keyword,char]]* name, [[keyword,unsigned]] offset, [[keyword,unsigned]] length);
+    [[function,~Annotation]]();
     
-    const char* name;
-    unsigned offset;
-    unsigned length;
+    [[keyword,const]] [[keyword,char]]* [[member-variable,name]];
+    [[keyword,unsigned]] [[member-variable,offset]];
+    [[keyword,unsigned]] [[member-variable,length]];
 };
 
-class Annotator {
-    public:
-        explicit Annotator(std::string source);
-        ~Annotator();
+[[keyword,class]] [[class-name,Annotator]] {
+    [[keyword,public]]:
+        [[keyword,explicit]] [[function,Annotator]]([[namespace-name,std]]::[[class-name,string]] source);
+        [[function,~Annotator]]();
         
-        void insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite = false);
-        void annotate();
+        [[keyword,void]] [[function,insert_annotation]]([[keyword,const]] [[keyword,char]]* name, [[keyword,unsigned]] line, [[keyword,unsigned]] column, [[keyword,unsigned]] length, [[keyword,bool]] overwrite = [[keyword,false]]);
+        [[keyword,void]] [[function,annotate]]();
         
-    private:
-        void compute_line_lengths();
-        [[nodiscard]] std::size_t compute_offset(unsigned line, unsigned column) const;
+    [[keyword,private]]:
+        [[keyword,void]] [[function,compute_line_lengths]]();
+        [[nodiscard]] [[namespace-name,std]]::[[class-name,size_t]] [[function,compute_offset]]([[keyword,unsigned]] line, [[keyword,unsigned]] column) [[keyword,const]];
     
-        std::string m_source;
-        std::vector<unsigned> m_line_lengths;
-        std::vector<Annotation> m_annotations;
+        [[namespace-name,std]]::[[class-name,string]] [[member-variable,m_source]];
+        [[namespace-name,std]]::[[class-name,vector]]<[[keyword,unsigned]]> [[member-variable,m_line_lengths]];
+        [[namespace-name,std]]::[[class-name,vector]]<[[class-name,Annotation]]> [[member-variable,m_annotations]];
 };
 ```
 Annotations are registered through `insert_annotation()` and stored in the `m_annotations` vector.
 Annotations typically correspond to unique tokens in the source file.
 The `insert_annotation()` function calculates the character offset in the file for the given source location using `compute_offset()` and appends the annotation.
-```cpp
-void Annotator::insert_annotation(const char* name, unsigned line, unsigned column, unsigned length, bool overwrite) {
-    std::size_t offset = compute_offset(line, column);
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+[[keyword,void]] [[class-name,Annotator]]::[[function,insert_annotation]]([[keyword,const]] [[keyword,char]]* name, [[keyword,unsigned]] line, [[keyword,unsigned]] column, [[keyword,unsigned]] length, [[keyword,bool]] overwrite) {
+    [[namespace-name,std]]::[[class-name,size_t]] offset = [[function,compute_offset]](line, column);
     
     // Do not add duplicate annotations of the same name at the same location
-    for (Annotation& annotation : m_annotations) {
-        if (annotation.offset == offset) {
-            if (overwrite) {
-                annotation.name = name;
-                annotation.length = length;
+    [[keyword,for]] ([[class-name,Annotation]]& annotation : [[member-variable,m_annotations]]) {
+        [[keyword,if]] (annotation.[[member-variable,offset]] == offset) {
+            [[keyword,if]] (overwrite) {
+                annotation.[[member-variable,name]] = name;
+                annotation.[[member-variable,length]] = length;
             }
             
-            return;
+            [[keyword,return]];
         }
-        else if (offset > annotation.offset && offset < annotation.offset + annotation.length) {
-            utils::logging::error("Inserting annotation in the middle of another annotation!");
-            return;
+        [[keyword,else]] [[keyword,if]] (offset > annotation.[[member-variable,offset]] && offset < annotation.[[member-variable,offset]] + annotation.[[member-variable,length]]) {
+            [[namespace-name,utils]]::[[namespace-name,logging]]::[[function,error]]("Inserting annotation in the middle of another annotation");
+            [[keyword,return]];
         }
     }
     
-    m_annotations.emplace_back(name, offset, length);
+    [[member-variable,m_annotations]].emplace_back(name, offset, length);
 }
 ```
 The `overwrite` flag allows for existing annotations to be overwritten when necessary.
@@ -776,89 +769,87 @@ Partial overlaps - where an annotation would sit inside another - are rejected e
 This is a rare condition, and typically indicates a problem with the code that's calling `insert_annotation()`.
 
 The `compute_offset()` function calculates the absolute character position for a given line and column:
-```cpp
-std::size_t Annotator::compute_offset(unsigned line, unsigned column) {
-    std::size_t offset = 0;
-    for (std::size_t i = 0; i < line; ++i) {
-        offset += m_line_lengths[i];
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+[[namespace-name,std]]::[[class-name,size_t]] [[class-name,Annotator]]::[[function,compute_offset]]([[keyword,unsigned]] line, [[keyword,unsigned]] column) [[keyword,const]] {
+    [[namespace-name,std]]::[[class-name,size_t]] offset = 0;
+    [[keyword,for]] ([[namespace-name,std]]::[[class-name,size_t]] i = 0; i [[binary-operator,<]] (line [[binary-operator,-]] 1); [[unary-operator,++]]i) {
+        offset += [[member-variable,m_line_lengths]][[operator,[]]i[[operator,]]];
     }
-    return offset + column;
+    [[keyword,return]] offset [[binary-operator,+]] (column [[binary-operator,-]] 1);
 }
 ```
 To support this, the length of each line (including newline characters) is precomputed during initialization:
-```cpp
-Annotator::Annotator(const std::string& file) {
-    // Read source file contents
-    m_file = read(file);
-    compute_line_lengths();
+```cpp line-numbers:{enabled} title:{annotator.cpp}
+[[class-name,Annotator]]::[[function,Annotator]]([[namespace-name,std]]::[[class-name,string]] source) : [[member-variable,m_source]](std::move(source)) {
+    [[function,compute_line_lengths]]();
 }
 
-void Annotator::compute_line_lengths() {
-    std::size_t start = 0;
+[[keyword,void]] [[class-name,Annotator]]::[[function,compute_line_lengths]]() {
+    [[namespace-name,std]]::[[class-name,size_t]] start = 0;
 
     // Traverse through the string and count lengths of lines separated by newlines
-    for (std::size_t i = 0; i < m_file.size(); ++i) {
-        if (m_file[i] == '\n') {
-            // Include newline character in line length calculation
-            m_line_lengths.push_back(i - start + 1);
-            start = i + 1;
+    [[keyword,for]] ([[namespace-name,std]]::[[class-name,size_t]] i = 0; i [[binary-operator,<]] [[member-variable,m_source]].[[function,size]](); [[unary-operator,++]]i) {
+        [[keyword,if]] (m_source[i] == '\n') {
+            [[member-variable,m_line_lengths]].push_back(i [[binary-operator,-]] start [[binary-operator,+]] 1);
+            start [[binary-operator,=]] i [[binary-operator,+]] 1;
         }
     }
 
-    // Add any trailing characters
-    if (start < m_file.size()) {
-        m_line_lengths.push_back(m_file.size() - start);
+    // Add any trailing characters (if the file does not end in a newline)
+    [[keyword,if]] (start [[binary-operator,<]] [[member-variable,m_source]].[[function,size]]()) {
+        [[member-variable,m_line_lengths]].[[function,push_back]]([[member-variable,m_source]].[[function,size]]() [[binary-operator,-]] start);
     }
 }
 ```
 Newlines and carriage returns are included in the line lengths to ensure offsets remain accurate across different platforms.
 
-##### `annotate()`
+### The `annotate()` function
 
 After AST traversal is complete, a call to `annotate()` generates the final annotated file.
 The full source for this function can be viewed [here]().
 
 The first step is to sort the annotations by their offsets:
-```cpp
-std::sort(m_annotations.begin(), m_annotations.end(), [](const Annotation& a, const Annotation& b) -> bool {
-    return a.offset < b.offset;
+```cpp title:{annotator.cpp}
+[[namespace-name,std]]::[[function,sort]]([[member-variable,m_annotations]].[[function,begin]](), [[member-variable,m_annotations]].[[function,end]](), []([[keyword,const]] [[class-name,Annotation]]& a, [[keyword,const]] [[class-name,Annotation]]& b) -> [[keyword,bool]] {
+    [[keyword,return]] a.[[member-variable,offset]] < b.[[member-variable,offset]];
 });
 ```
 Since nodes in the AST are not guaranteed to be visited in the same order as their counterparts appear in the code, annotations are typically added to the `Annotator` out of order.
 
 To avoid expensive reallocations, the final length of the file (including all annotations) is precomputed and allocated at once:
-```cpp
-std::size_t length = m_source.length();
-for (const Annotation& annotation : m_annotations) {
+```cpp title:{annotator.cpp}
+[[namespace-name,std]]::[[class-name,size_t]] length = [[member-variable,m_source]].length();
+[[keyword,for]] ([[keyword,const]] [[class-name,Annotation]]& annotation : [[member-variable,m_annotations]]) {
     // Annotation format: [[{AnnotationType},{Tokens}]]
     // '[[' + {AnnotationType} + ',' + {Tokens} + ']]'
-    length += 2 + strlen(annotation.name) + 1 + annotation.length + 2;
+    length [[binary-operator,+=]] 2 [[binary-operator,+]] [[function,strlen]](annotation.[[member-variable,name]]) [[binary-operator,+]] 1 [[binary-operator,+]] annotation.[[member-variable,length]] [[binary-operator,+]] 2;
 }
-std::string file;
-file.reserve(length);
+
+[[namespace-name,std]]::[[class-name,string]] file;
+file.[[function,reserve]](length);
 ```
 This takes advantage of the fact that annotations follow a consistent pattern when inserted into the file: `[[{AnnotationType},{Tokens}]]`, and is efficient because it avoids reallocating the file as the contents grow in size.
 
 Annotations are then inserted sequentially:
-```cpp
-std::size_t position = 0;
-for (const Annotation& annotation : m_annotations) {
+```cpp title:{annotator.cpp}
+[[namespace-name,std]]::[[class-name,size_t]] position = 0;
+[[keyword,for]] ([[keyword,const]] [[class-name,Annotation]]& annotation : [[member-variable,m_annotations]]) {
     // Copy the part before the annotation
-    file.append(m_source, position, annotation.offset - position);
+    file.[[function,append]]([[member-variable,m_source]], position, annotation.[[member-variable,offset]] [[binary-operator,-]] position);
     
     // Insert annotation
-    file.append("[[");
-    file.append(annotation.name);
-    file.append(",");
-    file.append(m_source, annotation.offset, annotation.length);
-    file.append("]]");
+    file.[[function,append]]("[[");
+    file.[[function,append]](annotation.[[member-variable,name]]);
+    file.[[function,append]](",");
+    file.[[function,append]]([[member-variable,m_source]], annotation.[[member-variable,offset]], annotation.[[member-variable,length]]);
+    file.[[function,append]]("]]");
 
     // Move offset into 'src'
-    position = annotation.offset + annotation.length;
+    position = annotation.[[member-variable,offset]] [[binary-operator,+]] annotation.[[member-variable,length]];
 }
 
 // Copy the remaining part of the line
-file.append(m_source, position, m_source.length() - position);
+file.[[function,append]]([[member-variable,m_source]], position, [[member-variable,m_source]].[[function,length]]() [[binary-operator,-]] position);
 ```
 The annotated file is then written out and saved to disk.
 The generated code snippet can now be embedded directly into a Markdown source file, where annotations will be processed by the renderer for syntax highlighting.
@@ -879,65 +870,61 @@ We will explore this in greater detail when we look at visitor function implemen
 
 Tokenization is handled by the `Tokenizer` class.
 ```cpp line-numbers:{enabled} title:{tokenizer.hpp}
-#include <clang/Frontend/CompilerInstance.h> // clang::CompilerInstance
-#include <clang/AST/ASTConsumer.h> // clang::ASTConsumer
-#include <string> // std::string
-#include <vector> // std::vector
-
-struct Token {
-    Token(std::string spelling, unsigned line, unsigned column);
-    ~Token();
+[[keyword,struct]] [[class-name,Token]] {
+    [[function,Token]]([[namespace-name,std]]::[[class-name,string]] spelling, [[keyword,unsigned]] line, [[keyword,unsigned]] column);
+    [[function,~Token]]();
     
-    std::string spelling;
-    unsigned line;
-    unsigned column;
+    [[namespace-name,std]]::[[class-name,string]] [[member-variable,spelling]];
+    [[keyword,unsigned]] [[member-variable,line]];
+    [[keyword,unsigned]] [[member-variable,column]];
 };
 
-class Tokenizer {
-    public:
-        explicit Tokenizer(clang::ASTContext* context);
-        ~Tokenizer();
+[[keyword,class]] [[class-name,Tokenizer]] {
+    [[keyword,public]]:
+        [[keyword,explicit]] [[function,Tokenizer]]([[namespace-name,clang]]::[[class-name,ASTContext]]* context);
+        [[function,~Tokenizer]]();
         
-        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceLocation start, clang::SourceLocation end) const;
-        [[nodiscard]] std::span<const Token> get_tokens(clang::SourceRange range) const;
+        [[nodiscard]] [[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] Token> [[function,get_tokens]]([[namespace-name,clang]]::[[class-name,SourceLocation]] start, [[namespace-name,clang]]::[[class-name,SourceLocation]] end) [[keyword,const]];
+        [[nodiscard]] [[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] Token> [[function,get_tokens]]([[namespace-name,clang]]::[[class-name,SourceRange]] range) [[keyword,const]];
         
-    private:
-        void tokenize();
+    [[keyword,private]]:
+        [[keyword,void]] [[function,tokenize]]();
         
-        clang::ASTContext* m_context;
-        std::vector<Token> m_tokens;
+        [[namespace-name,clang]]::[[class-name,ASTContext]]* [[member-variable,m_context]];
+        [[namespace-name,std]]::[[class-name,vector]]<[[class-name,Token]]> [[member-variable,m_tokens]];
 };
 ```
 We can leverage Clang's `Lexer` class from the LibTooling API to handle tokenization.
 The `Lexer` provides an API to process an input text buffer into a sequence of tokens based on a set of predetermined C/C++ language rules.
-Raw tokens for the code snippet are stored contiguously in `m_tokens`, allowing the `get_tokens` functions to return a non-owning `std::span` instead of copying token data into a separate buffer.
-This helps avoid unnecessary allocations and provides a significant boost to performance, as the `get_tokens` functions are called frequently during the traversal of the AST,
+Raw tokens for the code snippet are stored contiguously in `m_tokens`, allowing the `get_tokens()` functions to return a non-owning `std::span` instead of copying token data into a separate buffer.
+This helps avoid unnecessary allocations and provides a significant boost to performance, as the `get_tokens()` functions are called frequently during the traversal of the AST,
 
 Tokenization is handled by the `tokenize` function:
 ```cpp line-numbers:{enabled} title:{tokenizer.cpp}
-void Tokenizer::tokenize() {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
+[[keyword,void]] [[class-name,Tokenizer]]::[[function,tokenize]]() {
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceManager]]& source_manager = [[member-variable,m_context]]->[[function,getSourceManager]]();
     
-    clang::FileID file = source_manager.getMainFileID();
-    clang::SourceLocation file_start = source_manager.getLocForStartOfFile(file);
-    clang::LangOptions options = m_context->getLangOpts();
+    [[namespace-name,clang]]::[[class-name,FileID]] file = source_manager.[[function,getMainFileID]]();
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] file_start = source_manager.[[function,getLocForStartOfFile]](file);
+    [[namespace-name,clang]]::[[class-name,LangOptions]] options = [[member-variable,m_context]]->[[function,getLangOpts]]();
     
-    clang::StringRef source = source_manager.getBufferData(file);
-    clang::Lexer lexer(file_start, options, source.begin(), source.begin(), source.end());
+    [[namespace-name,clang]]::[[class-name,StringRef]] source = source_manager.[[function,getBufferData]](file);
 
-    // Tokenize the entire file
-    clang::Token token;
-    while (true) {
-        lexer.LexFromRawLexer(token);
-        if (token.is(clang::tok::eof)) {
-            break;
+    // Tokenize with raw lexer
+    [[namespace-name,clang]]::[[class-name,Lexer]] [[plain,lexer]] { file_start, options, source.[[function,begin]](), source.[[function,begin]](), source.[[function,end]]() };
+    [[namespace-name,clang]]::[[class-name,Token]] [[plain,token]];
+    [[keyword,while]] ([[keyword,true]]) {
+        lexer.[[function,LexFromRawLexer]](token);
+        [[keyword,if]] (token.[[function,is]]([[namespace-name,clang]]::[[namespace-name,tok]]::[[enum-value,eof]])) {
+            [[keyword,break]];
         }
         
-        clang::SourceLocation location = token.getLocation();
-        unsigned line = source_manager.getSpellingLineNumber(location);
-        unsigned column = source_manager.getSpellingColumnNumber(location);
-
-        m_tokens.emplace_back(clang::Lexer::getSpelling(token, source_manager, options), line, column);
+        [[namespace-name,clang]]::[[class-name,SourceLocation]] location = token.[[function,getLocation]]();
+        [[namespace-name,std]]::[[class-name,string]] spelling = [[namespace-name,clang]]::[[class-name,Lexer]]::[[function,getSpelling]](token, source_manager, options);
+        [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+        [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+        
+        [[member-variable,m_tokens]].[[function,emplace_back]](spelling, line, column, keywords.[[function,contains]](spelling));
     }
 }
 ```
@@ -953,55 +940,55 @@ Now that the source file has been tokenized, let's turn our attention to `get_to
 There are two version of this function: one takes a `start` and `end` `SourceLocation`, while the other accepts a `SourceRange`.
 This is done purely for convenience: internally, the `SourceRange` overload forwards the call to the other version, passing the start and end locations extracted using `getBegin()` and `getEnd()`, respectively.
 ```cpp line-numbers:{enabled} title:{tokenizer.cpp}
-std::span<const Token> Tokenizer::get_tokens(clang::SourceRange range) const {
-    return get_tokens(range.getBegin(), range.getEnd());
+[[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] Token> [[class-name,Tokenizer]]::[[function,get_tokens]]([[namespace-name,clang]]::[[class-name,SourceRange]] range) [[keyword,const]] {
+    [[keyword,return]] [[function,get_tokens]](range.[[function,getBegin]](), range.[[function,getEnd]]());
 }
 ```
 
 A key consideration when retrieving tokens is that the provided range may span multiple lines.
 A good example of this is a `FunctionDecl` node, which represents a multi-line function definition.
 ```cpp line-numbers:{enabled} title:{tokenizer.cpp}
-std::span<const Token> Tokenizer::get_tokens(clang::SourceLocation start, clang::SourceLocation end) const {
-    const clang::SourceManager& source_manager = m_context->getSourceManager();
-    unsigned start_line = source_manager.getSpellingLineNumber(start);
-    unsigned start_column = source_manager.getSpellingColumnNumber(start);
+[[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] Token> [[class-name,Tokenizer]]::[[function,get_tokens]]([[namespace-name,clang]]::[[class-name,SourceLocation]] start, [[namespace-name,clang]]::[[class-name,SourceLocation]] end) [[keyword,const]] {
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceManager]]& source_manager = [[member-variable,m_context]]->[[function,getSourceManager]]();
+    [[keyword,unsigned]] start_line = source_manager.[[function,getSpellingLineNumber]](start);
+    [[keyword,unsigned]] start_column = source_manager.[[function,getSpellingColumnNumber]](start);
 
     // Determine tokens that fall within the range defined by [start:end]
     // Partial tokens (if the range start location falls within the extent of a token) should also be included here
 
-    unsigned offset = m_tokens.size(); // Invalid offset
-    for (std::size_t i = 0; i < m_tokens.size(); ++i) {
-        const Token& token = m_tokens[i];
+    [[keyword,unsigned]] offset = [[member-variable,m_tokens]].[[function,size]](); // Invalid offset
+    [[keyword,for]] ([[namespace-name,std]]::[[class-name,size_t]] i = 0; i [[binary-operator,<]] [[member-variable,m_tokens]].[[function,size]](); [[unary-operator,++]]i) {
+        [[keyword,const]] [[class-name,Token]]& token = [[member-variable,m_tokens]][[function-operator,[]]i[[function-operator,]]];
 
         // Skip any tokens that end before the range start line:column
-        if (token.line < start_line || (token.line == start_line && (token.column + token.spelling.length()) <= start_column)) {
-            continue;
+        [[keyword,if]] (token.[[member-variable,line]] [[binary-operator,<]] start_line [[binary-operator,||]] (token.[[member-variable,line]] [[binary-operator,==]] start_line [[binary-operator,&&]] (token.[[member-variable,column]] [[binary-operator,+]] token.[[member-variable,spelling]].[[function,length]]()) [[binary-operator,<=]] start_column)) {
+            [[keyword,continue]];
         }
 
-        offset = i;
-        break;
+        offset [[binary-operator,=]] i;
+        [[keyword,break]];
     }
 
-    unsigned count = 0;
-    unsigned end_line = source_manager.getSpellingLineNumber(end);
-    unsigned end_column = source_manager.getSpellingColumnNumber(end);
+    [[keyword,unsigned]] count = 0;
+    [[keyword,unsigned]] end_line = source_manager.[[function,getSpellingLineNumber]](end);
+    [[keyword,unsigned]] end_column = source_manager.[[function,getSpellingColumnNumber]](end);
 
-    for (std::size_t i = offset; i < m_tokens.size(); ++i) {
-        const Token& token = m_tokens[i];
+    [[keyword,for]] ([[namespace-name,std]]::[[class-name,size_t]] i = offset; i [[binary-operator,<]] [[member-variable,m_tokens]].[[function,size]](); [[unary-operator,++]]i) {
+        [[keyword,const]] [[class-name,Token]]& token = [[member-variable,m_tokens]][[function-operator,[]]i[[function-operator,]]];
 
         // Skip any tokens that start after the range end line:column
-        if (token.line > end_line || token.line == end_line && token.column > end_column) {
-            break;
+        [[keyword,if]] (token.[[member-variable,line]] [[binary-operator,>]] end_line [[binary-operator,||]] token.[[member-variable,line]] [[binary-operator,==]] end_line [[binary-operator,&&]] token.[[member-variable,column]] [[binary-operator,>]] end_column) {
+            [[keyword,break]];
         }
 
-        ++count;
+        [[unary-operator,++]]count;
     }
 
     // Return non-owning range of tokens
-    return { m_tokens.begin() + offset, count };
+    [[keyword,return]] { [[member-variable,m_tokens]].[[function,begin]]() [[function-operator,+]] offset, count };
 }
 ```
-The main challenge of `get_tokens` is properly accounting for partial tokens - those that overlap the range specified by `start` and `end` - in the result.
+The main challenge of `get_tokens()` is properly accounting for partial tokens - those that overlap the range specified by `start` and `end` - in the result.
 The function begins by locating the first token that starts at or after `start`.
 It then iterates through the tokens until it encounters one that begins after `end`, keeping track of all the tokens in between (those within the range).
 The resulting `std::span` contains a view of all tokens that overlap the given range.
@@ -1010,3 +997,8 @@ If `start` or `end` does not align with a token boundary, any tokens that stradd
 The `Annotator` and `Tokenizer` are added as member variables of the `ASTFrontendAction` class.
 Not all annotations we are interested are handled by the `ASTFrontendAction`.
 In this case, we'll need to ability to pass references to the `Annotator` and `Tokenizer` around so that annotations are inserted into the same resulting file.
+
+---
+
+Thanks for reading!
+In the [next post](), we'll walk through a few basic visitor implementations to get familiarized with the process of extracting data from AST nodes.

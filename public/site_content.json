@@ -1,7 +1,7 @@
 {
     "posts": [
         {
-            "title": "Better C++ Syntax Highlighting",
+            "title": "Better C++ Syntax Highlighting - Part 1: Introduction",
             "abstract": "",
             "tags": [
                 "c",
@@ -13,7 +13,7 @@
                 "clang"
             ],
             "date": "02-10-2025",
-            "filepath": "/posts/better_cpp_syntax_highlighting.md",
+            "filepath": "/posts/better_cpp_syntax_highlighting/1_intro.md",
             "last_modified_time": "2025-04-01T09:08:39.916Z"
         },
         {
@@ -30,7 +30,7 @@
             ],
             "date": "03-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/2_enums.md",
-            "last_modified_time": "2025-04-02T08:57:28.896Z"
+            "last_modified_time": "2025-06-24T05:00:24.262Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 10: Qualifiers",
@@ -62,7 +62,7 @@
             ],
             "date": "03-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/11_preprocessor.md",
-            "last_modified_time": "2025-06-18T02:59:21.897Z"
+            "last_modified_time": "2025-06-21T02:12:39.513Z"
         }
     ]
 }
