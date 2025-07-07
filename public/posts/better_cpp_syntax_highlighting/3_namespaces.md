@@ -3,7 +3,7 @@ Namespaces are up next.
 Their declarations and references appear frequently in C++ code, and Clang exposes several node types for processing them.
 
 Consider the following example:
-```cpp line-numbers:{enabled}
+```cpp
 namespace math {
     namespace utility {
         // ...
@@ -34,30 +34,32 @@ To annotate namespaces, we'll define visitor functions for three new node types:
 - [`NamespaceDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1NamespaceDecl.html), for namespace declarations,
 - [`NamespaceAliasDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1NamespaceAliasDecl.html), for namespace aliases, and
 - [`UsingDirectiveDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1UsingDirectiveDecl.html), for`using namespace` directives.
-```cpp
-bool VisitNamespaceDecl(clang::NamespaceDecl* node);
-bool VisitNamespaceAliasDecl(clang::NamespaceAliasDecl* node);
-bool VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node);
+```cpp title:{visitor.hpp}
+[[keyword,bool]] [[function,VisitNamespaceDecl]]([[namespace-name,clang]]::[[class-name,NamespaceDecl]]* node);
+[[keyword,bool]] [[function,VisitNamespaceAliasDecl]]([[namespace-name,clang]]::[[class-name,NamespaceAliasDecl]]* node);
+[[keyword,bool]] [[function,VisitUsingDirectiveDecl]]([[namespace-name,clang]]::[[class-name,UsingDirectiveDecl]]* node);
 ```
 
-### Namespace declarations
+## Namespace declarations
 
 `NamespaceDecl` nodes represent standard namespace declarations.
 We'll annotate these with a `namespace-name` tag:
-```cpp title:{visitor.cpp}
-bool Visitor::VisitNamespaceDecl(clang::NamespaceDecl* node) {
+```cpp line-numbers;{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitNamespaceDecl]]([[namespace-name,clang]]::[[class-name,NamespaceDecl]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    m_annotator->insert_annotation("namespace-name", line, column, name.length());
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = node->[[function,getNameAsString]]();
+    
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& source_location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](source_location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](source_location);
 
-    return true;
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("namespace-name", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
-With this visitor implemented, we are now able to properly annotate namespace declarations:
+With this visitor implemented, our tool produces the following output:
 ```text added:{1,2}
 namespace [[namespace-name,math]] {
     namespace [[namespace-name,utility]] {
@@ -73,37 +75,38 @@ int main() {
 }
 ```
 
-### Namespace aliases
+## Namespace aliases
 
-For `NamespaceAliasDecl` nodes, which represent namespace aliases, we annotate both the alias and the referenced namespaces.
-First, we annotate the alias itself:
-```cpp
-std::string name = node->getNameAsString();
+For `NamespaceAliasDecl` nodes, which represent namespace aliases, we'll annotate both the alias and the referenced namespaces.
+First, we annotate the alias:
+```cpp title:{visitor.cpp}
+[[namespace-name,std]]::[[class-name,string]] name = node->[[function,getNameAsString]]();
 
-clang::SourceLocation location = node->getAliasLoc();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
+[[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getAliasLoc]]();
+[[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+[[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
 
-m_annotator->insert_annotation("namespace-name", line, column, name.length());
+[[member-variable,m_annotator]]->[[function,insert_annotation]]("namespace-name", line, column, name.[[function,length]]());
 ```
-The alias location is retrieved via `getAliasLoc()`.
+The name and source location of the alias is retrieved from the `NamespaceAliasDecl` node itself.
+The location at which to insert annotations is retrieved via `getAliasLoc()`.
 
-Next, we annotate the namespace being aliased by accessing its `NamedDecl`.
-```cpp
-const clang::NamedDecl* aliased = node->getAliasedNamespace();
-name = aliased->getNameAsString();
+Next, we annotate the namespace being aliased:
+```cpp title:{visitor.cpp}
+[[keyword,const]] [[namespace-name,clang]]::[[class-name,NamedDecl]]* aliased = node->[[function,getAliasedNamespace]]();
+[[namespace-name,std]]::[[class-name,string]] name [[function-operator,=]] aliased->[[function,getNameAsString]]();
 
-clang::SourceLocation location = node->getTargetNameLoc();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
+[[namespace-name,clang]]::[[class-name,SourceLocation]] location [[function-operator,=]] node->[[function,getTargetNameLoc]]();
+[[keyword,unsigned]] line [[binary-operator,=]] source_manager.[[function,getSpellingLineNumber]](location);
+[[keyword,unsigned]] column [[binary-operator,=]] source_manager.[[function,getSpellingColumnNumber]](location);
 
-m_annotator->insert_annotation("namespace-name", line, column, name.length());
+[[member-variable,m_annotator]]->[[function,insert_annotation]]("namespace-name", line, column, name.[[function,length]]());
 ```
-The location of the alias target is retrieved via `getTargetNameLoc()`.
-Both instances are annotated as a `namespace-name`.
+As this references an already existing namespace, its name can be retrieved from its declaration using the `getAliasedNamespace()` function.
+Its location is retrieved via `getTargetNameLoc()`.
 
-With this visitor implemented, we can now properly annotate namespace aliases:
-```text
+Both the alias and target namespaces are annotated with the `namespace-name` tag.
+```text added:{9}
 namespace math {
     namespace utility {
         // ...
@@ -118,21 +121,29 @@ int main() {
 }
 ```
 
-### `using namespace` directives
+## `using namespace` directives
 
 The `UsingDirectiveDecl` node handles `using namespace` directives.
-These follow the same pattern as namespace aliases but access the target namespace through `getNominatedNamespace()`:
-```cpp
-const clang::NamespaceDecl* decl = node->getNominatedNamespace();
-std::string name = decl->getNameAsString();
+This visitor follows the same pattern as before:
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitUsingDirectiveDecl]]([[namespace-name,clang]]::[[class-name,UsingDirectiveDecl]]* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
 
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,NamespaceDecl]]* n = node->[[function,getNominatedNamespace]]();
+    [[namespace-name,std]]::[[class-name,string]] name = n->[[function,getNameAsString]]();
 
-m_annotator->insert_annotation("namespace-name", line, column, name.length());
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("namespace-name", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
+}
 ```
-With this visitor implemented, we are able to annotate namespaces in `using namespace` directives:
-```text
+The name of the nominated namespace is retrieved from its declaration using `getNominatedNamespace()`, which returns a `NamespaceDecl`.
+As before, the namespace name is annotated with the `namespace-name` tag.
+```text added:{8}
 namespace math {
     namespace utility {
         // ...
@@ -147,7 +158,7 @@ int main() {
 }
 ```
 
-You'll notice that in both examples, qualifiers on namespace aliases and `using namespace` directives (such as `math::utility`) remain unannotated.
+You'll notice that in both examples, qualifiers these directives (such as `math` qualifier on the `utility` namespace) remain unannotated.
 We will handle these when we look at generic qualifier processing in a later post in this series.
 
 ## Styling 
@@ -172,4 +183,10 @@ int main() {
     // ...
 }
 ```
+
+---
+
+We've added support for annotating namespace declarations, aliases, and `using namespace` directives.
+In the [next post](), we'll take a closer look at annotating functions declarations, definitions, calls, and operators.
+Thanks for reading!
 
