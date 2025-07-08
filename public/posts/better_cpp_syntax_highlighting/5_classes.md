@@ -562,6 +562,9 @@ As before, we retrieve information about the underlying declaration with `getDec
 With a combination of the `isCXXClassMember()`, `isCXXInstanceMember()`, and `isFunctionOrFunctionTemplate()` checks, we can isolate only references to static members variables.
 As before, these are annotated with the `member-variable` tag.
 
+This logic needs to come *after* the check for enum constants to avoid annotating unscoped enum members as member variables.
+
+
 ```text added:{20,23}
 #include <cmath> // std::sqrt
 

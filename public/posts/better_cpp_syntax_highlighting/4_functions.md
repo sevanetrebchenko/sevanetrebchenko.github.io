@@ -3,7 +3,7 @@ Functions are next on our list.
 Their declarations, definitions, and calls appear throughout C++ code, and Clang provides a rich set of node types for processing them.
 
 Consider the following example:
-```cpp
+```cpp line-numbers:{enabled}
 #include <cstring> // std::strcmp
 #include <string> // std::string, std::string_literals
 #include <chrono> // std::chrono::duration, std::chrono_literals
@@ -246,16 +246,15 @@ To annotate functions and operators, we'll define visitor functions for eight ne
 - [`CompoundAssignOperator` nodes](https://clang.llvm.org/doxygen/classclang_1_1CompoundAssignOperator.html), for compound assignment operators, and
 - [`UserDefinedLiteral` nodes](https://clang.llvm.org/doxygen/classclang_1_1UserDefinedLiteral.html), for user-defined [literal operators](https://en.cppreference.com/w/cpp/language/user_literal).
 
-```cpp
-bool VisitFunctionDecl(clang::FunctionDecl* node);
-bool VisitFunctionTemplateDecl(clang::FunctionTemplateDecl* node);
-bool VisitUnaryOperator(clang::UnaryOperator* node);
-bool VisitBinaryOperator(clang::BinaryOperator* node);
-bool VisitCallExpr(clang::CallExpr* node);
-bool VisitCXXOperatorCallExpr(clang::CXXOperatorCallExpr* node);
-bool VisitCompoundAssignOperator(clang::CompoundAssignOperator* node);
-bool VisitUserDefinedLiteral(clang::UserDefinedLiteral* node);
-};
+```cpp title:{visitor.hpp}
+[[keyword,bool]] [[function,VisitFunctionDecl]]([[namespace-name,clang]]::[[class-name,FunctionDecl]]* node);
+[[keyword,bool]] [[function,VisitFunctionTemplateDecl]]([[namespace-name,clang]]::[[class-name,FunctionTemplateDecl]]* node);
+[[keyword,bool]] [[function,VisitUnaryOperator]]([[namespace-name,clang]]::[[class-name,UnaryOperator]]* node);
+[[keyword,bool]] [[function,VisitBinaryOperator]]([[namespace-name,clang]]::[[class-name,BinaryOperator]]* node);
+[[keyword,bool]] [[function,VisitCallExpr]]([[namespace-name,clang]]::[[class-name,CallExpr]]* node);
+[[keyword,bool]] [[function,VisitCXXOperatorCallExpr]]([[namespace-name,clang]]::[[class-name,CXXOperatorCallExpr]]* node);
+[[keyword,bool]] [[function,VisitCompoundAssignOperator]]([[namespace-name,clang]]::[[class-name,CompoundAssignOperator]]* node);
+[[keyword,bool]] [[function,VisitUserDefinedLiteral]]([[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]* node);
 ```
 
 ## Function declarations
@@ -263,42 +262,40 @@ bool VisitUserDefinedLiteral(clang::UserDefinedLiteral* node);
 `FunctionDecl` nodes represent standard function declarations and definitions.
 We'll annotate these with a `function` tag, with special handling for overloaded operators.
 
-We start with the standard checks to ensure we're processing nodes from the main file:
-```cpp
-bool Visitor::VisitFunctionDecl(clang::FunctionDecl* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitFunctionDecl]]([[namespace-name,clang]]::[[class-name,FunctionDecl]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    // Skip implicit declarations, such as those for static class functions
-    if (node->isImplicit()) {
-        return true;
+    [[keyword,if]] (node->[[function,isImplicit]]()) {
+        [[keyword,return]] [[keyword,true]];
     }
-```
-The implicit declaration check prevents annotating compiler-generated placeholder declarations.
-Without this check, annotations for static member functions appear in the wrong location.
-
-For overloaded operators, we need special handling to annotate only the operator symbol, since `operator` should be highlighted as a language keyword:
-```cpp
-std::string name = node->getNameAsString();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
-
-if (node->isOverloadedOperator()) {
-    name = name.substr(8); // Skip 'operator' keyword
-    m_annotator->insert_annotation("function-operator", line, column + 8, name.length());
-}
-else {
-    m_annotator->insert_annotation("function", line, column, name.length());
+    
+    [[namespace-name,std]]::[[class-name,string]] name = node->[[function,getNameAsString]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    
+    [[keyword,if]] (node->[[function,isOverloadedOperator]]()) {
+        name [[function-operator,=]] name.substr(8); // Skip 'operator' keyword
+        [[member-variable,m_annotator]]->[[function,insert_annotation]]("function-operator", line, column [[binary-operator,+]] 8, name.[[function,length]]());
+    }
+    [[keyword,else]] {
+        [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", line, column, name.[[function,length]]());
+    }
+    
+    [[keyword,return]] [[keyword,true]];
 }
 ```
-We use `isOverloadedOperator()` to detect operator functions and skip the first 8 characters (`operator`) when inserting the annotation.
-We will revisit highlighting keywords in a later post in this series.
+The `isImplicit()` check prevents annotating compiler-generated placeholder declarations.
+For overloaded operators, `isOverloadedOperator()` is used to detect operator functions and skip the first 8 characters (`operator`) to annotate only the operator symbol.
+`operator` itself should instead be highlighted as a language keyword, which we'll handle in a later post in this series.
 
-Note that `CXXMethodDecl` nodes (class member functions) also get annotated by this visitor, since they derive from `FunctionDecl`.
+Note that `CXXMethodDecl` nodes (class member functions) are picked up by this visitor, since they derive from `FunctionDecl`.
 This includes static class functions, constructors, and destructors.
 Similarly, template function declarations are also visited because each `FunctionTemplateDecl` contains a child `FunctionDecl` node representing the actual function.
+This means we don't actually need to set up dedicated visitors for these nodes (unless we want some specialized logic).
 
-With this visitor implemented, we can now properly annotate function declarations and definitions:
+With this visitor implemented, function declarations and definitions are properly annotated:
 ```text added:{6,12,23,30,31,35}
 template <typename T>
 bool [[function,equal]](T a, T b) {
@@ -337,23 +334,24 @@ int [[function,main]]() {
 As before, we'll annotate the function name of each call with the `function` tag.
 
 We can retrieve the function name from the underlying declaration:
-```cpp
-const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
-std::string name = function->getNameAsString();
+```cpp title:{visitor.cpp}
+[[keyword,const]] [[namespace-name,clang]]::[[class-name,FunctionDecl]]* function = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,FunctionDecl]]>(ptr);
+[[namespace-name,std]]::[[class-name,string]] name = function->[[function,getNameAsString]]();
 ```
 We get the function declaration through `getCalleeDecl()` and extract its name using `getNameAsString()`.
 Unlike other AST nodes, `CallExpr` does not provide direct access to the function name's location in the source.
 The `getBeginLoc()` function returns the location of the fully-qualified function call, including any namespace and/or class qualifiers.
 ```cpp
 // This approach won't work for qualified calls like math::Point::distance()
-clang::SourceLocation location = node->getBeginLoc(); // Points to 'math', not 'distance'
+[[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getBeginLoc]](); // Points to 'math', not 'distance'
 ```
 Instead, we tokenize the function call's source range and annotate only the token matching the function's name:
-```cpp
-for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-    if (token.spelling == name) {
-        m_annotator->insert_annotation("function", token.line, token.column, name.length());
-        break;
+```cpp title:{visitor.cpp}
+[[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] [[class-name,Token]]> tokens = [[member-variable,m_tokenizer]]->[[function,get_tokens]](node->[[function,getSourceRange]]());
+[[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
+    [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] name) {
+        [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", token.[[member-variable,line]], token.[[member-variable,column]], name.[[function,length]]());
+        [[keyword,break]];
     }
 }
 ```
@@ -386,17 +384,19 @@ int main() {
 
 Unary, binary, and compound assignment operators are captured under `UnaryOperator`, `BinaryOperator`, and `CompoundAssignOperator` nodes respectively.
 All three follow the same implementation pattern, so we'll focus on unary operators as an example.
-```cpp
-bool Visitor::VisitUnaryOperator(clang::UnaryOperator* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitUnaryOperator]]([[namespace-name,clang]]::[[class-name,UnaryOperator]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    const std::string& name = clang::UnaryOperator::getOpcodeStr(node->getOpcode()).str();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getOperatorLoc]]();
     
-    m_annotator->insert_annotation("unary-operator", line, column, name.length());
-    return true;
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = [[namespace-name,clang]]::[[class-name,UnaryOperator]]::[[function,getOpcodeStr]](node->[[function,getOpcode]]()).[[function,str]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("unary-operator", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Unlike other nodes, operator nodes provide direct access to the operator's location through `getOperatorLoc()`.
@@ -406,18 +406,18 @@ Unary operators are annotated with `unary-operator`, while binary and compound a
 
 Another type of built-in operator is the array subscript operator, represented by the `ArraySubscriptExpr` AST node.
 Handling this requires setting up a dedicated visitor, as these nodes are not visited by other operator visitors.
-```cpp
-bool Visitor::VisitArraySubscriptExpr(clang::ArraySubscriptExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitArraySubscriptExpr]]([[namespace-name,clang]]::[[class-name,ArraySubscriptExpr]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
-    
-    for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-        if (token.spelling == "[" || token.spelling == "]") {
-            m_annotator->insert_annotation("operator", token.line, token.column, 1);
+
+    [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : [[member-variable,m_tokenizer]]->[[function,get_tokens]](node->[[function,getSourceRange]]())) {
+        [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] "[" [[binary-operator,||]] token.[[binary-operator,spelling]] [[binary-operator,==]] "]") {
+            [[member-variable,m_annotator]]->[[function,insert_annotation]]("operator", token.[[member-variable,line]], token.[[member-variable,column]], 1);
         }
     }
-    
-    return true;
+
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Unlike most other operators, Clang does not provide a direct way of retrieving the locations of both the opening and closing brackets.
@@ -429,28 +429,29 @@ To work around this, we simply tokenize the source range of the node and manuall
 `CXXOperatorCallExpr` nodes represent calls to overloaded operators.
 The implementation largely follows the same structure as built-in operators:
 Overloaded operators are captured under `CXXOperatorCallExpr` nodes:
-```cpp
-bool Visitor::VisitCXXOperatorCallExpr(clang::CXXOperatorCallExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitCXXOperatorCallExpr]]([[namespace-name,clang]]::[[class-name,CXXOperatorCallExpr]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    const std::string& op = clang::getOperatorSpelling(node->getOperator());
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    if (op == "[]") {
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& op = [[namespace-name,clang]]::[[function,getOperatorSpelling]](node->[[function,getOperator]]());
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[keyword,if]] (op [[binary-operator,==]] "[]") {
         // Special handling for array subscript operator
-        for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-            if (token.spelling == "[" || token.spelling == "]") {
-                m_annotator->insert_annotation("function-operator", token.line, token.column, 1);
+        [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : [[member-variable,m_tokenizer]]->[[function,get_tokens]](node->[[function,getSourceRange]]())) {
+            [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] "[" [[binary-operator,||]] token.[[member-variable,spelling]] [[binary-operator,==]] "]") {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("function-operator", token.[[member-variable,line]], token.[[member-variable,column]], 1);
             }
         }
     }
-    else {
-        m_annotator->insert_annotation("function-operator", line, column, op.length());
+    [[keyword,else]] {
+        [[member-variable,m_annotator]]->[[function,insert_annotation]]("function-operator", line, column, op.[[function,length]]());
     }
-    
-    return true;
+
+    [[function,visit_qualifiers]](node->[[function,getDirectCallee]]()->[[function,getDeclContext]](), [[namespace-name,clang]]::[[function,SourceRange]](node->[[function,getBeginLoc]](), node->[[function,getOperatorLoc]]()));
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 We use `getOperatorSpelling()` to retrieve the operator symbol and annotate it with `function-operator` to match our handling of overloaded operator declarations from earlier.
@@ -503,22 +504,22 @@ int main() {
 We'll annotate these to match the type of literal they're applied to.
 
 Unlike built-in operators, we need to retrieve the operator name from the function declaration:
-```cpp
-const clang::FunctionDecl* function = clang::dyn_cast<clang::FunctionDecl>(node->getCalleeDecl());
-std::string name = function->getNameAsString();
-name = name.substr(10); // Skip 'operator""' prefix
+```cpp title:{visitor.cpp}
+[[keyword,const]] [[namespace-name,clang]]::[[class-name,FunctionDecl]]* function = node->[[function,getCalleeDecl]]()->[[function,getAsFunction]]();
+[[namespace-name,std]]::[[class-name,string]] name = function->[[function,getNameAsString]]();
+name [[function-operator,=]] name.[[function,substr]](10); // Skip 'operator""' prefix
 ```
 We get the function declaration through `getCalleeDecl()` and strip the `operator""` prefix to get the actual suffix used in the code.
 For the annotation type, the annotation of the operator should match the underlying literal type.
 Rather than relying on `getLiteralOperatorKind()` (which can be misleading for template-based operators), we parse the token directly:
-```cpp
-for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-    std::size_t position = token.spelling.find(name);
-    if (position != std::string::npos) {
-        bool is_string_type = token.spelling.find('\'') != std::string::npos || token.spelling.find('"') != std::string::npos;
-        const char* annotation = is_string_type ? "string" : "number";
-        
-        m_annotator->insert_annotation(annotation, token.line, token.column + position, name.length());
+```cpp title:{visitor.cpp}
+[[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
+    [[namespace-name,std]]::[[class-name,size_t]] position = token.[[member-variable,spelling]].[[function,find]](name);
+    [[keyword,if]] (position [[binary-operator,!=]] [[namespace-name,std]]::[[class-name,string]]::[[member-variable,npos]]) {
+        [[keyword,bool]] is_string_type = token.[[member-variable,spelling]].[[function,find]]('\'') [[binary-operator,!=]] [[namespace-name,std]]::[[class-name,string]]::[[member-variable,npos]] [[binary-opetator,||]] token.[[member-variable,spelling]].[[function,find]]('"') [[binary-operator,!=]] [[namespace-name,std]]::[[class-name,string]]::[[member-variable,npos]];
+        [[keyword,const]] [[keyword,char]]* annotation = is_string_type [[binary-opertaor,?]] "string" [[binary-operator,:]] "number";
+
+        [[member-variable,m_annotator]]->[[function,insert_annotation]](annotation, token.[[member-variable,line]], token.[[member-variable,column]] + position, name.[[function,length]]());
     }
 }
 ```
@@ -526,35 +527,34 @@ We can do this because literal operators can only be applied to integer, floatin
 If the token containing our operator suffix contains quotations marks, the operator is annotated as a `string` - otherwise, we know the operator is a `number`.
 
 An alternative approach uses the `getLiteralOperatorKind()` function, which returns a category corresponding to the function signature of the operator according to the [specification](https://en.cppreference.com/w/cpp/language/user_literal.html):
-```cpp
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
+```cpp title:{visitor.cpp}
+[[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+[[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
 
-std::string annotation;
-switch (node->getLiteralOperatorKind()) {
-    case clang::UserDefinedLiteral::LOK_Raw:  // C-style string
-    case clang::UserDefinedLiteral::LOK_Template:  // Template parameter pack of characters (numeric literal operator template)
-    case clang::UserDefinedLiteral::LOK_String:  // C-style string and length
-    case clang::UserDefinedLiteral::LOK_Character:
-        annotation = "string";
-        break;
-        
-    case clang::UserDefinedLiteral::LOK_Integer:
-    case clang::UserDefinedLiteral::LOK_Floating:
-        annotation = "number";
-        break;
+[[keyword,const]] [[keyword,char]]* annotation;
+[[keyword,switch]] (node->[[function,getLiteralOperatorKind]]()) {
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_Raw]]:  // C-style string
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_Template]]:  // Template parameter pack of characters (numeric literal operator template)
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_String]]:  // C-style string and length
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_Character]]:
+        annotation [[binary-operator,=]] "string";
+        [[keyword,break]];
+
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_Integer]]:
+    [[keyword,case]] [[namespace-name,clang]]::[[class-name,UserDefinedLiteral]]::[[enum-value,LOK_Floating]]:
+        annotation [[binary-operator,=]] "number";
+        [[keyword,break]];
 }
 
-m_annotator->insert_annotation(annotation, line, column, name.length());
+[[member-variable,m_annotator]]->[[function,insert_annotation]](annotation, line, column, name.[[function,length]]());
 ```
 However, this approach has some unexpected drawbacks.
 For example, the C++ `std::chrono` library does not provide an overload to resolve `200ms` into a function that accepts an integer.
 Instead, the following overload is called (accepting a variadic list of characters as the digits of the number):
-```cpp title:{chrono.h}
+```cpp
 // Literal suffix for durations of type `std::chrono::milliseconds`
-template <char... _Digits>
-constexpr chrono::milliseconds
-operator""ms() {
+[[keyword,template]] <[[keyword,char]]... _Digits>
+[[keyword,constexpr]] [[namespace-name,std]]::[[namespace-name,chrono]]::[[class-name,milliseconds]] [[keyword,operator]]""[[function,ms]]() {
     // ...
 }
 ```
@@ -576,27 +576,78 @@ int main() {
 }
 ```
 
+We'll also need some special handling for annotating function declarations of literal operators.
+Currently, our `VisitFunctionDecl` visitor incorrectly annotates the `operator""` portion of the function name in addition to the operator itself.
+```text
+template <char... _Digits>
+constexpr std::chrono::milliseconds [[function,operator""ms]]() {
+    // ...
+}
+```
+We'll fix this by checking for and handling this case explicitly:
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::VisitFunctionDecl([[namespace-name,clang]]::[[class-name,FunctionDecl]]* node[[function,) {
+    // ...
+    
+    [[keyword,if]] (node->[[function,isOverloadedOperator]]()) {
+        // ...
+    }
+    [[keyword,else]] [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,IdentifierInfo]]* identifier = node->[[function,getLiteralIdentifier]]()) {
+        name = identifier->[[function,getName]]();
+        [[keyword,for]] ([[keyword,auto]] it = [[member-variable,m_tokenizer]]->at(node->[[function,getTypeSpecStartLoc]]()); it [[binary-operator,!=]] [[member-variable,m_tokenizer]]->end(); [[unary-operator,++]]it) {
+            [[keyword,const]] [[class-name,Token]]& token = [[function,*]]it;
+            [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] name) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", token.[[member-variable,line]], token.[[member-variable,column]], name.[[function,length]]());
+                [[keyword,break]];
+            }
+            [[keyword,else]] [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] [[namespace-name,utils]]::[[function,format]]("\"\"{}", name)) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", token.[[member-variable,line]], token.[[member-variable,column]] [[binary-operator,+]] 2, name.[[function,length]]());
+                [[keyword,break]];
+            }
+        }
+    }
+    
+    // ...
+}
+```
+We use the `getLiteralIdentifer()` function to check if the function declaration refers to a literal operator.
+Using the returned `IdentifierInfo` struct, we can query the name of the operator using the `getName()` function and search for it in the source range of the node.
+
+Unfortunately, there is no direct way to retrieve the location of the operator itself, so we'll resort to manually searching for a token that matches the name of the operator using the tokenization approach.
+One small caveat here is that literal operators are one of the few exceptions of functions that may contain a space in the function name.
+Names that contain no space (for example `operator""ms`) will combine the quotes with the name of the function into the same token.
+This must also be accounted for so that only the operator name is annotated.
+
+Literal operator declarations, as with declarations for other functions, are annotated with the `function` annotation.
+```text
+template <char... _Digits>
+constexpr std::chrono::milliseconds operator""[[function,ms]]() {
+    // ...
+}
+```
+
 ### Functional-style variable declarations
 
 In most other syntax highlighters, variable declarations using functional-style initialization are incorrectly highlighted as function calls.
 This likely occurs because functions are identified based on the presence of parentheses.
 
 We can fix this by implementing a `VarDecl` visitor, which represents variable declarations and definitions.
-```cpp title:{visitor.cpp} added:{24-27}
-bool Visitor::VisitVarDecl(clang::VarDecl* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitVarDecl]]([[namespace-name,clang]]::[[class-name,VarDecl]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = node->[[function,getNameAsString]]();
     
-    if (node->isDirectInit()) {
-        // Direct (functional) initialization should not be annotated as a function call
-        m_annotator->insert_annotation("plain", line, column, name.length());
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    
+	[[keyword,if]] (node->[[function,isDirectInit]]()) {
+         [[member-variable,m_annotator]]->[[function,insert_annotation]]("plain", line, column, name.[[function,length]]());
     }
 
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 The key is the `isDirectInit()` check, which helps identify variables using functional-style initialization. 

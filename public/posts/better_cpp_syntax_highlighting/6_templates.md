@@ -289,21 +289,19 @@ For unresolved calls, `getCalleeDecl()` returns `nullptr`, which causes issues w
 Good examples of this are the `std::begin(...)` and `std::end(...)` functions - the function this call resolves to differs based on the type of container that is passed in.
 We can handle these nodes by extending our existing `VisitCallExpr` visitor to explicitly account for these types of expressions.
 
-## Global and static class function calls
-
-Although we can't access the declaration of the function being called, we can still retrieve the name of it if we do a bit of targeted casting of the callee of the node:
+We'll start off by doing some dynamic casting to determine the kind of function call being processed:
 ```cpp
 if (const clang::UnresolvedLookupExpr* ule = clang::dyn_cast<clang::UnresolvedLookupExpr>(node->getCallee())) {
-    std::string name = ule->getNameInfo().getAsString();
-    
     clang::SourceLocation location = ule->getNameLoc();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    m_annotator->insert_annotation("function", line, column, name.length());
+    const Token& token = *m_tokenizer->at(location);
+    m_annotator->insert_annotation("function", token.line, token.column, token.spelling.length());
 }
 ```
 We retrieve the callee with the `getCallee()` function.
+Instead of accessing the name of the function through its declaration, we'll instead annotate just the token at the source location of the call.
+For `UnresolvedLookupExpr` nodes, this is done via the `getNameLoc()` function.
+Retrieving the name through the function declaration may not always return the same name as the function used at the call site.
+The function name for a custom dereference operator, for example, returns `operator*` (and not the expected `*` of the actual call).
 
 Member calls like `T::function()` appear as `DependentScopeDeclRefExpr` nodes.
 `DependentScopeDeclRefExpr` represents a qualified reference to a member of a dependent type, where the type of `T` is unknown during parsing.
@@ -312,15 +310,12 @@ For example, in templates where `T::value_type` or `T::function()` is written, C
 Within a `CallExpr`, however, if the callee is a `DependentScopeDeclRefExpr`, we know it's being invoked as a function, making it safe to annotate:
 ```cpp
 else if (const clang::DependentScopeDeclRefExpr* dre = clang::dyn_cast<clang::DependentScopeDeclRefExpr>(node->getCallee())) {
-    std::string name = dre->getNameInfo().getAsString();
-    
     clang::SourceLocation location = dre->getLocation();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    m_annotator->insert_annotation("function", line, column, name.length());
+    const Token& token = *m_tokenizer->at(location);
+    m_annotator->insert_annotation("function", token.line, token.column, token.spelling.length());
 }
 ```
+We'll use a similar approach here and annotate just the token at the call location.
 `DependentScopeDeclRefExpr` nodes outside of function calls are purposefully left unhandled to avoid ambiguity.
 The annotation for a type is different from the annotation for a member.
 
@@ -328,18 +323,15 @@ The annotation for a type is different from the annotation for a member.
 
 Function calls made directly through an object or reference, such as `container.size()` or `container.capacity()` from the example above, are represented by `CXXDependentScopeMemberExpr` nodes.
 These nodes appear when the compiler cannot resolve the exact type of the object at parse time, but the syntax clearly indicates a member function call.
-We annotate these the same way as global or static function calls:
+We annotate these the same way as in the earlier sections:
 ```cpp
 else if (const clang::CXXDependentScopeMemberExpr* dsme = clang::dyn_cast<clang::CXXDependentScopeMemberExpr>(node->getCallee())) {
-    std::string name = dsme->getMemberNameInfo().getAsString();
-    
     clang::SourceLocation location = dsme->getMemberLoc();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    
-    m_annotator->insert_annotation("function", line, column, name.length());
+    const Token& token = *m_tokenizer->at(location);
+    m_annotator->insert_annotation("function", token.line, token.column, token.spelling.length());
 }
 ```
+The source location of the call is retrieved using the `getMemberLoc()` function.
 For all other cases, we'll fall back to our existing approach of annotating the function call using token matching.
 ```text
 template <typename T>
