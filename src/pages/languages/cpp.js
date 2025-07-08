@@ -16,6 +16,10 @@ export default function processLanguageCpp(tokens) {
 
             let j = i;
             while (true) {
+                if (!tokens[j] || !tokens[j].content) {
+                    break;
+                }
+
                 annotation += tokens[j].content;
 
                 if (tokens[j].content === "]" && tokens[j + 1].content !== "]") {

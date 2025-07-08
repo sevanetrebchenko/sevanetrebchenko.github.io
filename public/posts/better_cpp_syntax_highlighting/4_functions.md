@@ -745,3 +745,10 @@ int [[function,main]]() {
     // ...
 }
 ```
+
+---
+
+We've added support for annotating functions declarations, definitions, calls, and several kinds of operators.
+We also improved the consistency of our syntax highlighting by overriding annotations on functional-style variable initializations.
+In the [next post](), we'll take a deeper look at annotating the different components of classes: declarations, static and class member variables, constructor initializer lists, and type aliases.
+Thanks for reading!

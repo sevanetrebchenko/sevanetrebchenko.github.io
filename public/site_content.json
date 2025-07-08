@@ -46,7 +46,7 @@
             ],
             "date": "03-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/3_namespaces.md",
-            "last_modified_time": "2025-07-03T14:46:06.052Z"
+            "last_modified_time": "2025-07-07T18:47:54.491Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 4: Functions",
@@ -62,7 +62,23 @@
             ],
             "date": "02-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/4_functions.md",
-            "last_modified_time": "2025-04-01T09:08:39.916Z"
+            "last_modified_time": "2025-07-08T08:41:53.746Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 5: Classes",
+            "abstract": "",
+            "tags": [
+                "c",
+                "c++",
+                "python",
+                "javascript",
+                "programming",
+                "website",
+                "clang"
+            ],
+            "date": "02-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/5_classes.md",
+            "last_modified_time": "2025-07-08T08:41:53.729Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 10: Qualifiers",

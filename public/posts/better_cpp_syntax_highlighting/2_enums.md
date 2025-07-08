@@ -138,6 +138,7 @@ The implementation of `VisitDeclRefExpr` is very similar to the `VisitEnumDecl` 
     // Check to ensure this node originates from the file we are annotating
     // ...
 
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& location = node->[[function,getLocation]]();
     [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
     [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
 
