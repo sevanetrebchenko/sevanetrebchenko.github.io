@@ -280,15 +280,12 @@ div[class*="language-"] .overlay:hover {
     color: rgb(106, 171, 115);
 }
 
-.language-cpp .macro.directive-hash,
-.language-cpp .macro.directive {
+.language-cpp .preprocessor-directive {
     color: rgb(187, 181, 41);
 }
-.language-cpp .macro.macro-name {
-    color: rgb(144, 139, 37);
-}
-.language-cpp .macro.macro-argument {
-    color: rgb(108, 106, 42);
+.language-cpp .macro-name,
+.language-cpp .macro-argument {
+    color: rgb(149, 144, 51);
 }
 
 .language-cpp .function {

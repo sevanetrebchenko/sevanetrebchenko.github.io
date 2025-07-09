@@ -1,9 +1,9 @@
 
 Part of the reason we added the `Annotator` and `Tokenizer` as member variables of the `ASTFrontendAction` is so that they could be reused in different contexts.
 Up until now, we've worked exclusively with nodes of the AST.
-However, the AST is generated **after** the preprocessor runs, which means all preprocessor directives and macro definitions have already been resolved and stripped out.
+However, the AST is generated *after* the preprocessor runs, which means all preprocessor directives and macro definitions have already been resolved and stripped out.
 
-If we want to insert syntax highlighting annotations for these symbols, we need to hook into the compiler **before** the AST is created, during the preprocessing phase.
+If we want to insert syntax highlighting annotations for these symbols, we need to hook into the compiler *before* the AST is created, during the preprocessing phase.
 
 ## Hooking into the Clang preprocessor
 
@@ -23,30 +23,26 @@ The information required for syntax highlighting is usually provided directly.
 
 Hooking into the Clang preprocessor is a straightforward addition to our `ASTFrontendAction`.
 Here is the `Preprocessor` class:
-```cpp title:{preprocessor.hpp}
-class Preprocessor final : public clang::PPCallbacks {
-    public:
-        Preprocessor(clang::ASTContext* context, Annotator* annotator, Tokenizer* tokenizer);
-        ~Preprocessor() override;
+```cpp title:{preprocessor.hpp} line-numbers:{enabled}
+[[keyword,class]] [[class-name,Preprocessor]] [[keyword,final]] : [[keyword,public]] [[namespace-name,clang]]::[[class-name,PPCallbacks]] {
+    [[keyword,public]]:
+        [[function,Preprocessor]]([[namespace-name,clang]]::[[class-name,ASTContext]]* context, [[class-name,Annotator]]* annotator, [[class-name,Tokenizer]]* tokenizer);
+        [[function,~Preprocessor]]() [[keyword,override]];
         
         // Overrides for preprocessor directives go here
         
-    private:
-        clang::ASTContext* m_context;
-        Annotator* m_annotator;
-        Tokenizer* m_tokenizer;
+    [[keyword,private]]:
+        [[namespace-name,clang]]::[[class-name,ASTContext]]* [[member-variable,m_context]];
+        [[class-name,Annotator]]* [[member-variable,m_annotator]];
+        [[class-name,Tokenizer]]* [[member-variable,m_tokenizer]];
 };
 ```
 In our `CreateASTConsumer` function (originally implemented as a part of our `ASTFrontendAction`), we register it with the preprocessor using the `addPPCallbacks` function.
-```cpp title:{action.hpp} added:{9}
-std::unique_ptr<clang::ASTConsumer> SyntaxHighlighter::CreateASTConsumer(clang::CompilerInstance& compiler, clang::StringRef file) {
-    clang::ASTContext& context = compiler.getASTContext();
-    
-    m_tokenizer = new Tokenizer(&context);
-    
-    // Hook into preprocessor to add annotations for macros / preprocessor definitions
-    compiler.getPreprocessor().addPPCallbacks(std::make_unique<Preprocessor>(&context, &m_annotator, m_tokenizer));
-    return std::make_unique<Consumer>(&m_annotator, m_tokenizer);
+```cpp title:{action.hpp} line-numbers:{enabled} added:{3}
+[[namespace-name,std]]::[[class-name,unique_ptr]]<[[namespace-name,clang]]::[[class-name,ASTConsumer]]> [[class-name,SyntaxHighlighter]]::[[function,CreateASTConsumer]]([[namespace-name,clang]]::[[class-name,CompilerInstance]]& compiler, [[namespace-name,clang]]::[[class-name,StringRef]] file) {
+    [[namespace-name,clang]]::[[class-name,ASTContext]]& context = compiler.[[function,getASTContext]]();
+    compiler.[[function,getPreprocessor]]().addPPCallbacks(std::make_unique<[[class-name,Preprocessor]]>([[unary-operator,&]]context, [[unary-operator,&]][[member-variable,m_annotator]], [[member-variable,m_tokenizer]]));
+    [[keyword,return]] std::make_unique<[[class-name,Consumer]]>([[unary-operator,&]][[member-variable,m_annotator]], [[member-variable,m_tokenizer]]);
 }
 ```
 We also pass in references to the AST context, annotator, and tokenizer so that we can insert syntax highlighting annotations and retrieve tokens across source ranges.
@@ -56,17 +52,17 @@ All that's left to do now is implement the visitors.
 
 The `#define` preprocessor directive defines macros.
 To process them, we override the `MacroDefined` hook:
-```cpp
-void MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,MacroDefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) [[keyword,override]];
 ```
 In this function, we'll annotate four things:
 1. The macro name,
-1. The macro arguments (if any),
-1. References to macro arguments or other macros within the body, 
-1. The `#define` directive itself.
+2. The macro arguments (if any),
+3. References to macro arguments or other macros within the body, 
+4. The `#define` directive itself.
 
 Consider the following example:
-```cpp
+```text
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
@@ -80,11 +76,18 @@ Consider the following example:
 ```
 
 Before annotating, we check to make sure the macro comes from the main file.
-```cpp
-const clang::MacroInfo* info = directive->getMacroInfo();
-clang::SourceLocation location = info->getDefinitionLoc();
-if (source_manager.getFileID(location) != source_manager.getMainFileID()) {
-    return;
+```cpp line-numbers:{enabled} title:{preprocessor.cpp}
+void Preprocessor::MacroDefined(const clang::Token& name, const clang::MacroDirective* directive) {
+    const clang::SourceManager& source_manager = m_context->getSourceManager();
+    
+    // Ensure this macro comes from the 'main' file
+    const clang::MacroInfo* info = directive->getMacroInfo();
+    clang::SourceLocation location = info->getDefinitionLoc();
+    if (source_manager.getFileID(location) != source_manager.getMainFileID()) {
+        return;
+    }
+    
+    // ...
 }
 ```
 Note that this functionality is shared across all visitor implementations in this post.
@@ -94,15 +97,23 @@ For future sections, however, it is omitted for brevity.
 
 The macro name is provided by the `name` parameter.
 All we need is its location:
-```cpp
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
-m_annotator->insert_annotation("macro-name", line, column, name.length());
+```cpp line-numbers:{enabled} title:{preprocessor.cpp}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,MacroDefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) {
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceManager]]& source_manager = [[member-variable,m_context]]->[[function,getSourceManager]]();
+    
+    // Check to ensure this node originates from the file we are annotating
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroInfo]]* info = directive->[[function,getMacroInfo]]();
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = info->[[function,getDefinitionLoc]]();
+    [[keyword,if]] (source_manager.[[function,getFileID]](location) [[function-operator,!=]] source_manager.[[function,getMainFileID]]()) {
+        [[keyword,return]];
+    }
+    
+    // ...
 }
 ```
 Macro definitions are annotated with the `macro-name` annotation.
 
-```text
+```text added:{4}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
@@ -118,25 +129,32 @@ Macro definitions are annotated with the `macro-name` annotation.
 ### Annotating macro arguments
 
 For annotating macro arguments, we retrieve the tokens of the macro definition and iterate through them, checking for matches against the names of known macro parameters.
-```cpp
-clang::SourceLocation start = info->getDefinitionLoc();
-clang::SourceLocation end = info->getDefinitionEndLoc();
-std::span<const Token> tokens = m_tokenizer->get_tokens(start, end);
-
-for (const Token& token : m_tokenizer->get_tokens(start, end)) {
-    for (const clang::IdentifierInfo* argument : info->params()) {
-        if (token.spelling == argument->getName().str()) {
-            m_annotator->insert_annotation("macro-argument", token.line, token.column, argument_name.length());
+```cpp line-numbers:{enabled} title:{preprocessor.cpp}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,MacroDefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    // Annotate the name of the macro
+    // ...
+    
+    [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : [[member-variable,m_tokenizer]]->[[function,get_tokens]](info->[[function,getDefinitionLoc]](), info->[[function,getDefinitionEndLoc]]())) {
+        [[keyword,for]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,IdentifierInfo]]* argument : info->[[function,params]]()) {
+            [[namespace-name,std]]::[[class-name,string]] argument_name = argument->[[function,getName]]().[[function,str]]();
+            [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] argument_name) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("macro-argument", token.[[member-variable,line]], token.[[member-variable,column]], argument_name.[[function,length]]());
+            }
         }
     }
+    
+    // ...
 }
 ```
 Macro arguments are annotated with the `macro-argument` annotation.
-```text
+```text added:{4,6,8}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
-#define [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+#define ASSERT([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
     do { \
         if (!([[macro-argument,EXPRESSION]])) { \
             std::source_location location = std::source_location::current(); \
@@ -154,7 +172,7 @@ In fact, by default the `#define` directive is not included in the source range 
 
 One approach we can use is a helper function of the `SourceLocation` class, `getLocWithOffset`, to offset our location by the number of characters in `#define` and a single whitespace separator in an attempt to reach the start of the `#define` directive.
 ```cpp
-std::span<const Token> tokens = m_tokenizer->get_tokens(start.getLocWithOffset(-8), end);
+[[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] [[class-name,Token]]> tokens = [[member-variable,m_tokenizer]]->[[member-variable,get_tokens]](start.[[function,getLocWithOffset]]([[unary-operator,-]]8), end);
 ```
 This works as long as we provide a large enough offset to capture both the `#` and `define` tokens.
 
@@ -166,26 +184,41 @@ We can try specifying a larger offset, but that runs the risk of unnecessary ove
 
 A better approach is to take advantage of this restriction imposed by the standard and modify our `Tokenizer::get_tokens` function to optionally ignore column offsets and retrieve tokens from an entire line.
 Then, in `annotate_directive`, we simply annotate the first two tokens from the specified line, which are the `#` and the directive itself.
-```cpp
-void annotate_directive(clang::SourceLocation location) {
-    std::span<const Token> tokens = m_tokenizer->get_tokens(location, location, true);
-    for (int i = 0; i < 2; ++i) {
-        const Token& token = tokens[i];
-        m_annotator->insert_annotation("preprocessor-directive", token.line, token.column, token.spelling.length());
+```cpp title:{preprocessor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,annotate_directive]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location) {
+    std::span<[[keyword,const]] Token> tokens = [[member-variable,m_tokenizer]]->[[member-variable,get_tokens]](location, location, [[keyword,true]]);
+    [[keyword,for]] ([[keyword,int]] i = 0; i [[binary-operator,<]] 2; [[unary-operator,++]]i) {
+        [[keyword,const]] [[class-name,Token]]& token = tokens[[operator,[]]i[[operator,]]];
+        [[member-variable,m_annotator]]->[[function,insert_annotation]]("preprocessor-directive", token.[[member-variable,line]], token.[[member-variable,column]], token.[[member-variable,spelling]].[[function,length]]());
     }
 }
 ```
 This helper will come in handy for implementing the other visitors.
+The last step for `MacroDefined` is to annotate the `#define` directive:
+```cpp title:{preprocessor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,MacroDefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    // Annotate the name of the macro
+    // ...
+    
+    // Annotate macro parameters
+    // ...
+    
+    [[function,annotate_directive]](info->[[function,getDefinitionLoc]]());
+}
+```
 Directives are annotated with the `preprocessor-directive` annotation.
-```text
+```text added:{4}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
-[[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+[[preprocessor-directive,#]][[preprocessor-directive,define]] ASSERT(EXPRESSION, MESSAGE, ...) \
     do { \
-        if (!([[macro-argument,EXPRESSION]])) { \
+        if (!(EXPRESSION)) { \
             std::source_location location = std::source_location::current(); \
-            utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+            utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
         } \
     } while (false)
 ```
@@ -223,16 +256,23 @@ int main() {
 ```
 
 Macro expansions are handled by the `MacroExpands` function:
-```cpp
-void MacroExpands(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range, const clang::MacroArgs* args) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,MacroExpands]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[namespace-name,clang]]::[[class-name,SourceRange]] range, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroArgs]]* args) [[keyword,override]];
 ```
 
 The implementation is straightforward, as we simply need to annotate the macro name.
-```cpp
-clang::SourceLocation location = name.getLocation();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
-m_annotator->insert_annotation("macro-name", line, column, name.getLength());
+```cpp title:{preprocessor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,MacroExpands]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[namespace-name,clang]]::[[class-name,SourceRange]] range, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroArgs]]* args) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = name.[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("macro-name", line, column, name.[[function,getLength]]());
+}
+
 ```
 This applies even if the macro was defined in a different file - we are only checking where it is *used*.
 This allows us to handle built-in macros, such as those provided from a build system or the command line, without requiring the definition to be present in the file we are annotating.
@@ -240,15 +280,15 @@ The `MacroArgs` struct allows for deeper introspection into the structure of the
 This advanced behavior is not necessary for simple syntax highlighting, so we won't be requiring it here.
 
 As with macro definitions, macro references are also annotated with the `macro-name` annotation.
-```text
+```text added:{13}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
-[[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+#define ASSERT(EXPRESSION, MESSAGE, ...) \
     do { \
-        if (!([[macro-argument,EXPRESSION]])) { \
+        if (!(EXPRESSION)) { \
             std::source_location location = std::source_location::current(); \
-            utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+            utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
         } \
     } while (false)
 
@@ -271,16 +311,25 @@ int main() {
 ## Undefining macros
 
 For visiting `#undef` directives, we must override the `MacroUndefined` visitor.
-```cpp
-void MacroUndefined(const clang::Token& name, const clang::MacroDefinition& definition, const clang::MacroDirective* directive) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,MacroUndefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) [[keyword,override]];
 ```
 This directive may refer to a macro that hasn't been defined (in which case the `directive` pointer is null), but for the purposes of syntax highlighting, we just need the name and location of the macro.
 Both of these are retrieved from the `name` parameter directly.
-```cpp
-clang::SourceLocation location = name.getLocation();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
-m_annotator->insert_annotation("macro-name", line, column, name.getLength());
+```cpp title:{preprocessor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,MacroUndefined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDirective]]* directive) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    // Annotate the name of the macro
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = name.[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("macro-name", line, column, name.[[function,getLength]]());
+    
+    // Annotate the '#undef' preprocessor directive
+    [[function,annotate_directive]](location);
+}
 ```
 The `#undef` directive itself is annotated with a call to `annotate_directive`.
 
@@ -306,48 +355,49 @@ One of the most common ways this is done is scoping the actual assertion logic w
 ```
 Conditional compilation directives include `#if`, `#elif`, `#ifdef`, `#ifndef`, `#elifdef`, `#elifndef`, `#else`, and `#endif`.
 Each directive has a corresponding override in the `PPCallbacks` interface:
-```cpp
-void If(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value) override;
-void Elif(clang::SourceLocation location, clang::SourceRange range, ConditionValueKind value, clang::SourceLocation if_location) override;
-void Ifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-void Ifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-void Elifdef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-void Elifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) override;
-void Else(clang::SourceLocation location, clang::SourceLocation if_location) override;
-void Endif(clang::SourceLocation location, clang::SourceLocation if_location) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,If]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[class-name,SourceRange]] range, [[namespace-name,clang]]::[[class-name,PPCallbacks]]::[[enum-name,ConditionValueKind]] value) [[keyword,override]];
+[[keyword,void]] [[function,Elif]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[class-name,SourceRange]] range, [[namespace-name,clang]]::[[class-name,PPCallbacks]]::[[enum-name,ConditionValueKind]] value, [[namespace-name,clang]]::[[class-name,SourceLocation]] if_location) [[keyword,override]];
+[[keyword,void]] [[function,Ifdef]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition) [[keyword,override]];
+[[keyword,void]] [[function,Ifndef]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition) [[keyword,override]];
+[[keyword,void]] [[function,Elifdef]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition) [[keyword,override]];
+[[keyword,void]] [[function,Elifndef]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition) [[keyword,override]];
+[[keyword,void]] [[function,Else]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[class-name,SourceLocation]] if_location) [[keyword,override]];
+[[keyword,void]] [[function,Endif]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[class-name,SourceLocation]] if_location) [[keyword,override]];
 ```
 Annotating directives like `#if`, `#else`, `#elif`, and `#endif` is simple, as these do not reference other macro identifiers.
 We can annotate them with a call to `annotate_directive`.
 
 For identifier-based directives, such as `#ifdef`, `#ifndef`, `#elifdef`, and `#elifndef`, we must also annotate the reference to the macro in the check, as it is not handled by `MacroExpands`.
 For example:
-```cpp
-void Preprocessor::Ifndef(clang::SourceLocation location, const clang::Token& name, const clang::MacroDefinition& definition) {
+```cpp title:{preprocessor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,Ifndef]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition) {
+    // Check to ensure this node originates from the file we are annotating
     // ...
-        
-    // Annotate '#ifndef' preprocessor directive
-    annotate_directive(location);
     
     // Annotate macro name
-    location = name.getLocation();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
-    m_annotator->insert_annotation("macro-name", line, column, name.getLength());
+    location [[function-operator,=]] name.[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("macro-name", line, column, name.[[function,getLength]]());
+    
+    // Annotate '#ifndef' preprocessor directive
+    [[function,annotate_directive]](location);
 }
 ```
 The `location` parameter references the location of the preprocessor directive itself, meaning the location at which to insert the `macro-name` annotation for the macro identifier must instead be retrieved from the token that represents it.
 This pattern applies to the rest of the visitors for identifier-based conditional compilation directives.
 
-```text
+```text added:{4,12,15}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
 [[preprocessor-directive,#]][[preprocessor-directive,ifndef]] [[macro-name,NDEBUG]]
-    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
         do { \
-            if (!([[macro-argument,EXPRESSION]])) { \
+            if (!(EXPRESSION)) { \
                 std::source_location location = std::source_location::current(); \
-                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
             } \
         } while (false)
 [[preprocessor-directive,#]][[preprocessor-directive,else]]
@@ -370,67 +420,78 @@ Still, if this becomes a bigger problem down the road, expect another blog post.
 The `defined` operator is used inside `#if` or `#elif` conditions to test whether a macro has been defined.
 You've likely seen it written like this:
 ```cpp
-#if !defined(NDEBUG)
+[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
 ```
 In fact, the `#ifdef` and `#ifndef` directives are shorthand for `#if defined` and `#if !defined` (respectively), and, with the introduction of C++23, the `#elif defined` and `#elif !defined` constructs were formalized into `#elifdef` and `#elifndef` directives.
 However, `defined` is still widely used.
 
 To annotate this directive, we must override the `Defined` visitor:
-```cpp
-void Defined(const clang::Token& name, const clang::MacroDefinition& definition, clang::SourceRange range) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,Defined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[namespace-name,clang]]::[[class-name,SourceRange]] range) [[keyword,override]];
 ```
 Unfortunately, there is no direct way to get the location of the `defined` keyword itself - only the macro name.
-To get around this limitation, we tokenize the line and look for the token manually:
-```cpp
-std::span<const Token> tokens = m_tokenizer->get_tokens(location, location, true);
-for (const Token& token : tokens) {
-    if (token.spelling == "defined") {
-        m_annotator->insert_annotation("preprocessor-directive", token.line, token.column, token.spelling.length());
+To get around this limitation, we'll just tokenize the line and look for the token manually:
+```cpp line-numbers:{enabled} title:{preprocessor.cpp}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,Defined]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[keyword,const]] [[namespace-name,clang]]::[[class-name,MacroDefinition]]& definition, [[namespace-name,clang]]::[[class-name,SourceRange]] range) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    // Annotate macro name
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = name.[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("macro-name", line, column, name.[[function,getLength]]());
+    
+    // Annotate 'defined' preprocessor directive
+    [[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] [[class-name,Token]]> tokens = [[member-variable,m_tokenizer]]->[[function,get_tokens]](location, location, [[keyword,true]]);
+    [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
+        [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] "defined") {
+            [[member-variable,m_annotator]]->[[function,insert_annotation]]("preprocessor-directive", token.[[member-variable,line]], token.[[member-variable,column]], token.[[member-variable,spelling]].[[function,length]]());
+        }
     }
 }
 ```
-The macro name is annotated in the same way as before:
-```cpp
-clang::SourceLocation location = name.getLocation();
-unsigned line = source_manager.getSpellingLineNumber(location);
-unsigned column = source_manager.getSpellingColumnNumber(location);
-m_annotator->insert_annotation("macro-name", line, column, name.getLength());
-```
+The tokenization approach is the same as what we used for the `annotate_directive()` function.
+Here, however, because we have no guarantee in the position of the token we are searching for, we start from the beginning of the line.
+The macro name is annotated in the same way as in the other preprocessor hooks by using the `getLocation()` function from the node.
+The `defined` directive is annotated as a `preprocessor-directive`, just as before.
+
+In the case of an `#if defined` directive, the `#if` portion will be picked up by the `Preprocessor::If` preprocessor hook, so it is not annotated here.
 
 With this visitor implemented, we are able to annotate both short and long representations of these conditional directives.
-```text
+```text added:{4}
 #include <source_location> // std::source_location
 #include "utils/logging.hpp"
 
-[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
-    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+#if ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
         do { \
-            if (!([[macro-argument,EXPRESSION]])) { \
+            if (!(EXPRESSION)) { \
                 std::source_location location = std::source_location::current(); \
-                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
             } \
         } while (false)
-[[preprocessor-directive,#]][[preprocessor-directive,else]]
+#else
     // ...
-[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+#endif
 ```
 
 ## `#include` statements
 
 Setting up our visitor to handle `#include` directives requires implementing the `InclusionDirective` visitor:
-```cpp
-void InclusionDirective(clang::SourceLocation hash_location, 
-                        const clang::Token& name, 
-                        clang::StringRef filename,
-                        bool angled,
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,InclusionDirective]]([[namespace-name,clang]]::[[class-name,SourceLocation]] hash_location,
+                        [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name,
+                        [[namespace-name,clang]]::[[class-name,StringRef]] filename,
+                        [[keyword,bool]] angled,
                         // Unused parameters...
-                        clang::CharSourceRange,
-                        clang::OptionalFileEntryRef,
-                        clang::StringRef,
-                        clang::StringRef,
-                        const clang::Module*,
-                        bool,
-                        clang::SrcMgr::CharacteristicKind) override;
+                        [[namespace-name,clang]]::[[class-name,CharSourceRange]],
+                        [[namespace-name,clang]]::[[class-name,OptionalFileEntryRef]],
+                        [[namespace-name,clang]]::[[class-name,StringRef]],
+                        [[namespace-name,clang]]::[[class-name,StringRef]],
+                        [[keyword,const]] [[namespace-name,clang]]::[[class-name,Module]]*,
+                        [[keyword,bool]],
+                        [[namespace-name,clang]]::[[namespace-name,SrcMgr]]::[[enum-name,CharacteristicKind]]) [[keyword,override]];
 };
 ```
 This function is set up to handle both `#include` and `#import` directives (for supporting C++20 modules).
@@ -439,48 +500,59 @@ There is a separate `FileNotFound` function that is invoked when the compiler ca
 We can hook into this if we wanted to underline the missing include statement in red, as is typically done in many IDEs.
 
 However, for the purposes of syntax highlighting, most of these parameters can be ignored.
-As before, annotating the `#include` preprocessor directive is handled using the `annotate_directive` function.
-The file being included is annotated as a string:
-```cpp
-std::span<const Token> tokens = m_tokenizer->get_tokens(location, location, true);
-for (const Token& token : tokens) {
-    if (angled) {
-        // Angle brackets are not included in the filename for include statements that use angled brackets (e.g. #include <...>) and must be handled separately
-        if (token.spelling == "<" || token.spelling == ">") {
-            m_annotator->insert_annotation("string", token.line, token.column, 1);
+```cpp line-numbers:{enabled} title:{preprocessor.cpp}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,InclusionDirective]]([[namespace-name,clang]]::[[class-name,SourceLocation]] hash_location, [[keyword,const]] [[namespace-name,clang]]::[[class-name,Token]]& name, [[namespace-name,clang]]::[[class-name,StringRef]] filename, [[keyword,bool]] angled, ...) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    // Annotate file being included
+    [[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] [[class-name,Token]]> tokens = [[member-variable,m_tokenizer]]->[[function,get_tokens]](location, location, [[keyword,true]]);
+    [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
+        [[keyword,if]] (angled) {
+            // Angle brackets are not included in the filename for include statements that use angled brackets (e.g. #include <...>) and must be handled separately
+            [[keyword,if]] (token.[[member-variable,spelling]] [[function-operator,==]] "<" [[binary-operator,||]] token.[[member-variable,spelling]] [[function-operator,==]] ">") {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("string", token.[[member-variable,line]], token.[[member-variable,column]], 1);
+            }
+            [[keyword,else]] [[keyword,if]] (token.[[member-variable,spelling]] [[function-operator,==]] filename) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("string", token.[[member-variable,line]], token.[[member-variable,column]], token.[[member-variable,spelling]].[[function,length]]());
+            }
         }
-        else if (token.spelling == filename) {
-            m_annotator->insert_annotation("string", token.line, token.column, token.spelling.length());
+        [[keyword,else]] {
+            // The filename includes quotes for include statements that use quotes (e.g. #include "...")
+            [[keyword,if]] (token.[[member-variable,spelling]] [[function-operator,==]] ("\"" [[function-operator,+]] filename.[[function,str]]() [[function-operator,+]] "\"")) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("string", token.[[member-variable,line]], token.[[member-variable,column]], token.[[member-variable,spelling]].[[function,length]]());
+            }
         }
     }
-    else {
-        // The filename includes quotes for include statements that use quotes (e.g. #include "...")
-        if (token.spelling == ("\"" + filename.str() + "\"")) {
-            m_annotator->insert_annotation("string", token.line, token.column, token.spelling.length());
-        }
-    }
+    
+    // Annotate '#include' directive
+    [[function,annotate_directive]](location);
 }
 ```
-The `filename` parameter contains the name of the file being included with quotes when processing `#include "..."` statements, but not when processing `#include <...>` statements.
-This must be properly accounted for to handle both types of includes.
-```text
+Both the filename and the braces should be annotated with the `string` tag
+One small caveat is that the `filename` parameter contains the name of the file being included with quotes when processing `#include "..."` statements, but not when processing `#include <...>` statements.
+This must be properly accounted for in order to keep annotations consistent across both types of includes.
+
+As before, annotating the `#include` preprocessor directive is handled using the `annotate_directive` function.
+
+```text added:{1-2}
 [[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,<]][[string,source_location]][[string,>]] // std::source_location
 [[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,"utils/logging.hpp"]]
 
-[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
-    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+#ifndef NDEBUG
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
         do { \
-            if (!([[macro-argument,EXPRESSION]])) { \
+            if (!(EXPRESSION)) { \
                 std::source_location location = std::source_location::current(); \
-                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
             } \
         } while (false)
-[[preprocessor-directive,#]][[preprocessor-directive,else]]
-    #define ASSERT(EXPRESSION, MESSAGE, ...) do { } while (false)
-[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+#else
+    // ...
+#endif
 ```
 
-## `#pragma`
+## `#pragma` directives
 
 `#pragma` directives are used to toggle compiler- or platform-specific features, such as disabling compilation warnings or changing alignment requirements.
 ```text
@@ -502,28 +574,40 @@ This must be properly accounted for to handle both types of includes.
 #endif
 ```
 Clang's `PPCallbacks` interface provides specialized visitors for various `#pragma` directives, such as `PragmaComment` for `#pragma comment` statements, but the simplest way to support them is to treat all pragmas as generic preprocessor directives and override the `PragmaDirective` visitor, which is invoked whenever the preprocessor encounters *any* `#pragma` directive.
-```cpp
-void PragmaDirective(clang::SourceLocation location, clang::PragmaIntroducerKind introducer) override;
+```cpp title:{preprocessor.hpp}
+[[keyword,void]] [[function,PragmaDirective]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[enum-name,PragmaIntroducerKind]] introducer) [[keyword,override]];
 ```
-We use the `annotate_directive` function to target the `#pragma` directive, leaving any pragma-specific tokens unmodified.
-If these require further annotation, it should be done manually.
-```text
+The implementation of this function is straightforward, as we only need to annotate the `#pragma` preprocessor directive itself:
+```cpp title:{preprocessor.hpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Preprocessor]]::[[function,PragmaDirective]]([[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[namespace-name,clang]]::[[enum-name,PragmaIntroducerKind]] introducer) {
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceManager]]& source_manager = [[member-variable,m_context]]->[[function,getSourceManager]]();
+    [[keyword,if]] (source_manager.[[function,getFileID]](location) [[function-operator,!=]] source_manager.[[function,getMainFileID]]()) {
+        [[keyword,return]];
+    }
+    
+    // Annotate '#pragma' directive
+    [[function,annotate_directive]](location);
+}
+```
+As before, is easily achieved with the `annotate_directive()` function.
+Any pragma-specific tokens are purposefully left unmodified due to the wide range of pragmas available.If these require further annotation, it should be done manually.
+```text added:{1}
 [[preprocessor-directive,#]][[preprocessor-directive,pragma]] once
 
-[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,<]][[string,source_location]][[string,>]] // std::source_location
-[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,"utils/logging.hpp"]]
+#include <source_location> // std::source_location
+#include "utils/logging.hpp"
 
-[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
-    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+#if !defined(NDEBUG)
+    #define ASSERT(EXPRESSION, MESSAGE, ...) \
         do { \
-            if (!([[macro-argument,EXPRESSION]])) { \
+            if (!(EXPRESSION)) { \
                 std::source_location location = std::source_location::current(); \
-                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #EXPRESSION, location.file_name(), location.line(), MESSAGE, ##__VA_ARGS__); \
             } \
         } while (false)
-[[preprocessor-directive,#]][[preprocessor-directive,else]]
+#else
     // ...
-[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+#endif
 ```
 
 ## Unsupported directives
@@ -533,3 +617,46 @@ At the time of writing this post, some preprocessor directives, like `#error` an
 - `#line`, which is used to change the current line number (and optionally file name) reported by the compiler for diagnostic or debug information in generated code
 
 Annotating these would require manual parsing of the source file and annotation based on the format of the directive, similar to the tokenization approach we used throughout this series.
+
+## Styling
+
+The final step is to add definitions for the various CSS styles for the different kinds of preprocessor directives:
+```css
+.language-cpp .preprocessor-directive {
+    color: rgb(187, 181, 41);
+}
+.language-cpp .macro-name,
+.language-cpp .macro-argument {
+    color: rgb(149, 144, 51);
+}
+```
+
+```cpp
+[[preprocessor-directive,#]][[preprocessor-directive,pragma]] once
+
+[[preprocessor-directive,#]][[preprocessor-directive,ifndef]] [[macro-name,EXAMPLE_HPP]]
+[[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,EXAMPLE_HPP]]
+
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,<]][[string,source_location]][[string,>]] // std::source_location
+[[preprocessor-directive,#]][[preprocessor-directive,include]] [[string,"utils/logging.hpp"]]
+
+[[preprocessor-directive,#]][[preprocessor-directive,if]] ![[preprocessor-directive,defined]]([[macro-name,NDEBUG]])
+    [[preprocessor-directive,#]][[preprocessor-directive,define]] [[macro-name,ASSERT]]([[macro-argument,EXPRESSION]], [[macro-argument,MESSAGE]], ...) \
+        [[keyword,do]] { \
+            [[keyword,if]] (!([[macro-argument,EXPRESSION]])) { \
+                std::source_location location = std::source_location::current(); \
+                utils::logging::error("Assertion '{}' failed in {}:{}: {}", #[[macro-argument,EXPRESSION]], location.file_name(), location.line(), [[macro-argument,MESSAGE]], ##[[macro-argument,__VA_ARGS__]]); \
+            } \
+        } [[keyword,while]] ([[keyword,false]])
+[[preprocessor-directive,#]][[preprocessor-directive,else]]
+    // ...
+[[preprocessor-directive,#]][[preprocessor-directive,endif]]
+
+[[preprocessor-directive,#]][[preprocessor-directive,endif]] // EXAMPLE_HPP
+```
+
+---
+
+In this post, we implemented a way to hook into the Clang preprocessor and set up visitors for common preprocessor directives such as macro definitions, conditional compilation directives, and file includes
+In the [next post](), we'll wrap up the project with a discussion on how to annotate C++ language keywords.
+Thanks for reading!

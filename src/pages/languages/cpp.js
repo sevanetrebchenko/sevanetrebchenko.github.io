@@ -39,6 +39,7 @@ export default function processLanguageCpp(tokens) {
                 "class-name",
                 "namespace-name",
                 "member-variable",
+                "preprocessor-directive",
                 "macro", "macro-name", "macro-argument",
                 "enum-name",
                 "enum-value",
