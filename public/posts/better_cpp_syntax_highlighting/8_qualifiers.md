@@ -3,7 +3,7 @@ Throughout this series, we've focused on annotating the *targets* of AST nodes â
 However, many of these nodes also contain *qualifiers*, such as namespaces or class names, that appear on type names, static member references, and function calls.
 
 Consider the following example, taken from a previous post in this series:
-```cpp
+```text
 #include <cmath> // std::sqrt
 
 namespace math {
@@ -87,90 +87,88 @@ While the type names and member variables are properly annotated, notice how the
 remain partially unannotated.
 
 In the case of `math::[[class-name,Vector3]]`, you'll notice the qualifying class name is already highlighted.
-That's because our `TypeLoc` visitor handles annotating the referenced type.
-However, namespace qualifiers like `math::` or `std::` aren't being annotated yet.
+That's because our `TypeLoc` visitor handles annotating the type portion of the expression.
+However, namespace qualifiers like `math::` or `std::` are not being annotated yet.
 
-In this post, we'll implement a way to add annotations to namespace, class, and enum qualifiers.
+In this post, we'll implement a generic way to add annotations to namespace, class, and enum qualifiers on types, functions, and other declarations.
 
 ## Annotating qualifiers
 
 To retrieve qualifier information, we'll introduce a new `extract_qualifiers` helper function.
 This function walks up the declaration hierarchy of a given AST node, recording any enclosing namespaces, classes, and enums it encounters along the way.
-We can access this hierarchy through a node's `DeclContext` chain:
-```cpp
-QualifierList extract_qualifiers(const clang::DeclContext* context) {
-    QualifierList qualifiers { };
+As before, we'll access this hierarchy through the `DeclContext` chain of a given node:
+```cpp title:{visitor.cpp} line-numbers:{enabled}
+[[class-name,QualifierList]] [[function,extract_qualifiers]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,DeclContext]]* context) {
+    [[class-name,QualifierList]] [[plain,qualifiers]] { };
     
-    while (context) {
-        if (const clang::NamespaceDecl* n = clang::dyn_cast<clang::NamespaceDecl>(context)) {
-            qualifiers.add_namespace(n->getNameAsString());
+    [[keyword,while]] (context) {
+        [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,NamespaceDecl]]* n = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,NamespaceDecl]]>(context)) {
+            qualifiers.[[function,add_namespace]](n->[[function,getNameAsString]]());
         }
-        else if (const clang::CXXRecordDecl* r = clang::dyn_cast<clang::CXXRecordDecl>(context)) {
-            qualifiers.add_record(r->getNameAsString());
+        [[keyword,else]] [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,CXXRecordDecl]]* r = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,CXXRecordDecl]]>(context)) {
+            qualifiers.[[function,add_record]](r->[[function,getNameAsString]]());
         }
-        else if (const clang::EnumDecl* e = clang::dyn_cast<clang::EnumDecl>(context)) {
-            qualifiers.add_enum(e->getNameAsString());
+        [[keyword,else]] [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,EnumDecl]]* e = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,EnumDecl]]>(context)) {
+            qualifiers.[[function,add_enum]](e->[[function,getNameAsString]]());
         }
         
-        context = context->getParent();
+        context [[binary-operator,=]] context->[[function,getParent]]();
     }
     
-    return qualifiers;
+    [[keyword,return]] qualifiers;
 }
 ```
 The function achieves this by repeatedly calling `getParent()`, which takes one step outward in the declaration hierarchy.
 This continues until the root translation unit, whose parent is null.
 Qualifiers get collected into a `QualifierList`, a lightweight utility class for tracking both the annotation used for each qualifier.
-```cpp
-class QualifierList {
-    public:
-        QualifierList();
-        ~QualifierList() = default;
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,class]] [[class-name,QualifierList]] {
+    [[keyword,public]]:
+        [[function,QualifierList]]();
+        [[function,~QualifierList]]() = [[keyword,default]];
         
-        void add_namespace(const std::string& name);
-        void add_record(const std::string& name);
-        void add_enum(const std::string& name);
+        [[keyword,void]] [[function,add_namespace]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name);
+        [[keyword,void]] [[function,add_record]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name);
+        [[keyword,void]] [[function,add_enum]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name);
         
-        [[nodiscard]] bool contains(const std::string& name) const;
-        [[nodiscard]] const char* get_annotation(const std::string& name) const;
+        [[nodiscard]] [[keyword,bool]] [[function,contains]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name) [[keyword,const]];
+        [[nodiscard]] [[keyword,const]] [[keyword,char]]* [[function,get_annotation]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name) [[keyword,const]];
         
-    private:
-        std::unordered_map<std::string, const char*> m_qualifiers;
+    [[keyword,private]]:
+        [[namespace-name,std]]::[[class-name,unordered_map]]<[[namespace-name,std]]::[[class-name,string]], [[keyword,const]] [[keyword,char]]*> [[member-variable,m_qualifiers]];
 };
 ```
 The `QualifierList` also provides simple lookup functions for determining if a given token is a known qualifier, and retrieving the annotation.
 Its implementation is straightforward, as it just registers the proper annotation for each qualifier encountered:
-```cpp
-void QualifierList::add_namespace(const std::string& name) {
-    m_qualifiers[name] = "namespace-name";
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,void]] [[class-name,QualifierList]]::[[function,add_namespace]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name) {
+    [[member-variable,m_qualifiers]][[operator,[]]name[[operator,]]] [[binary-operator,=]] "namespace-name";
 }
 
-void QualifierList::add_record(const std::string& name) {
-    m_qualifiers[name] = "class-name";
+[[keyword,void]] [[class-name,QualifierList]]::[[function,add_record]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name) {
+    [[member-variable,m_qualifiers]][[operator,[]]name[[operator,]]] [[binary-operator,=]] "class-name";
 }
 
-void QualifierList::add_enum(const std::string& name) {
-    m_qualifiers[name] = "enum-name";
+[[keyword,void]] [[class-name,QualifierList]]::[[function,add_enum]]([[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name) {
+    [[member-variable,m_qualifiers]][[operator,[]]name[[operator,]]] [[binary-operator,=]] "enum-name";
 }
 ```
 
-Once we have the `DeclContext` of a node, we can easily retrieve its qualifiers and apply annotations using the same tokenization pattern we've used in earlier posts:
-```cpp
-QualifierList qualifiers = extract_qualifiers(node->getDeclContext());
-for (const Token& token : m_tokenizer->get_tokens(node->getSourceRange())) {
-    if (qualifiers.contains(token.spelling)) {
-        const char* annotation = qualifiers.get_annotation(token.spelling);
-        m_annotator->insert_annotation(annotation, token.line, token.column, token.spelling.length());
+Once we have the `DeclContext` of a node, we can easily retrieve its qualifiers and apply annotations using the same tokenization pattern we've used in earlier posts.
+To simplify its usage, we'll wrap this logic in a `visit_qualifiers()` helper function:
+```cpp line-numbers:{enabled} title:{visitor.cpp}
+[[keyword,void]] [[class-name,Visitor]]::[[function,visit_qualifiers]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,DeclContext]]* context, [[namespace-name,clang]]::[[class-name,SourceRange]] range) {
+    [[class-name,QualifierList]] qualifiers = [[function,extract_qualifiers]](context);
+    [[keyword,for]] ([[keyword,const]] Token& token : m_tokenizer->get_tokens(range)) {
+        [[keyword,if]] (qualifiers.contains(token.spelling)) {
+            [[keyword,const]] [[keyword,char]]* annotation = qualifiers.get_annotation(token.spelling);
+            m_annotator->insert_annotation(annotation, token.line, token.column, token.spelling.length());
+        }
     }
 }
 ```
 We check each token to see if it matches a known qualifier using the `contains()` function.
 If it does, we use `get_qualifier_type()` to determine the correct annotation - `namespace-name` for namespaces, `class-name` for classes, or `enum-name` for enums.
-
-To simplify its usage, we'll wrap this logic in a `visit_qualifiers()` helper function:
-```cpp
-void Visitor::visit_qualifiers(const clang::DeclContext* context, clang::SourceRange range);
-```
 All that's left is to add calls to this function in visitors for nodes that may contain qualifiers.
 
 ## Adding qualifiers
@@ -195,22 +193,27 @@ int main() {
 ```
 
 To handle this, we'll update the `VisitDeclRefExpr` visitor to annotate qualifiers in addition to the referenced enum constant:
-```cpp
-if (clang::ValueDecl* decl = node->getDecl()) {
-    const std::string& name = decl->getNameAsString();
-    
+```cpp title:{visitor.cpp} line-numbers:{enabled} added:{13}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitDeclRefExpr]]([[namespace-name,clang]]::[[class-name,DeclRefExpr]]* node) {
+    // Check to ensure this node originates from the file we are annotating
     // ...
-    
-    if (const clang::EnumConstantDecl* ec = clang::dyn_cast<clang::EnumConstantDecl>(decl)) {
-        m_annotator->insert_annotation("enum-value", line, column, name.length());
+
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[keyword,if]] ([[namespace-name,clang]]::[[class-name,ValueDecl]]* decl = node->[[function,getDecl]]()) {
+        // ...
     }
-    
-    visit_qualifiers(decl->getDeclContext(), node->getSourceRange());
+
+    [[function,visit_qualifiers]](decl->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
+    [[keyword,return]] [[keyword,true]];
 }
+
 ```
 Note that `visit_qualifiers()` is called unconditionally, as `VisitDeclRefExpr` handles more than just enum constants.
 This way, other nodes (such as references to static class member variables) also get their qualifiers annotated.
-```text
+```text added:{12}
 enum class Level {
     Debug = 0,
     Info,
@@ -246,36 +249,35 @@ The existing `VisitNamespaceAliasDecl` and `VisitUsingDirectiveDecl` visitors on
 Adding a `visit_qualifiers()` call to both visitors ensures that nested namespace qualifiers are annotated correctly.
 
 For namespace aliases:
-```cpp
-bool Visitor::VisitNamespaceAliasDecl(clang::NamespaceAliasDecl* node) {
+```cpp title:{visitor.cpp} line-numbers:{enabled} added:{9}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitNamespaceAliasDecl]]([[namespace-name,clang]]::[[class-name,NamespaceAliasDecl]]* node) {
     // Annotate namespace alias
     // ...
     
     // Annotate aliased namespace(s)
-    const clang::NamedDecl* aliased = node->getAliasedNamespace();
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,NamedDecl]]* aliased = node->[[function,getAliasedNamespace]]();
     // ...
     
-    visit_qualifiers(aliased->getDeclContext(), node->getSourceRange());
-    return true;
+    [[function,visit_qualifiers]](aliased->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Here, we annotate using the `DeclContext` of the namespace being aliased to properly capture the entire namespace chain.
 
-For `using namespace` directives:
-```cpp
-bool Visitor::VisitUsingDirectiveDecl(clang::UsingDirectiveDecl* node) {
+For `using namespace` directives, we annotate any qualifiers on the nominated namespace:
+```cpp title:{visitor.cpp} line-numbers:{enabled} added:{6}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitUsingDirectiveDecl]]([[namespace-name,clang]]::[[class-name,UsingDirectiveDecl]]* node) {
     // Annotate the namespace name itself
-    const clang::NamespaceDecl* n = node->getNominatedNamespace();
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,NamespaceDecl]]* n = node->[[function,getNominatedNamespace]]();
     // ...
     
-    visit_qualifiers(n->getDeclContext(), node->getSourceRange());
-    return true;
+    [[function,visit_qualifiers]](n->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
-Here, we annotate any qualifiers of the nominated namespace.
 
 With both of these visitors updated, qualifiers in namespace directives are now properly handled:
-```text
+```text added:{8,9}
 namespace math {
     namespace utility {
         // ...
@@ -333,25 +335,25 @@ int main() {
 }
 ```
 For annotating qualifiers on function declarations, such as out-of-line class member functions, we'll update the `VisitFunctionDecl` visitor:
-```cpp
-bool Visitor::VisitFunctionDecl(clang::FunctionDecl* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{5}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitFunctionDecl]]([[namespace-name,clang]]::[[class-name,FunctionDecl]]* node) {
     // Annotate function name
     // ...
     
-    visit_qualifiers(node->getDeclContext(), clang::SourceRange(node->getBeginLoc(), node->getTypeSpecEndLoc()));
-    return true;
+    [[function,visit_qualifiers]](node->[[function,getDeclContext]](), [[namespace-name,clang]]::[[function,SourceRange]](node->[[function,getBeginLoc]](), node->[[function,getTypeSpecEndLoc]]()));
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Notice the source range:
 ```cpp
-clang::SourceRange(node->getBeginLoc(), node->getTypeSpecEndLoc())
+[[namespace-name,clang]]::[[class-name,SourceRange]](node->[[function,getBeginLoc]](), node->[[function,getTypeSpecEndLoc]]())
 ```
 This range covers all tokens from the start of the declaration (including qualifiers like `Vector3::`) up to the function name (which we don't care about, since we've already annotated it before).
 This ensures we annotate all relevant qualifiers consistently, even for constructors, destructors, and overloaded operators.
 Using `getTypeSpecStartLoc()` as the start of the range is insufficient in those cases, as constructors and destructors lack a return type.
 
 This approach also properly annotates definitions and forward declarations of namespace-qualified global functions, such as:
-```cpp
+```text
 namespace math {
     float dot(const Vector3& a, const Vector3& b);
 }
@@ -362,37 +364,37 @@ float math::dot(const Vector3& a, const Vector3& b) {
 ```
 
 For explicitly-qualified operator calls, such as `a.Vector3::operator+(b)`, we'll annotate qualifiers in `VisitCXXOperatorCallExpr`:
-```cpp
-bool Visitor::VisitCXXOperatorCallExpr(clang::CXXOperatorCallExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{5}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitCXXOperatorCallExpr]]([[namespace-name,clang]]::[[class-name,CXXOperatorCallExpr]]* node) {
     // Annotate operator name
     // ...
 
-    visit_qualifiers(node->getDirectCallee()->getDeclContext(), clang::SourceRange(node->getBeginLoc(), node->getOperatorLoc()));
-    return true;
+    [[function,visit_qualifiers]](node->[[function,getDirectCallee]]()->[[function,getDeclContext]](), [[namespace-name,clang]]::[[function,SourceRange]](node->[[function,getBeginLoc]](), node->[[function,getOperatorLoc]]()));
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 The range:
 ```cpp
-clang::SourceRange(node->getBeginLoc(), node->getOperatorLoc()))
+[[namespace-name,clang]]::[[function,SourceRange]](node->[[function,getBeginLoc]](), node->[[function,getOperatorLoc]]())
 ```
 ensures that only the relevant tokens before the operator symbol are parsed for qualifiers (e.g. `Vector3::operator`).
 
 All other function calls, including qualified regular function calls, are handled by `VisitCallExpr`:
-```cpp
-bool Visitor::VisitCallExpr(clang::CallExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{5-7}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitCallExpr]]([[namespace-name,clang]]::[[class-name,CallExpr]]* node) {
     // Annotate UnresolvedLookupExpr, DependentScopeDeclRefExpr, CXXDependentScopeMemberExpr, and other calls
     // ...
     
-    if (const clang::Decl* decl = node->getCalleeDecl()) {
-        visit_qualifiers(decl->getDeclContext(), node->getSourceRange());
+    [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,Decl]]* decl = node->[[function,getCalleeDecl]]()) {
+        [[function,visit_qualifiers]](decl->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
     }
 
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 
 With these visitors updated, qualifiers for function declarations and calls are properly annotated:
-```text
+```text added:{16,18,20,22,23,26,34}
 #include <cmath> // std::sqrt
 
 struct Vector3 {
@@ -451,18 +453,20 @@ const math::Vector3 math::Vector3::zero = math::Vector3();
 ```
 
 Static class member definitions are handled by the `VisitVarDecl` visitor:
-```cpp
-bool Visitor::VisitVarDecl(clang::VarDecl* node) {
-    if (node->isStaticDataMember()) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{8-10}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitVarDecl]]([[namespace-name,clang]]::[[class-name,VarDecl]]* node) {
+    // ...
+
+    [[keyword,if]] (node->[[function,isStaticDataMember]]()) {
         // Annotate member variable
         // ...
         
-        std::string type = node->getType().getUnqualifiedType().getAsString();
-        clang::SourceLocation start = node->getTypeSpecStartLoc().getLocWithOffset(type.length());
-        visit_qualifiers(node->getDeclContext(), clang::SourceRange(start, location));
+        [[namespace-name,std]]::[[class-name,string]] type = node->[[function,getType]]().[[function,getUnqualifiedType]]().[[function,getAsString]]();
+        [[namespace-name,clang]]::[[class-name,SourceLocation]] start = node->[[function,getTypeSpecStartLoc]]().[[function,getLocWithOffset]](type.[[function,length]]());
+        [[function,visit_qualifiers]](node->[[function,getDeclContext]](), [[namespace-name,clang]]::[[class-name,SourceRange]](start, location));
     }
 
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Unfortunately, there is no direct way to retrieve the source range of *just* the qualified member name.
@@ -477,7 +481,7 @@ To annotate only the qualifiers on the member name, we'll offset the range by th
 The `getUnqualifiedType()` call ensures that qualifiers like `const`, `volatile`, or references / pointers are stripped away, leaving only the name of the type.
 
 With this approach, we can annotate just the qualifiers on the member:
-```text
+```text added:{11}
 namespace math {
     struct Vector3 {
         static const Vector3 zero;
@@ -494,21 +498,23 @@ Annotations for references to the static member itself are already handled by th
 
 Similarly, we'll update the `VisitCXXTemporaryObjectExpr` visitor to annotate qualifiers for temporary object constructors themselves (such as the initialization of static class member `Vector3::zero` to `math::Vector3()`).
 This is a simple addition to the visitor:
-```cpp
-bool Visitor::VisitCXXTemporaryObjectExpr(clang::CXXTemporaryObjectExpr* node) {
-    if (clang::CXXConstructorDecl* constructor = node->getConstructor()) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{8}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitCXXTemporaryObjectExpr]]([[namespace-name,clang]]::[[class-name,CXXTemporaryObjectExpr]]* node) {
+    // ...
+    
+    [[keyword,if]] ([[namespace-name,clang]]::[[class-name,CXXConstructorDecl]]* constructor = node->[[function,getConstructor]]()) {
         // Annotate constructor call
         // ...
-                
-        visit_qualifiers(constructor->getDeclContext(), node->getSourceRange());
+        
+        [[function,visit_qualifiers]](constructor->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
     }
     
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 This change ensures that annotations are consistent for any namespace or class qualifiers that appear before a temporary constructor call.
 Now, **all** constructor calls (whether for temporary objects or otherwise) have uniform qualifier annotations.
-```text
+```text added:{10}
 namespace math {
     struct Vector3 {
         static const Vector3 zero;
@@ -534,23 +540,23 @@ struct Derived : public Base {
     }
 };
 ```
-We can modify `VisitMemberExpr` to annotate the qualifier when present:
-```cpp
-bool Visitor::VisitMemberExpr(clang::MemberExpr* node) {
+We'll modify `VisitMemberExpr` to annotate the qualifier when present:
+```cpp line-numbers:{enabled} titler:{visitor.cpp} added:{5-7}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitMemberExpr]]([[namespace-name,clang]]::[[class-name,MemberExpr]]* node) {
     // Annotate member variable
     // ...
 
-    if (node->hasQualifier()) {
-        visit_qualifiers(member->getDeclContext(), node->getSourceRange());
+    [[keyword,if]] (node->[[function,hasQualifier]]()) {
+        [[function,visit_qualifiers]](member->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
     }
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 The `hasQualifier()` check ensures we only process nodes that explicitly include a qualifier.
 This avoids unnecessary work for standard member accesses without qualifiers.
 
 With the visitor updated, qualifiers on member accesses are properly annotated:
-```text
+```text added:{7}
 struct Base {
     float value;
 };
@@ -565,7 +571,7 @@ struct Derived : public Base {
 ### Types
 
 `TypeLoc` nodes represent type references in variable declarations, function parameters and return values, template arguments, and more.
-With our current visitor setup, adding qualifier annotations for these types requires only a few small tweaks.
+With our current visitor setup, we can add qualifier annotations for these types with only a few small tweaks.
 Take the `RecordTypeLoc` case as an example:
 ```cpp
 clang::SourceLocation location;
@@ -593,32 +599,24 @@ While this is a viable strategy, it is completely overkill.
 Instead, we can tokenize *backwards* from the type name, annotating qualifiers while walking to the beginning of the qualified type expression.
 This avoids any unnecessary work and isolates exactly what we need.
 
-To achieve this, we extend the `Tokenizer` with iterators:
-```cpp
-[[nodiscard]] std::vector<Token>::const_iterator begin() const;
-[[nodiscard]] std::vector<Token>::const_iterator end() const;
-[[nodiscard]] std::vector<Token>::const_iterator at(clang::SourceLocation location) const;
-```
-`at()` retrieves an iterator to the token at a given `SourceLocation`, using the same logic as `get_tokens()` to retrieve the first token of the range.
-
-With this, we can implement this incremental traversal logic in a new `visit_qualifiers` helper:
-```cpp
-void Visitor::visit_qualifiers(const clang::DeclContext* context, clang::SourceLocation location, bool forward) {
-    QualifierList qualifiers = extract_qualifiers(context);
-    auto start = m_tokenizer->at(location);
-    for (auto it = start; it != m_tokenizer->begin(); forward ? forward ? ++it : --it) {
+We can employ the use of the iterator functions from the `Tokenizer` to implement this incremental traversal logic in a new `visit_qualifiers` helper:
+```cpp title:{visitor.cpp} line-numbers:{enabled}
+[[keyword,void]] [[class-name,Visitor]]::[[function,visit_qualifiers]]([[keyword,const]] [[namespace-name,clang]]::[[class-name,DeclContext]]* context, [[namespace-name,clang]]::[[class-name,SourceLocation]] location, [[keyword,bool]] forward) {
+    [[class-name,QualifierList]] qualifiers = [[function,extract_qualifiers]](context);
+    [[keyword,auto]] start = [[member-variable,m_tokenizer]]->[[member-variable,at]](location);
+    [[keyword,for]] ([[keyword,auto]] it [[binary-operator,=]] start; it [[binary-operator,!=]] [[member-variable,m_tokenizer]]->[[member-variable,begin]](); forward [[unary-operator,?]] [[unary-operator,++]]it [[unary-operator,:]] [[unary-operator,--]]it) {
         // First token is the type name itself
-        if (it == start) {
-            continue;
+        [[keyword,if]] (it [[binary-operator,==]] start) {
+            [[keyword,continue]];
         }
         
-        const Token& token = *it;
+        [[keyword,const]] [[class-name,Token]]& token = [[function,*]]it;
         
-        if (qualifiers.contains(token.spelling)) {
-            m_annotator->insert_annotation(qualifiers.get_annotation(token.spelling), token.line, token.column, token.spelling.length());
+        [[keyword,if]] (qualifiers.[[function,contains]](token.[[member-variable,spelling]])) {
+            [[member-variable,m_annotator]]->[[function,insert_annotation]](qualifiers.[[function,get_annotation]](token.[[member-variable,spelling]]), token.[[member-variable,line]], token.[[member-variable,column]], token.[[member-variable,spelling]].[[function,length]]());
         }
-        else if (token.spelling != "::") {
-            break;
+        [[keyword,else]] [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,!=]] "::") {
+            [[keyword,break]];
         }
     }
 }
@@ -627,16 +625,19 @@ While the current token is a known qualifier or a `::` separator, we know we are
 As soon as this condition is no longer true, we know we've reached the end.
 
 Annotating qualifiers on `TypeLoc` nodes is now trivial:
-```cpp
-bool Visitor::VisitTypeLoc(clang::TypeLoc node) {
+```cpp title:{visitor.cpp} line-numbers:{enabled} added:{7-9}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitTypeLoc]]([[namespace-name,clang]]::[[class-name,TypeLoc]] node) {
+    [[keyword,const]] [[namespace,clang]]::[[class-name,DeclContext]]* context = [[keyword,nullptr]];
+    [[namespace-namen,clang]]::[[class-name,SourceLocation]] location;
+    
     // Annotate type name
     // ...
     
-    if (context) {
-        visit_qualifiers(context, location, false);
+    [[keyword,if]] (context) {
+        [[function,visit_qualifiers]](context, location, [[keyword,false]]);
     }
     
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 
@@ -680,47 +681,50 @@ To support this, we'll extend the `VisitConceptSpecializationExpr`, `VisitRequir
 
 The `VisitConceptSpecializationExpr` visitor already handles annotating the concept name itself.
 We'll extend this function to also annotate any namespace or class qualifiers as well:
-```cpp
-bool Visitor::VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{7}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitConceptSpecializationExpr]]([[namespace-name,clang]]::[[class-name,ConceptSpecializationExpr]]* node) {
+    [[namespace-name,clang]]::[[class-name,NamedDecl]]* decl = node->[[function,getFoundDecl]]();
+    
     // Annotate concept name
     // ...
-        
-    visit_qualifiers(decl->getDeclContext(), node->getSourceRange());
-    return true;
+    
+    [[function,visit_qualifiers]](decl->[[function,getDeclContext]](), node->[[function,getSourceRange]]());
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 
 The `VisitRequiresExpr` visitor is responsible for annotating trailing type constraints within requires expressions, such as:
 ```cpp
-std::same_as<decltype(std::end(container))>;
+[[namespace-name,std]]::[[concept,same_as]]<[[keyword,decltype]]([[namespace-name,std]]::[[function,end]](container))>;
 ```
 Similarly, we'll update this visitor to also annotate qualifiers in addition to the concept name:
-```cpp
-bool Visitor::VisitRequiresExpr(clang::RequiresExpr* node) {
-    clang::SourceLocation location = node->getLocation();
-    
-    for (const clang::concepts::Requirement* r : node->getRequirements()) {
-        if (const clang::concepts::ExprRequirement* er = clang::dyn_cast<clang::concepts::ExprRequirement>(r)) {
-            // Annotate constraint name
-            // ...
-            
-            clang::SourceLocation location = constraint->getConceptNameLoc();
-            
-            clang::DeclContext* context = constraint->getFoundDecl()->getDeclContext();
-            const clang::Expr* expr = er->getExpr();
-            if (expr) {
-                visit_qualifiers(context, location, false);
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{12-15}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitRequiresExpr]]([[namespace-name,clang]]::[[class-name,RequiresExpr]]* node) {
+    [[keyword,for]] ([[keyword,const]] [[namespace-name,clang]]::[[namespace-name,concepts]]::[[class-name,Requirement]]* r : node->[[function,getRequirements]]()) {
+        [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[namespace-name,concepts]]::[[class-name,ExprRequirement]]* er = clang::dyn_cast<[[namespace-name,clang]]::[[namespace-name,concepts]]::[[class-name,ExprRequirement]]>(r)) {
+            [[keyword,const]] [[namespace-name,clang]]::[[namespace-name,concepts]]::[[class-name,ExprRequirement]]::[[class-name,ReturnTypeRequirement]]& rtr = er->[[function,getReturnTypeRequirement]]();
+            [[keyword,if]] (rtr.[[function,isTypeConstraint]]()) {
+                [[keyword,const]] [[namespace-name,clang]]::[[class-name,TypeConstraint]]* constraint = rtr.[[function,getTypeConstraint]]();
+                [[namespace-name,clang]]::[[class-name,SourceLocation]] location = constraint->[[function,getConceptNameLoc]]();
+                
+                // Annotate constraint name
+                // ...
+                
+                [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,Expr]]* expr = er->[[function,getExpr]]()) {
+                    [[namespace-name,clang]]::[[class-name,DeclContext]]* context = constraint->[[function,getFoundDecl]]()->[[function,getDeclContext]]();
+                    [[function,visit_qualifiers]](context, location, [[keyword,false]]);
+                }
             }
         }
     }
 
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 This uses the `visit_qualifiers()` overload we implemented in the previous section.
 Alternatively, a range-based approach works just as well:
 ```cpp
-visit_qualifiers(context, clang::SourceRange(expr->getEndLoc(), location));
+[[function,visit_qualifiers]](context, [[namespace-name,clang]]::[[function,SourceRange]](expr->[[function,getEndLoc]](), location));
 ```
 This annotates tokens from the end of the requires expression to type name of the constraint:
 ```text
@@ -731,30 +735,30 @@ This annotates tokens from the end of the requires expression to type name of th
 The standard guarantees that only one type constraint may appear in a trailing requirement, so this approach is equally viable.
 
 For constraints on template parameters, we'll update `VisitTemplateTypeParmDecl`:
-```cpp
-bool Visitor::VisitTemplateTypeParmDecl(clang::TemplateTypeParmDecl* node) {
+```cpp line-numbers:{enabled} title:{visitor.cpp} added:{11,12}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitTemplateTypeParmDecl]]([[namespace-name,clang]]::[[class-name,TemplateTypeParmDecl]]* node) {
     // Annotate template parameter
     // ...
     
-    if (const clang::TypeConstraint* constraint = node->getTypeConstraint()) {
-        const clang::NamedDecl* decl = constraint->getNamedConcept();
-        if (decl) {
+    [[keyword,if]] ([[keyword,const]] [[namespace-name,clang]]::[[class-name,TypeConstraint]]* constraint = node->[[function,getTypeConstraint]]()) {
+        [[keyword,const]] [[namespace-name,clang]]::[[class-name,NamedDecl]]* decl = constraint->[[function,getNamedConcept]]();
+        [[keyword,if]] (decl) {
             // Annotate concept name
             // ...
             
-            clang::SourceLocation location = constraint->getConceptNameLoc();
-            visit_qualifiers(decl->getDeclContext(), location, false);
+            [[namespace-name,clang]]::[[class-name,SourceLocation]] location = constraint->[[function,getConceptNameLoc]]();
+            [[function,visit_qualifiers]](decl->[[function,getDeclContext]](), location, [[keyword,false]]);
         }
     }
     
-    return true;
+    [[keyword,return]] [[keyword,true]];
 }
 ```
 Clang doesn't expose the full source range for the constraint, only allowing the location of the type name itself.
 However, since type constraints on template parameters function structurally identical to types, we can employ the reverse-tokenization approach for this case as well.
 
 With these visitors updated, qualifiers in concept contexts are now properly annotated:
-```text
+```text added:{10,12,18,26}
 #include <concepts> // std::same_as
 #include <iterator> // std::begin, std::end
 
@@ -790,6 +794,10 @@ For now, such cases will require manual annotation.
 
 ---
 
-This post does not provide an exhaustive implementation for all AST nodes that may contain qualifiers.
+In this post, we implemented a generic way to annotate keywords across a variety of different contexts.
+Note that this was not intended to provide exhaustive handling for all AST nodes that may contain qualifiers.
 Many of these cases were discovered incrementally while working through real-world examples, so it's likely that additional nodes or edge cases exist that aren't covered here.
 Fortunately, the `visit_qualifiers()` functions are designed to be reusable and easy to integrate into new visitors as new and unhandled cases arise.
+
+In the next post, we'll hook into the Clang preprocessor to annotate preprocessor directives such as file includes, macro definitions, and conditional compilation directives.
+Thanks for reading!

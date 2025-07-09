@@ -994,6 +994,15 @@ It then iterates through the tokens until it encounters one that begins after `e
 The resulting `std::span` contains a view of all tokens that overlap the given range.
 If `start` or `end` does not align with a token boundary, any tokens that straddle the range - either starting before but extending past `start`, or starting before but continuing past `end` - are also included.
 
+Finally, we'll also extend the `Tokenizer` with iterator support:
+```cpp title:{tokenizer.hpp}
+[[nodiscard]] std::vector<Token>::const_iterator Tokenizer::begin() const;
+[[nodiscard]] std::vector<Token>::const_iterator Tokenizer::end() const;
+[[nodiscard]] std::vector<Token>::const_iterator Tokenizer::at(clang::SourceLocation location) const;
+```
+The `at()` function returns the nearest token at the given `SourceLocation` using the same logic as `get_tokens()`.
+The underlying implementation of these functions simply returns at iterator to the beginning, one past the end, or the token corresponding to the requested location, respectively.
+
 The `Annotator` and `Tokenizer` are added as member variables of the `ASTFrontendAction` class.
 Not all annotations we are interested are handled by the `ASTFrontendAction`.
 In this case, we'll need to ability to pass references to the `Annotator` and `Tokenizer` around so that annotations are inserted into the same resulting file.
