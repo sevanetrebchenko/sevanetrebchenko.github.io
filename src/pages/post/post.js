@@ -197,7 +197,7 @@ function IC(props) {
 }
 
 function CodeBlock(props) {
-    let { className, children, options, title, added, removed, hidden, highlighted } = props;
+    let { className, children, options, title, added, removed, modified, highlighted, hidden } = props;
     if (!children) {
         return;
     }
@@ -219,6 +219,7 @@ function CodeBlock(props) {
     added = added ? added.split(",").map(Number) : [];
     removed = removed ? removed.split(",").map(Number) : [];
     hidden = hidden ? hidden.split(",").map(Number) : [];
+    modified = modified ? modified.split(",").map(Number) : []
     highlighted = highlighted ? highlighted.split(",").map(Number) : [];
     options = JSON.parse(options);
 
@@ -315,6 +316,9 @@ function CodeBlock(props) {
                 symbol = '-';
                 override = 'removed';
             }
+            else if (modified.includes(i + 1)) {
+                override = 'modified';
+            }
             else if (highlighted.includes(i + 1)) {
                 override = 'highlighted';
             }
@@ -331,7 +335,10 @@ function CodeBlock(props) {
             }
         }
         else {
-            if (highlighted.includes(i + 1)) {
+            if (modified.includes(i + 1)) {
+                override = 'modified';
+            }
+            else if (highlighted.includes(i + 1)) {
                 override = 'highlighted';
             }
 
@@ -456,6 +463,7 @@ function parseCodeBlockMetadata() {
             let added = [];
             let removed = [];
             let hidden = [];
+            let modified = [];
             let highlighted = [];
             let lineCount = -1; // -1 means show all lines
             let useLineNumbers = false;
@@ -492,6 +500,16 @@ function parseCodeBlockMetadata() {
                 }
             }
 
+            // Modified lines are specified with the modified:{[range]} metadata tag
+            // These lines show up with a yellow background
+            {
+                const regexp = /\bmodified\b:{([-,\d\s]+)}/;
+                const match = regexp.exec(meta);
+                if (match) {
+                    modified.push(...rangeParser(match[1]));
+                }
+            }
+
             // Highlighted lines are specified with the highlighted:{[range]} metadata tag
             // These lines show up with a blue TODO: ? background
             {
@@ -499,7 +517,6 @@ function parseCodeBlockMetadata() {
                 const match = regexp.exec(meta);
                 if (match) {
                     highlighted.push(...rangeParser(match[1]));
-
                 }
             }
 
@@ -546,6 +563,7 @@ function parseCodeBlockMetadata() {
                     title: title,
                     added: added.join(","),
                     removed: removed.join(","),
+                    modified: modified.join(","),
                     highlighted: highlighted.join(","),
                     hidden: hidden.join(","),
                 },

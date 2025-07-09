@@ -81,6 +81,22 @@
             "last_modified_time": "2025-07-08T08:41:53.729Z"
         },
         {
+            "title": "Better C++ Syntax Highlighting - Part 7: Types",
+            "abstract": "",
+            "tags": [
+                "c",
+                "c++",
+                "python",
+                "javascript",
+                "programming",
+                "website",
+                "clang"
+            ],
+            "date": "02-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/7_types.md",
+            "last_modified_time": "2025-07-08T08:41:53.729Z"
+        },
+        {
             "title": "Better C++ Syntax Highlighting - Part 10: Qualifiers",
             "abstract": "",
             "tags": [

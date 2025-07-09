@@ -254,6 +254,10 @@ div[class*="language-"] .overlay:hover {
     background-color: rgb(88, 49, 49);
 }
 
+.modified {
+    background-color: rgb(75, 74, 54);
+}
+
 .highlighted {
     background-color: rgb(45, 74, 88);
     width: 100%;

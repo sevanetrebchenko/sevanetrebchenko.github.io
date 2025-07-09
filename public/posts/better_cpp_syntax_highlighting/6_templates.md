@@ -57,36 +57,53 @@ And corresponding AST:
 ## Template declarations
 
 Template declarations are represented by several node types:
-- `ClassTemplateDecl` for primary class templates,
-- `ClassTemplatePartialSpecializationDecl` for partial specializations,
-- `ClassTemplateSpecializationDecl` for explicit specializations, and
-- `TemplateTypeParmDecl` for template parameters
+- [`ClassTemplateDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplateDecl.html) for primary class templates,
+- [`ClassTemplatePartialSpecializationDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplatePartialSpecializationDecl.html) for partial specializations,
+- [`ClassTemplateSpecializationDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplateSpecializationDecl.html) for explicit specializations, and
+- `[TemplateTypeParmDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1TemplateTypeParmDecl.html) for template parameters
 
 We don’t actually need to define new visitors for the template class declarations themselves.
-Each `ClassTemplateDecl`, `ClassTemplatePartialSpecializationDecl`, and `ClassTemplateSpecializationDecl` node contains a nested `CXXRecordDecl` representing the underlying class — which is already handled by our existing `VisitCXXRecordDecl` visitor.
+Each `ClassTemplateDecl`, `ClassTemplatePartialSpecializationDecl`, and `ClassTemplateSpecializationDecl` node contains a nested `CXXRecordDecl` representing the underlying class.
+This is already handled by our existing `VisitCXXRecordDecl` visitor.
 
 However, we do need to annotate template parameters, which are represented by `TemplateTypeParmDecl` nodes.
 The visitor signature looks like this:
-```cpp
-bool VisitTemplateTypeParmDecl(clang::TemplateTypeParmDecl* node);
+```cpp title:{visitor.hpp}
+[[keyword,bool]] [[function,VisitTemplateTypeParmDecl]]([[namespace-name,clang]]::[[class-name,TemplateTypeParmDecl]]* node);
 ```
 And implementation:
-```cpp
+```cpp title:{visitor.hpp} line-numbers:{enabled}
 bool Visitor::VisitTemplateTypeParmDecl(clang::TemplateTypeParmDecl* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
     
     const std::string& name = node->getNameAsString();
+    
+    
     unsigned line = source_manager.getSpellingLineNumber(location);
     unsigned column = source_manager.getSpellingColumnNumber(location);
 
     m_annotator->insert_annotation("class-name", line, column, name.length());
     return true;
 }
+
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitTemplateTypeParmDecl]]([[namespace-name,clang]]::[[class-name,TemplateTypeParmDecl]]* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+
+    [[namespace-name,std]]::[[class-name,string]] name = node->[[function,getNameAsString]]();
+    
+    [[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("class-name", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
+}
 ```
 Template parameters represent types and are annotated with `class-name`.
 This works for both template functions and class declarations:
-```cpp
+```text added"{1,2,4,5,7,12}
 template <typename [[class-name,T]]>
 void print(const [[class-name,T]]& value);
 
@@ -127,7 +144,7 @@ template <Container T>
 void print(const T& container);
 ```
 And corresponding AST:
-```text
+```text show-lines:{35}
 |-ConceptDecl 0x2076bca2e88 <example.cpp:4:1, line:13:1> line:5:9 Container
 | |-TemplateTypeParmDecl 0x2076bca2de0 <line:4:11, col:20> col:20 referenced typename depth 0 index 0 T
 | `-RequiresExpr 0x2076bca3eb8 <line:5:21, line:13:1> 'bool'
@@ -210,24 +227,38 @@ And corresponding AST:
 ```
 
 Concept-related declarations and expressions are represented by several node types:
-- `ConceptDecl` for concept definitions, and
-- `ConceptSpecializationExpr` for concept constraints used in templates.
+- [`ConceptDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ConceptDecl.html) for concept definitions, and
+- [`ConceptSpecializationExpr` nodes](https://clang.llvm.org/doxygen/classclang_1_1ConceptSpecializationExpr.html) for concept constraints used in templates.
 
 We’ll need to annotate both the concept declarations and any uses of concepts as constraints.
 
-## Concepts
-
+## Concept declarations
 Concept declarations are represented by `ConceptDecl` nodes.
 
-We annotate both the concept declarations and any uses of concepts as constraints using the same structure we've seen for other visitors:
-```cpp
-bool Visitor::VisitConceptDecl(clang::ConceptDecl* node) {
+We'll annotate concept declarations and any uses of concepts as constraints using the same structure we've seen for other visitors:
+```cpp title:{visitor.cpp} line-numbers:{enabled}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitConceptDecl]]([[namespace-name,clang]]::[[class-name,ConceptDecl]]* node) {
     // Check to ensure this node originates from the file we are annotating
     // ...
-    const std::string& name = node->getNameAsString();
-    unsigned line = source_manager.getSpellingLineNumber(location);
-    unsigned column = source_manager.getSpellingColumnNumber(location);
     
+    [[keyword,const]] [[namespace-name,std]]::[[class-name,string]]& name = node->[[function,getNameAsString]]();
+    
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,SourceLocation]]& location = node->[[function,getLocation]]();
+    [[keyword,unsigned]] line = source_manager.[[function,getSpellingLineNumber]](location);
+    [[keyword,unsigned]] column = source_manager.[[function,getSpellingColumnNumber]](location);
+
+    [[member-variable,m_annotator]]->[[function,insert_annotation]]("concept", line, column, name.[[function,length]]());
+    [[keyword,return]] [[keyword,true]];
+}
+```
+
+
+bool Visitor::VisitConceptSpecializationExpr(clang::ConceptSpecializationExpr* node) {
+    // ...
+    const std::string& name = node->getNamedConcept()->getNameAsString();
+    unsigned line = source_manager.getSpellingLineNumber(node->getConceptNameLoc());
+    unsigned column = source_manager.getSpellingColumnNumber(node->getConceptNameLoc());
+
     m_annotator->insert_annotation("concept", line, column, name.length());
     return true;
 }
