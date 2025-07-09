@@ -123,14 +123,15 @@ struct MyStruct {
 };  
 
 MyStruct a;
-struct MyStruct b;  // Elaborated type reference
+struct MyStruct b;
 
 template <typename C>
 void print(const C& container) {
-    typename C::const_iterator it = container.begin();  // Elaborated type reference
+    typename C::const_iterator it = container.begin();
     // ...
 }
 ```
+In this example, the `struct MyStruct b;` and `typename C::const_iterator it = container.begin();` declarations are both considered `Elaborated` nodes.
 Why does this exist?
 Clang models this explicitly to preserve how the type was written in the source code, which is useful for a number of reasons:
 - Distinguishing user intent (e.g. disambiguating dependent type names in templates)
@@ -144,6 +145,7 @@ As a result, we only need to handle concrete `TypeLoc` nodes, such as those refe
 ## Enum types
 
 The first concrete `TypeLoc` node we will handle is `EnumTypeLoc`, which represents references to enum types.
+We'll add this to our `VisitTypeLoc` visitor:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,EnumTypeLoc]] e = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,EnumTypeLoc]]>()) {
     location [[function-operator,=]] e.[[function,getNameLoc]]();
@@ -186,6 +188,7 @@ int main() {
 ## `Record` nodes
 
 Next, we’ll handle references to classes, structs, and unions, all of which fall under `RecordTypeLoc` nodes.
+We'll add a case to handle this to our `VisitTypeLoc` visitor:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,RecordTypeLoc]] r = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,RecordTypeLoc]]>()) {
     location [[function-operator,=]] node.[[function,getBeginLoc]]();
@@ -198,7 +201,7 @@ Next, we’ll handle references to classes, structs, and unions, all of which fa
 ```
 There are considered types, so we'll use the default `class-name` annotation.
 
-However, there is a problem with the output from this visitor that is not readily apparent at first glance:
+However, there is a problem with the output from this change that is not readily apparent at first glance: constructor calls (like `Vector()` on line 6) are incorrectly annotated as types.
 ```text added:{2,6,9} line-numbers:{enabled}
 struct Vector {
     static const [[class-name,Vector]] zero;
@@ -212,7 +215,6 @@ int main() {
     // ...
 }
 ```
-Constructor calls like `Vector()` on line 6 are incorrectly annotated as types.
 
 This is not an issue with Clang, nor with the `TypeLoc` visitor itself - in the AST, constructor calls appear as `CXXConstructExpr` nodes that wrap a `RecordTypeLoc`.
 Semantically, however, constructor calls should be annotated as function calls, not types.
@@ -258,7 +260,7 @@ We can take advantage of this ordering and track the current parent node ourselv
 }
 ```
 `Expr` is a subclass of `Stmt`, so there is no separate traversal function.
-This requires a simple addition to our visitor:
+Supporting this requires a simple addition of a member to our visitor to keep track of the parents of the current node:
 ```cpp title:{visitor.hpp}
 [[namespace-name,std]]::[[class-name,vector]]<[[namespace-name,clang]]::[[class-name,DynTypedNode]]> [[member-variable,m_parents]];
 ```
@@ -305,7 +307,7 @@ int main() {
 
 Next, we'll handle type aliases.
 Both `typedef` declarations and modern `using` aliases are referenced by the `TypedefTypeLoc` node.
-We'll handle both of these types using the same structure as before:
+We'll handle these types using the same structure as before:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,TypedefTypeLoc]] t = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,TypedefTypeLoc]]>()) {
     location [[function-operator,=]] node.[[function,getBeginLoc]]();
@@ -342,6 +344,7 @@ int main() {
 }
 ```
 The underlying type for an alias can be anything, but the alias itself is annotated as a `class-name` to maintain consistency with how other type references are treated.
+Typedef and `using` declarations were handled by a visitor from a previous post.
 
 ## Templates
 
@@ -354,7 +357,7 @@ Specifically, we'll cover:
 - [`DependentNameTypeLoc` nodes](https://clang.llvm.org/doxygen/classclang_1_1DependentNameTypeLoc.html) for unresolved, dependent type names in template contexts.
 
 For this section, we'll use a slightly expanded example building on our earlier post about templates:
-```cpp
+```text
 #include <concepts> // std::same_as
 #include <iterator> // std::begin, std::end
 #include <vector> // std::vector
@@ -398,7 +401,7 @@ The visitor itself follows the same structure we're used to:
 }
 ```
 The name of the template parameter is retrieved from its underlying `TemplateTypeParmDecl` using the `getDecl()` function.
-As with other type references, the template parameter is annotated as a `class-name`.
+As with other type references, references to template parameters are annotated with the `class-name` tag.
 ```text added:{6,12,16}
 #include <concepts> // std::same_as
 #include <iterator> // std::begin, std::end
@@ -483,13 +486,13 @@ int main() {
 The final `TypeLoc` node we’ll cover is `DependentNameTypeLoc`, which represents type names that cannot be fully resolved at parse time due to their dependency on an unknown type parameter.
 These nodes are typically encountered in template or concept contexts.
 A good example of this comes from the `Container` concept in our earlier snippet, specifically this requirement:
-```cpp
-[[keyword,typename]] [[class-name,T]]::[[class-name,value_type]];
+```text
+typename T::value_type;
 ```
 In this case, `T::value_type` cannot be resolved until the concept is instantiated with a concrete type, so Clang models it as a `DependentNameTypeLoc`.
 This extends into template contexts as well.
 
-The annotation of `DependentNameTypeLoc` nodes follows the same structure as before:
+Supporting `DependentNameTypeLoc` nodes follows the same structure as before:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,DependentNameTypeLoc]] dn = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,DependentNameTypeLoc]]>()) {
     location [[function-operator,=]] dn.[[function,getNameLoc]]();
@@ -527,3 +530,14 @@ int main() {
     print(v2);
 }
 ```
+
+We don't need to add any new CSS styles to support the changes made in this section, as all the annotations added in this section use styles that have already been defined.
+The implementation of the `VisitTypeLoc` visitor is (purposefully) not complete - there are significantly more `TypeLoc` nodes than what we added support for.
+However, extending the function to handle these is straightforward.
+
+---
+
+In this post, we added support for annotating type references across a variety of contexts.
+This is a big improvement for syntax highlighting due to how frequently they appear in C++ source code.
+In the [next post](), we'll shift our focus to annotating qualifiers that appear on types, function calls, and other declarations.
+Thanks for reading!
