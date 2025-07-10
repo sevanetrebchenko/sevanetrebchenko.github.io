@@ -332,29 +332,36 @@ int [[function,main]]() {
 
 `CallExpr` nodes represent function calls.
 As before, we'll annotate the function name of each call with the `function` tag.
+```cpp title:{visitor.cpp} line-numbers:{enabled}
+[[keyword,bool]] [[class-name,Visitor]]::[[function,VisitCallExpr]]([[namespace-name,clang]]::[[class-name,CallExpr]]* node) {
+    // Check to ensure this node originates from the file we are annotating
+    // ...
+    
+    [[keyword,const]] [[namespace-name,clang]]::[[class-name,FunctionDecl]]* function = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,FunctionDecl]]>(node->[[function,getCalleeDecl]]());
+    [[namespace-name,std]]::[[class-name,string]] name = function->[[function,getNameAsString]]();
+    
+    [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : [[member-variable,m_tokenizer]]->[[member-variable,get_tokens]](node->[[function,getSourceRange]]())) {
+        [[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
+            [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] name) {
+                [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", token.[[member-variable,line]], token.[[member-variable,column]], name.[[function,length]]());
+                [[keyword,break]];
+            }
+        }
+    }
 
-We can retrieve the function name from the underlying declaration:
-```cpp title:{visitor.cpp}
-[[keyword,const]] [[namespace-name,clang]]::[[class-name,FunctionDecl]]* function = [[namespace-name,clang]]::[[function,dyn_cast]]<[[namespace-name,clang]]::[[class-name,FunctionDecl]]>(ptr);
-[[namespace-name,std]]::[[class-name,string]] name = function->[[function,getNameAsString]]();
+    [[keyword,return]] [[keyword,true]];
+}
 ```
-We get the function declaration through `getCalleeDecl()` and extract its name using `getNameAsString()`.
+
+We can retrieve the function name from the underlying declaration, which we get through `getCalleeDecl()`.
 Unlike other AST nodes, `CallExpr` does not provide direct access to the function name's location in the source.
 The `getBeginLoc()` function returns the location of the fully-qualified function call, including any namespace and/or class qualifiers.
 ```cpp
 // This approach won't work for qualified calls like math::Point::distance()
 [[namespace-name,clang]]::[[class-name,SourceLocation]] location = node->[[function,getBeginLoc]](); // Points to 'math', not 'distance'
 ```
-Instead, we tokenize the function call's source range and annotate only the token matching the function's name:
-```cpp title:{visitor.cpp}
-[[namespace-name,std]]::[[class-name,span]]<[[keyword,const]] [[class-name,Token]]> tokens = [[member-variable,m_tokenizer]]->[[function,get_tokens]](node->[[function,getSourceRange]]());
-[[keyword,for]] ([[keyword,const]] [[class-name,Token]]& token : tokens) {
-    [[keyword,if]] (token.[[member-variable,spelling]] [[binary-operator,==]] name) {
-        [[member-variable,m_annotator]]->[[function,insert_annotation]]("function", token.[[member-variable,line]], token.[[member-variable,column]], name.[[function,length]]());
-        [[keyword,break]];
-    }
-}
-```
+To work around this, we'll tokenize the function call's source range and annotate only the token matching the function's name.
+
 This approach elegantly handles arbitrarily qualified function calls.
 ```text added:{17,39,49}
 // Template specialization
