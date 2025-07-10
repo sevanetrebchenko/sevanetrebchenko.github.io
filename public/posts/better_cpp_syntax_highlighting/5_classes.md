@@ -816,7 +816,7 @@ using [[class-name,Position]] = Vector3;
 ---
 
 We've added support for annotating class declarations, static and class member variable declarations and references, constructor initializer lists, and type aliases.
-In the [next post](), we'll take a closer look at annotating template class / function declarations and template parameters. 
+In the [next post](), we'll take a closer look at annotating classes, functions, and parameters in template contexts.
 We will also revisit some of our existing visitors and add support for C++20 concepts.
 
 Thanks for reading!

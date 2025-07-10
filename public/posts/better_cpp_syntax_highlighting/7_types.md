@@ -533,7 +533,7 @@ int main() {
 
 We don't need to add any new CSS styles to support the changes made in this section, as all the annotations added in this section use styles that have already been defined.
 The implementation of the `VisitTypeLoc` visitor is (purposefully) not complete - there are significantly more `TypeLoc` nodes than what we added support for.
-However, extending the function to handle these is straightforward.
+However, extending the visitor to handle new `TypeLoc` nodes is straightforward.
 
 ---
 
