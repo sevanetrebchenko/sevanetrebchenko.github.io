@@ -43,9 +43,8 @@ function Header(props) {
                 <span onClick={onClick}>BACK</span>
             </div>
             <div className="title">
-                {title}
-            </div>
-            <div className="metadata">
+                <span>{title}</span>
+                <div className="metadata">
                 <span>
                     {
                         `Published ${publishedDate.toLocaleString('default', {
@@ -55,8 +54,8 @@ function Header(props) {
                         })}`
                     }
                 </span>
-                <div className="separator"></div>
-                <span>
+                    <div className="separator"></div>
+                    <span>
                     {
                         `Last revised ${lastModifiedDate.toLocaleString('default', {
                             month: 'long',
@@ -68,6 +67,7 @@ function Header(props) {
                         })}`
                     }
                 </span>
+                </div>
             </div>
         </div>
     );
@@ -92,8 +92,7 @@ function tokenize(token, types = []) {
                     content: temp[i],
                     types: ["plain"]
                 });
-            }
-            else if (temp[i].length > 1) {
+            } else if (temp[i].length > 1) {
                 // Tokens that are broken up should still reference the same types as before
                 tokenized.push({
                     content: temp[i],
@@ -734,7 +733,7 @@ export default function Post(props) {
         <div className="post">
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
             <div className="body">
-                <SectionHeaders markdownRef={markdownRef}></SectionHeaders>
+                {/*<SectionHeaders markdownRef={markdownRef}></SectionHeaders>*/}
                 <div className="content" ref={markdownRef}>
                     <Content components={components}></Content>
                 </div>
