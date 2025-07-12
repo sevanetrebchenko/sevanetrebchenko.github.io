@@ -1,6 +1,6 @@
 
-import React, {Fragment, useState} from "react";
-import {useLocation, useParams} from "react-router-dom";
+import React, {Fragment, useEffect, useState} from "react";
+import {useLocation, useNavigate, useParams, useSearchParams} from "react-router-dom";
 
 // Components
 import Sidebar from "./sidebar"
@@ -11,13 +11,26 @@ import Search from "./search";
 import "./landing.css"
 
 function Paginate(props) {
+    const location = useLocation();
+    const navigate  = useNavigate();
+
+    const queryParams = new URLSearchParams(location.search);
+    const initialPage = parseInt(queryParams.get("page"), 10);
+
     const {posts, postsPerPage} = props;
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(!isNaN(initialPage) && initialPage > 0 ? initialPage : 1);
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
 
     // Determine which posts should be shown on this page
     const startIndex = (currentPage - 1) * postsPerPage;
     const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
+
+    useEffect(() => {
+        // Preserve any other query params if you like:
+        const params = new URLSearchParams(location.search);
+        params.set("page", currentPage);
+        navigate(`${location.pathname}?${params.toString()}`, { replace: false });
+    }, [currentPage, location.pathname, location.search, navigate]);
 
     const navigateToPage = (page) => {
         if (page < 1 || page > totalNumPages) {
