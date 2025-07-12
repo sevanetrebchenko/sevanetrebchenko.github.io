@@ -152,7 +152,7 @@ function Footer() {
                     window.location.href = 'https://www.youtube.com/@sevanetrebchenko';
                 }}/>
             </div>
-            <span className="copyright">Copyright © 2024 Seva Netrebchenko</span>
+            <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
         </div>
     );
 }
