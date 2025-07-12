@@ -117,7 +117,9 @@ function Archive(props) {
                             // Reset the page number on when archive changes
                             const params = new URLSearchParams(searchParams.toString());
                             params.set("page", "1");
-                            navigateTo(`${path}?${params.toString()}`, { replace: true });
+
+                            const target = selected ? `/?${params}` : `/${path}?${params}`;
+                            navigateTo(target, { replace: true });
                         };
 
                         return (

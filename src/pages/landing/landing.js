@@ -1,6 +1,6 @@
 
-import React, {Fragment} from "react";
-import {useParams, useSearchParams} from "react-router-dom";
+import React, {Fragment, useEffect} from "react";
+import {useOutletContext, useParams, useSearchParams} from "react-router-dom";
 
 // Components
 import Sidebar from "./sidebar"
@@ -12,8 +12,18 @@ import "./landing.css"
 
 function Paginate(props) {
     const [searchParams, setSearchParams] = useSearchParams();
-    const page = parseInt(searchParams.get("page"), 10);
-    const currentPage = !isNaN(page) && page > 0 ? page : 1;
+
+    useEffect(() => {
+        const page = parseInt(searchParams.get("page"), 10);
+        if (isNaN(page) || page < 1) {
+            // Add page to the URL on initial load
+            const params = new URLSearchParams(searchParams);
+            params.set("page", "1");
+            setSearchParams(params, { replace: false });
+        }
+    }, []);
+
+    const currentPage = parseInt(searchParams.get("page"), 10);
 
     const {posts, postsPerPage} = props;
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
