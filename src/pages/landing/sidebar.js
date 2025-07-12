@@ -17,7 +17,7 @@ function Header() {
         searchParams.set("page", "1");
         setSearchParams(searchParams, { replace: true });
 
-        navigateTo("/"); // Go to landing
+        navigateTo(`/?${searchParams}`); // Go to landing
     }
 
     return (
