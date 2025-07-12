@@ -1,6 +1,8 @@
 
 .post {
     margin: 0 auto;
+    overflow-y: scroll;
+    height: 100vh;
 
     font-family: "Noto Serif", serif;
     font-weight: 300;

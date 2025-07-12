@@ -1,6 +1,6 @@
 
-import React, {Fragment, useEffect, useState} from "react";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import React, {Fragment} from "react";
+import {useParams, useSearchParams} from "react-router-dom";
 
 // Components
 import Sidebar from "./sidebar"
@@ -9,47 +9,27 @@ import Search from "./search";
 
 // Stylesheets
 import "./landing.css"
-import {useGlobalState} from "../../index";
 
 function Paginate(props) {
-    const location = useLocation();
-    const navigateTo  = useNavigate();
-    const [state, setGlobalState] = useGlobalState();
-
-    // Parse initial page from URL, if it exists
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const initialPage = parseInt(params.get("page"), 10);
-
-        if (!isNaN(initialPage) && initialPage > 0) {
-            setGlobalState((prev) => ({
-                ...prev,
-                currentPage: initialPage,
-            }));
-        }
-    }, [location.search, setGlobalState]);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = parseInt(searchParams.get("page"), 10);
+    const currentPage = !isNaN(page) && page > 0 ? page : 1;
 
     const {posts, postsPerPage} = props;
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
 
     // Determine which posts should be shown on this page
-    const startIndex = (state.currentPage - 1) * postsPerPage;
+    const startIndex = (currentPage - 1) * postsPerPage;
     const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
-
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        params.set("page", state.currentPage.toString());
-        navigateTo(`${location.pathname}?${params.toString()}`, { replace: false });
-    }, [state.currentPage]);
 
     const navigateToPage = (page) => {
         if (page < 1 || page > totalNumPages) {
             return;
         }
-        setGlobalState(prev => ({
-            ...prev,
-            currentPage: page,
-        }));
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("page", page.toString());
+        setSearchParams(params, { replace: false });
     };
 
     return (
@@ -60,8 +40,8 @@ function Paginate(props) {
                 ))}
             </div>
             <div className="pagination">
-                <div className={"navigation-button" + (state.currentPage === 1 ? " disabled" : "")}>
-                    <div className="previous" onClick={() => navigateToPage(state.currentPage - 1)}>
+                <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
+                    <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
                         <i className="fa-fw fa-solid fa-chevron-left"></i>
                         <span>Previous</span>
                     </div>
@@ -71,15 +51,15 @@ function Paginate(props) {
                     {[...Array(totalNumPages)].map((_, i) => {
                         const page = i + 1;
                         return (
-                            <span key={page} onClick={() => navigateToPage(page)} className={page === state.currentPage ? "active" : ""}>
+                            <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
                                 {page}
                             </span>
                         );
                     })}
                 </div>
 
-                <div className={"navigation-button align-right" + (state.currentPage === totalNumPages ? " disabled" : "")}>
-                    <div className="next" onClick={() => navigateToPage(state.currentPage + 1)}>
+                <div className={"navigation-button align-right" + ((currentPage === totalNumPages || totalNumPages === 0) ? " disabled" : "")}>
+                    <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
                         <span>Next</span>
                         <i className="fa-fw fa-solid fa-chevron-right"></i>
                     </div>
@@ -90,9 +70,9 @@ function Paginate(props) {
 }
 
 function Posts(props) {
-    const {posts} = props;
+    const { posts } = props;
     const {year, month} = useParams();
-    const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     let filtered = posts;
     if (year) {
@@ -107,10 +87,15 @@ function Posts(props) {
         }
     }
 
-    // Get the search query from the URL
-    const queryParams = new URLSearchParams(location.search);
-    const searchQuery = queryParams.get("q") || "";
-    const tags = queryParams.get("tags") || "";
+    const searchQuery = searchParams.get("q") || "";
+
+    let tags = searchParams.get("tags");
+    if (tags) {
+        tags = tags.split(",");
+    }
+    else {
+        tags = []
+    }
 
     // Filter posts based on the search query
     filtered = filtered.filter(post => {
@@ -123,7 +108,7 @@ function Posts(props) {
 
         // Filter by post categories
         if (tags.length > 0) {
-            if (!tags.split(",").some(tag => post.tags.includes(tag))) {
+            if (!tags.some(tag => post.tags.includes(tag))) {
                 return false;
             }
         }
@@ -141,7 +126,6 @@ function Posts(props) {
 
 export default function Landing(props) {
     const {posts, tags, archive} = props;
-
     return (
         <div className="landing">
             <div className="sidebar-container">

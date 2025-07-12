@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext } from 'react'
+import React from "react";
 import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
@@ -11,31 +10,6 @@ import {get, getPostUrl} from "./utils.js";
 
 // Stylesheets
 import "./index.css"
-
-// Global application state
-const initialState = {
-    selectedTags: [],
-    unselectedTags: [],
-    currentPage: 1
-};
-const GlobalStateContext = createContext(null);
-
-export function GlobalStateProvider(props) {
-    const {children} = props;
-    const [state, setState] = useState(initialState);
-
-    return (
-        <GlobalStateContext.Provider value={[state, setState]}>
-            {children}
-        </GlobalStateContext.Provider>
-    );
-}
-
-// Custom hook to use the global state
-export const useGlobalState = () => {
-    return useContext(GlobalStateContext);
-};
-
 
 function parseDate(date) {
     const [month, day, year] = date.split('-');
@@ -163,8 +137,4 @@ function App() {
 }
 
 // main
-createRoot(document.getElementsByClassName('root')[0]).render(
-    <GlobalStateProvider>
-        <App />
-    </GlobalStateProvider>
-);
+createRoot(document.getElementsByClassName('root')[0]).render(<App />)
