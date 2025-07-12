@@ -1,6 +1,5 @@
 import React from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {useGlobalState} from "../../index";
 import {getPostUrl, sortByName} from "../../utils";
 
 // Stylesheet

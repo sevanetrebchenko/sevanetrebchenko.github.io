@@ -1,5 +1,5 @@
 import React from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
+import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
 import {sortByName} from "../../utils";
 
 // Stylesheet
@@ -95,6 +95,7 @@ function Tags(props) {
 
 function Archive(props) {
     const {archive} = props;
+    const location = useLocation();
     const navigateTo = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -108,7 +109,7 @@ function Archive(props) {
                     Array.from(archive, ([name, count]) => {
                         const parsed = new Date(name);
                         const path = `archive/${parsed.getFullYear()}/${(parsed.getMonth() + 1)}`;
-                        const selected = window.location.pathname === `/${path}`;
+                        const selected = location.pathname === `/${path}`;
 
                         const selectArchive = (e) => {
                             e.preventDefault();
