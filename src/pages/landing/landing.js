@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, {Fragment, useState} from "react";
 import {useLocation, useParams} from "react-router-dom";
 
 // Components
@@ -9,6 +9,59 @@ import Search from "./search";
 
 // Stylesheets
 import "./landing.css"
+
+function Paginate(props) {
+    const {posts, postsPerPage} = props;
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalNumPages = Math.ceil(posts.length / postsPerPage);
+
+    // Determine which posts should be shown on this page
+    const startIndex = (currentPage - 1) * postsPerPage;
+    const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
+
+    const navigateToPage = (page) => {
+        if (page < 1 || page > totalNumPages) {
+            return;
+        }
+        setCurrentPage(page);
+    };
+
+    return (
+        <Fragment>
+            <div className="content">
+                {currentPosts.map((post, i) => (
+                    <Postcard post={post} key={startIndex + i}/>
+                ))}
+            </div>
+            <div className="pagination">
+                <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
+                    <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
+                        <i className="fa-fw fa-solid fa-chevron-left"></i>
+                        <span>Previous</span>
+                    </div>
+                </div>
+
+                <div className="page-numbers">
+                    {[...Array(totalNumPages)].map((_, i) => {
+                        const page = i + 1;
+                        return (
+                            <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
+                                {page}
+                            </span>
+                        );
+                    })}
+                </div>
+
+                <div className={"navigation-button align-right" + (currentPage === totalNumPages ? " disabled" : "")}>
+                    <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
+                        <span>Next</span>
+                        <i className="fa-fw fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </Fragment>
+    );
+}
 
 function Posts(props) {
     const {posts} = props;
@@ -55,13 +108,7 @@ function Posts(props) {
     return (
         <div className="posts">
             <Search></Search>
-            <div className="content">
-                {
-                    filtered.map((post, id) => (
-                        <Postcard post={post} key={id} />
-                    ))
-                }
-            </div>
+            <Paginate posts={filtered} postsPerPage={7}></Paginate>
         </div>
     );
 }
@@ -71,8 +118,12 @@ export default function Landing(props) {
 
     return (
         <div className="landing">
-            <Sidebar tags={tags} archive={archive} />
-            <Posts posts={posts} />
+            <div className="sidebar-container">
+                <Sidebar tags={tags} archive={archive}/>
+            </div>
+            <div className="posts-container">
+                <Posts posts={posts}/>
+            </div>
         </div>
     );
 }

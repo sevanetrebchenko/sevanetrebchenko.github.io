@@ -1,12 +1,13 @@
 
 .sidebar {
+    grid-column: 1 / 2;
+
     display: flex;
     flex: 1;
     flex-direction: column;
     justify-content: right;
 
     padding: 80px;
-
     row-gap: 30px;
 
     min-width: 360px;

@@ -134,6 +134,8 @@ function App() {
     const tags = getTags(content.posts);
     const archive = generateArchive(content.posts);
 
+    console.log(tags);
+
     const routes = [];
 
     // Configure routes for main site pages
