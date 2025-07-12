@@ -32,40 +32,44 @@ function Header() {
 function Tags(props) {
     const {tags} = props;
 
-    const [state, setState] = useGlobalState();
+    const [state, setGlobalState] = useGlobalState();
     const navigateTo = useNavigate();
     const location = useLocation();
 
-    const selectTag = (tag) => (e) => {
+    const handleSelectTag = (tag) => (e) => {
         e.preventDefault();
-        setState({
-            ...state,
+        setGlobalState((prev) => ({
+            ...prev,
+            currentPage: 1,
             // Add tag to selected tags list
-            selectedTags: sortByName([...state.selectedTags, tag]),
+            selectedTags: sortByName([...prev.selectedTags, tag]),
             // Remove tag from unselected tags list
-            unselectedTags: state.unselectedTags.filter(t => t !== tag),
-        });
+            unselectedTags: prev.unselectedTags.filter(t => t !== tag),
+        }));
     }
 
-    const deselectTag = (tag) => (e) => {
+    const handleDeselectTag = (tag) => (e) => {
         e.preventDefault();
-        setState({
-            ...state,
+
+        setGlobalState((prev) => ({
+            ...prev,
+            currentPage: 1,
             // Remove tag from selected tags list
-            selectedTags: state.selectedTags.filter(t => t !== tag),
+            selectedTags: prev.selectedTags.filter(t => t !== tag),
             // Add tag to unselected tags list
-            unselectedTags: sortByName([...state.unselectedTags, tag])
-        });
+            unselectedTags: sortByName([...prev.unselectedTags, tag])
+        }));
     }
 
     const handleClearSelection = (e) => {
         e.preventDefault();
         // Reset global tag state
-        setState({
-            ...state,
+        setGlobalState((prev) => ({
+            ...prev,
+            currentPage: 1,
             selectedTags: [],
-            unselectedTags: sortByName(state.selectedTags.concat(state.unselectedTags))
-        });
+            unselectedTags: sortByName(prev.selectedTags.concat(prev.unselectedTags))
+        }));
     };
 
     useEffect(() => {
@@ -73,12 +77,15 @@ function Tags(props) {
         if (state.selectedTags.length > 0) {
             // Set the tags parameter
             queryParams.set("tags", state.selectedTags.join(","));
-        } else {
-            // Clear only the tags parameter
+        }
+        else {
             queryParams.delete("tags");
         }
+
+        // Page gets reset to 1 when any tags change
+        queryParams.set("page", "1");
         navigateTo(`${location.pathname}?${queryParams.toString()}`);
-    }, [state.selectedTags]);
+    }, [state.selectedTags, location.search]);
 
     return (
         <div className="section">
@@ -95,7 +102,7 @@ function Tags(props) {
                 state.selectedTags.length > 0 && <div className="selected-elements">
                     {
                         state.selectedTags.map((tag) => (
-                            <div className="element selected" onClick={deselectTag(tag)} key={tag}>
+                            <div className="element selected" onClick={handleDeselectTag(tag)} key={tag}>
                                 <span className="name">{tag}</span>
                                 <span className="count">({tags.get(tag)})</span>
                                 <i className="fa-solid fa-xmark fa-fw"></i>
@@ -107,7 +114,7 @@ function Tags(props) {
             <div className="elements">
                 {
                     state.unselectedTags.map((tag) => (
-                        <div className="element" onClick={selectTag(tag)} key={tag}>
+                        <div className="element" onClick={handleSelectTag(tag)} key={tag}>
                             <span className="name">{tag}</span>
                             <span className="count">({tags.get(tag)})</span>
                         </div>
@@ -122,6 +129,7 @@ function Archive(props) {
     const {archive} = props;
     const location = useLocation();
     const navigateTo = useNavigate();
+    const [state, setGlobalState] = useGlobalState();
 
     return (
         <div className="section">
@@ -130,18 +138,24 @@ function Archive(props) {
             </div>
             <div className="elements archive">
                 {
-                    Array.from(archive, ([date, count]) => {
-                        const year = date.getFullYear();
-                        const path = `archive/${year}/${(date.getMonth() + 1)}`;
+                    Array.from(archive, ([name, count]) => {
+                        const parsed = new Date(name);
+                        const path = `archive/${parsed.getFullYear()}/${(parsed.getMonth() + 1)}`;
                         const selected = location.pathname === `/${path}`;
-                        const name = `${date.toLocaleString('default', {month: 'long'})} ${year}`
+
                         const selectArchive = (e) => {
                             e.preventDefault();
 
                             // Keep query params unmodified
-                            const searchParams = new URLSearchParams(location.search);
-                            console.log(path);
-                            navigateTo(selected ? `/?${searchParams.toString()}` : `/${path}?${searchParams.toString()}`, {replace: true});
+                            const queryParams = new URLSearchParams(location.search);
+
+                            // Reset the page number on when archive changes
+                            setGlobalState((prev) => ({
+                                ...prev,
+                                currentPage: 1
+                            }));
+                            queryParams.set("page", "1");
+                            navigateTo(selected ? `/?${queryParams.toString()}` : `/${path}?${queryParams.toString()}`, {replace: true});
                         };
 
                         return (
@@ -181,16 +195,33 @@ function Footer() {
 
 export default function Sidebar(props) {
     const {tags, archive} = props;
-
-    // Load tags into global state once on mount
     const [state, setGlobalState] = useGlobalState();
+    const location = useLocation();
+
     useEffect(() => {
-        setGlobalState({
-            ...state,
-            selectedTags: [],
-            unselectedTags: sortByName(Array.from(tags.keys()))
-        })
-    }, []);
+        const params = new URLSearchParams(location.search);
+        const tagParam = params.get("tags");
+        const pageParam = parseInt(params.get("page"), 10);
+
+        // Pull selected tags from URL (default to empty list)
+        const selected = tagParam ? tagParam.split(",") : [];
+
+        const allTags = Array.from(tags.keys());
+        const unselected = sortByName(
+            allTags.filter(t => !selected.includes(t))
+        );
+
+        // Pull page number from URL (default to 1)
+        const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
+
+        // Merge into global state
+        setGlobalState(prev => ({
+            ...prev,
+            selectedTags: sortByName(selected),
+            unselectedTags: unselected,
+            currentPage: page,
+        }));
+    }, [location.search, tags, setGlobalState]);
 
     return (
         <div className="sidebar">

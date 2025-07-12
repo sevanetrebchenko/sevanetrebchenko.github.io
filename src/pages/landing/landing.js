@@ -9,34 +9,47 @@ import Search from "./search";
 
 // Stylesheets
 import "./landing.css"
+import {useGlobalState} from "../../index";
 
 function Paginate(props) {
     const location = useLocation();
-    const navigate  = useNavigate();
+    const navigateTo  = useNavigate();
+    const [state, setGlobalState] = useGlobalState();
 
-    const queryParams = new URLSearchParams(location.search);
-    const initialPage = parseInt(queryParams.get("page"), 10);
+    // Parse initial page from URL, if it exists
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const initialPage = parseInt(params.get("page"), 10);
+
+        if (!isNaN(initialPage) && initialPage > 0) {
+            setGlobalState((prev) => ({
+                ...prev,
+                currentPage: initialPage,
+            }));
+        }
+    }, [location.search, setGlobalState]);
 
     const {posts, postsPerPage} = props;
-    const [currentPage, setCurrentPage] = useState(!isNaN(initialPage) && initialPage > 0 ? initialPage : 1);
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
 
     // Determine which posts should be shown on this page
-    const startIndex = (currentPage - 1) * postsPerPage;
+    const startIndex = (state.currentPage - 1) * postsPerPage;
     const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
 
     useEffect(() => {
-        // Preserve any other query params if you like:
         const params = new URLSearchParams(location.search);
-        params.set("page", currentPage);
-        navigate(`${location.pathname}?${params.toString()}`, { replace: false });
-    }, [currentPage, location.pathname, location.search, navigate]);
+        params.set("page", state.currentPage.toString());
+        navigateTo(`${location.pathname}?${params.toString()}`, { replace: false });
+    }, [state.currentPage]);
 
     const navigateToPage = (page) => {
         if (page < 1 || page > totalNumPages) {
             return;
         }
-        setCurrentPage(page);
+        setGlobalState(prev => ({
+            ...prev,
+            currentPage: page,
+        }));
     };
 
     return (
@@ -47,8 +60,8 @@ function Paginate(props) {
                 ))}
             </div>
             <div className="pagination">
-                <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
-                    <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
+                <div className={"navigation-button" + (state.currentPage === 1 ? " disabled" : "")}>
+                    <div className="previous" onClick={() => navigateToPage(state.currentPage - 1)}>
                         <i className="fa-fw fa-solid fa-chevron-left"></i>
                         <span>Previous</span>
                     </div>
@@ -58,15 +71,15 @@ function Paginate(props) {
                     {[...Array(totalNumPages)].map((_, i) => {
                         const page = i + 1;
                         return (
-                            <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
+                            <span key={page} onClick={() => navigateToPage(page)} className={page === state.currentPage ? "active" : ""}>
                                 {page}
                             </span>
                         );
                     })}
                 </div>
 
-                <div className={"navigation-button align-right" + (currentPage === totalNumPages ? " disabled" : "")}>
-                    <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
+                <div className={"navigation-button align-right" + (state.currentPage === totalNumPages ? " disabled" : "")}>
+                    <div className="next" onClick={() => navigateToPage(state.currentPage + 1)}>
                         <span>Next</span>
                         <i className="fa-fw fa-solid fa-chevron-right"></i>
                     </div>

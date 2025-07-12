@@ -3,11 +3,13 @@ import {useLocation, useNavigate} from "react-router-dom";
 
 // Stylesheet
 import "./search.css"
+import {useGlobalState} from "../../index";
 
 export default function Search() {
     const location = useLocation();
     const navigateTo = useNavigate();
     const [query, setQuery] = useState("");
+    const [state, setGlobalState] = useGlobalState();
 
     // Initialize the query state based on the URL when the component mounts
     useEffect(() => {
@@ -31,6 +33,12 @@ export default function Search() {
             queryParams.delete("q");
         }
 
+        // Reset the page number on search
+        setGlobalState((prev) => ({
+            ...prev,
+            currentPage: 1
+        }));
+        queryParams.set("page", "1");
         navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }
 
@@ -41,6 +49,13 @@ export default function Search() {
         const queryParams = new URLSearchParams(location.search);
         // Remove only the query string from the URL
         queryParams.delete("q");
+
+        // Reset the page number on search
+        setGlobalState((prev) => ({
+            ...prev,
+            currentPage: 1
+        }));
+        queryParams.set("page", "1");
         navigateTo(`${location.pathname}?${queryParams.toString()}`);
     }
 

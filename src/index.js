@@ -16,6 +16,7 @@ import "./index.css"
 const initialState = {
     selectedTags: [],
     unselectedTags: [],
+    currentPage: 1
 };
 const GlobalStateContext = createContext(null);
 
@@ -113,10 +114,9 @@ function generateArchive(posts) {
             continue;
         }
 
-        if (!archive.has(date)) {
-            archive.set(date, 0);
-        }
-        archive.set(date, archive.get(date) + 1);
+        const year  = post.date.getFullYear();
+        const key = `${date.toLocaleString('default', {month: 'long'})} ${year}`
+        archive.set(key, (archive.get(key) || 0) + 1);
     }
 
     // Sort posts by date published, most recent first
@@ -133,8 +133,6 @@ function App() {
 
     const tags = getTags(content.posts);
     const archive = generateArchive(content.posts);
-
-    console.log(tags);
 
     const routes = [];
 
