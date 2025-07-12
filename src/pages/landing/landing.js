@@ -1,6 +1,6 @@
 
 import React, {Fragment, useEffect, useState} from "react";
-import {useLocation, useNavigate, useParams, useSearchParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 
 // Components
 import Sidebar from "./sidebar"
