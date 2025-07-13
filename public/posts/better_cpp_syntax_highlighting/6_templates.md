@@ -60,7 +60,7 @@ Template declarations are represented by several node types:
 - [`ClassTemplateDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplateDecl.html) for primary class templates,
 - [`ClassTemplatePartialSpecializationDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplatePartialSpecializationDecl.html) for partial specializations,
 - [`ClassTemplateSpecializationDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1ClassTemplateSpecializationDecl.html) for explicit specializations, and
-- `[TemplateTypeParmDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1TemplateTypeParmDecl.html) for template parameters
+- [`TemplateTypeParmDecl` nodes](https://clang.llvm.org/doxygen/classclang_1_1TemplateTypeParmDecl.html) for template parameters
 
 We don’t actually need to define new visitors for the template class declarations themselves.
 Each `ClassTemplateDecl`, `ClassTemplatePartialSpecializationDecl`, and `ClassTemplateSpecializationDecl` node contains a nested `CXXRecordDecl` representing the underlying class.
