@@ -35,11 +35,30 @@ export default function Postcard(props) {
         setSearchParams(params, { replace: false });
     };
 
+    // Post abstracts may contain inline code that should be parsed out
+    const parts = post.abstract.split(/(`[^`]+`)/g);
+
     return (
         <div className="postcard" onClick={handleClick}>
             <div className="abstract">
                 <span className="title">{post.title}</span>
-                <span className="description">{post.abstract}</span>
+                <span className="description">
+                    {
+                        parts.map((part, idx) => {
+                            if (part.startsWith('`') && part.endsWith('`')) {
+                                const code = part.slice(1, -1);
+                                return (
+                                    <span key={idx} className="inline">
+                                      {code}
+                                    </span>
+                                );
+                            }
+                            else {
+                                return <span key={idx}>{part}</span>;
+                            }
+                        })
+                    }
+                </span>
             </div>
             <div className="metadata">
                 <div className="date">
