@@ -1,20 +1,126 @@
 {
     "posts": [
         {
-            "title": "Better C++ Syntax Highlighting",
-            "abstract": "",
+            "title": "Better C++ Syntax Highlighting - Part 1: Introduction",
+            "abstract": "Ever wondered why modern syntax highlighting for browsers struggles with C++? This post introduces a new method for context-aware syntax highlighting for browsers by leveraging Clang's LibTooling API and AST to inject semantic hints into C++ code snippets.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-12-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/1_intro.md",
+            "last_modified_time": "2025-07-14T00:56:15.492Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 2: Enums",
+            "abstract": "Enum definitions and constants can be hard to distinguish in complex C++ code, often going completely overlooked in browser syntax highlighting. This post introduces the basic structure of a visitor for the Clang AST and implements several visitors for annotating enums and their values.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-14-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/2_enums.md",
+            "last_modified_time": "2025-07-14T00:57:25.048Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 3: Namespaces",
+            "abstract": "This post builds on the previous post by adding new AST visitors for namespace declarations, aliases, and `using namespace` directives.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-18-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/3_namespaces.md",
+            "last_modified_time": "2025-07-14T01:18:21.464Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 4: Functions",
+            "abstract": "C++ function come in many forms, each requiring a different approach for proper syntax highlighting. This post covers the implementation of visitors for annotating function declarations, calls, and several kinds of operators, including operator overloads and user-defined literals.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-20-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/4_functions.md",
+            "last_modified_time": "2025-07-14T01:19:01.858Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 5: Classes",
+            "abstract": "Classes in C++ are comprised of many elements: constructors, destructors, class methods, member variables (both static and instance), and (optionally) nested types. This post shows how to implement visitors that traverse and annotate each component of a complex class definition.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-24-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/5_classes.md",
+            "last_modified_time": "2025-07-14T01:20:37.959Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 6: Templates",
+            "abstract": "Templates are ubiquitous in modern C++ code and pose unique challenges for implementing accurate syntax highlighting. This post dives into the intricacies of visiting and annotating template functions, classes, and C++20 concepts.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "06-29-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/6_templates.md",
+            "last_modified_time": "2025-07-14T01:21:36.531Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 7: Types",
+            "abstract": "Earlier posts in this series focused only on the declarations of types. References to types, such as in variable declarations, function parameters, and return statements, often appear as plain text in browser-based syntax highlighters. This post implements a dedicated visitor to annotate these type references, ensuring every type name is styled consistently.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "07-08-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/7_types.md",
+            "last_modified_time": "2025-07-14T01:24:30.528Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 8: Qualifiers",
+            "abstract": "Similar to type names, qualifiers on functions and types (such as namespaces and other class names) are annotated as plain tokens in browser-based syntax highlighters. This post introduces a technique to traverse the qualifier chain of an AST node and addresses the challenges of adding annotations for each qualifier.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "07-10-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/8_qualifiers.md",
+            "last_modified_time": "2025-07-14T01:25:48.095Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 9: Preprocessor",
+            "abstract": "Annotating preprocessor directives requires hooking into Clang's preprocessing stage before the AST is generated. This post explains how to annotate common directives like `#define`, `#include`, and conditional blocks before they’re stripped out of the AST.",
+            "tags": [
+                "c++",
+                "clang",
+                "libtooling"
+            ],
+            "date": "07-12-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/9_preprocessor.md",
+            "last_modified_time": "2025-07-14T01:25:48.090Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
             "tags": [
                 "c",
                 "c++",
-                "python",
-                "javascript",
-                "programming",
-                "website",
-                "clang"
+                "clang",
+                "libtooling",
+                "libclang"
             ],
-            "date": "02-10-2025",
-            "filepath": "/posts/better_cpp_syntax_highlighting.md",
-            "last_modified_time": "2025-03-24T07:07:00.454Z"
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-10T05:17:54.079Z"
         }
     ]
 }
