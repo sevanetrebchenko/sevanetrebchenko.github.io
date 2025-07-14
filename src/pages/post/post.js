@@ -723,8 +723,15 @@ export default function Post(props) {
         loadPostContent(post.filepath);
     }, [post.filepath]);
 
+    const postRef = useRef(null);
+    useEffect(() => {
+        if (postRef.current) {
+            console.log("resetting scroll position");
+            postRef.current.scrollTop = 0;
+        }
+    }, [Content]);
+
     if (Content == null) {
-        console.log("Loading...");
         return;
     }
 
@@ -733,10 +740,8 @@ export default function Post(props) {
         code: CodeBlock,
     }
 
-    console.log("rendering with " + category);
-
     return (
-        <div className="post">
+        <div className="post" ref={postRef}>
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
             <div className="body">
                 {/*<SectionHeaders markdownRef={markdownRef}></SectionHeaders>*/}
