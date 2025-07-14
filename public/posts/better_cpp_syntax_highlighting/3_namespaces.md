@@ -187,6 +187,6 @@ int main() {
 ---
 
 We've added support for annotating namespace declarations, aliases, and `using namespace` directives.
-In the [next post](), we'll take a closer look at annotating functions declarations, definitions, calls, and operators.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 4: Functions"}></LocalLink>, we'll take a closer look at annotating functions declarations, definitions, calls, and operators.
 Thanks for reading!
 

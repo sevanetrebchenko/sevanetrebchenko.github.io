@@ -4,9 +4,10 @@ import RehypeRaw from "rehype-raw";
 import RemarkGFM from "remark-gfm";
 import rangeParser from "parse-numeric-range";
 import processLanguageCpp from "../languages/cpp";
+import { Link } from 'react-router-dom';
 
 import {useNavigate} from "react-router-dom";
-import {get} from "../../utils";
+import {get, getPostUrl} from "../../utils";
 import {compile, run} from "@mdx-js/mdx";
 import * as runtime from 'react/jsx-runtime'
 import { visit } from 'unist-util-visit';
@@ -684,6 +685,11 @@ function Section(props) {
     </div>
 }
 
+function LocalLink(props) {
+    const {text, to} = props;
+    return <Link to={getPostUrl(to)}>{text}</Link>;
+}
+
 export default function Post(props) {
     const {post} = props;
     const [Content, setContent] = useState(null);
@@ -723,7 +729,7 @@ export default function Post(props) {
     }
 
     const components = {
-        IC: IC,
+        LocalLink: LocalLink,
         code: CodeBlock,
     }
 

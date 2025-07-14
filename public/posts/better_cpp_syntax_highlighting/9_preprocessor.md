@@ -658,5 +658,5 @@ The final step is to add definitions for the various CSS styles for the differen
 ---
 
 In this post, we implemented a way to hook into the Clang preprocessor and set up visitors for common preprocessor directives such as macro definitions, conditional compilation directives, and file includes
-In the [next post](), we'll wrap up the project with a discussion on how to annotate C++ language keywords.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 10: Keywords"}></LocalLink>, we'll wrap up the project with a discussion on how to annotate C++ language keywords.
 Thanks for reading!

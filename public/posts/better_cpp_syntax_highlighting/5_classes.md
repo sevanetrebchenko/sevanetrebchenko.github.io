@@ -782,7 +782,7 @@ For this reason, only the implementation of `VisitTypedefDecl` is shown below:
 }
 ```
 Type aliases are annotated with the `class-name` tag.
-The implementation of `VisitTypeAliasDecl` is identical and omitted for brevity, but can be found [here]().
+The implementation of `VisitTypeAliasDecl` is identical and omitted for brevity, but can be found [here](https://github.com/sevanetrebchenko/syntax-highlighter/blob/master/src/visitor.cpp).
 
 With both visitors implemented, `typedef` and `using` declarations are properly annotated:
 ```text added:{24,25}
@@ -816,7 +816,7 @@ using [[class-name,Position]] = Vector3;
 ---
 
 We've added support for annotating class declarations, static and class member variable declarations and references, constructor initializer lists, and type aliases.
-In the [next post](), we'll take a closer look at annotating classes, functions, and parameters in template contexts.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 6: Templates"}></LocalLink>, we'll take a closer look at annotating classes, functions, and parameters in template contexts.
 We will also revisit some of our existing visitors and add support for C++20 concepts.
 
 Thanks for reading!

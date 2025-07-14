@@ -47,7 +47,7 @@ The AST for this snippet looks like this:
 
 ## Enum Declarations
 
-Enums are represented by two node types in the AST: `EnumDecl` for the declaration itself, and `EnumConstantDecl` for each enumerator value.
+Enums are represented by two node types in the AST: an [`EnumDecl` node](https://clang.llvm.org/doxygen/classclang_1_1EnumDecl.html) for the declaration itself, and an [`EnumConstantDecl` node](https://clang.llvm.org/doxygen/classclang_1_1EnumConstantDecl.html) for each enum constant.
 From the `EnumDecl` node above, we can infer that `Level` is declared as an enum class, and that it's underlying type is an int.
 If we had explicitly set this to a type like `unsigned char` or `std::uint8_t`, this would be also reflected in the AST.
 
@@ -205,5 +205,5 @@ int main() {
 ---
 
 We've configured the first (of many!) visitors to handle enum declarations and references to enum constants, and established some common patterns that we'll use throughout this series.
-In the [next post](), we'll expand our tool to annotate namespaces.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 3: Namespaces"}></LocalLink>, we'll expand our tool to annotate namespaces.
 Thanks for reading!

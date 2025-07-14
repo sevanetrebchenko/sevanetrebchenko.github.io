@@ -621,7 +621,7 @@ We use the `getLiteralIdentifer()` function to check if the function declaration
 Using the returned `IdentifierInfo` struct, we can query the name of the operator using the `getName()` function and search for it in the source range of the node.
 
 Unfortunately, there is no direct way to retrieve the location of the operator itself, so we'll resort to manually searching for a token that matches the name of the operator using the tokenization approach.
-One small caveat here is that literal operators are one of the few exceptions of functions that may contain a space in the function name.
+One small caveat here is that literal operators are one of the few exceptions to functions that may contain a space in the function name.
 Names that contain no space (for example `operator""ms`) will combine the quotes with the name of the function into the same token.
 This must also be accounted for so that only the operator name is annotated.
 
@@ -757,5 +757,5 @@ int [[function,main]]() {
 
 We've added support for annotating functions declarations, definitions, calls, and several kinds of operators.
 We also improved the consistency of our syntax highlighting by overriding annotations on functional-style variable initializations.
-In the [next post](), we'll take a deeper look at annotating the different components of classes: declarations, static and class member variables, constructor initializer lists, and type aliases.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 5: Classes"}></LocalLink>, we'll take a deeper look at annotating the different components of classes: declarations, static and class member variables, constructor initializer lists, and type aliases.
 Thanks for reading!

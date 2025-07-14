@@ -799,5 +799,5 @@ Note that this was not intended to provide exhaustive handling for all AST nodes
 Many of these cases were discovered incrementally while working through real-world examples, so it's likely that additional nodes or edge cases exist that aren't covered here.
 Fortunately, the `visit_qualifiers()` functions are designed to be reusable and easy to integrate into new visitors as new and unhandled cases arise.
 
-In the next post, we'll hook into the Clang preprocessor to annotate preprocessor directives such as file includes, macro definitions, and conditional compilation directives.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 9: Preprocessor"}></LocalLink>, we'll hook into the Clang preprocessor to annotate preprocessor directives such as file includes, macro definitions, and conditional compilation directives.
 Thanks for reading!

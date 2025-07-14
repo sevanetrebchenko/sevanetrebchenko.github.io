@@ -3,7 +3,7 @@ In this post, we're finally tackling annotating type references.
 So far, our visitors have only annotated type declarations for classes, structs, enums, templates, etc.
 But what about the places where those types are actually used?
 
-In the Clang AST, `TypeLoc` nodes represent the location where a type appears in the source code.
+In the Clang AST, [`TypeLoc` nodes](https://clang.llvm.org/doxygen/classclang_1_1TypeLoc.html) represent the location where a type appears in the source code.
 By handling `TypeLoc` nodes, we can annotate type references in variable declarations, function parameters and return values, template arguments, and more.
 In some cases, such as base class inheritance chains, `TypeLoc` nodes allow for a much more elegant way of inserting semantic highlighting annotations.
 
@@ -116,7 +116,7 @@ It also makes it easy to extend in the future as we encounter more `TypeLoc` typ
 We've identified several nodes types in the output above, so let's start extending our visitor function to support these.
 
 ## `Elaborated` nodes
-An `ElaboratedTypeLoc` type wraps a keyword (e.g., `struct`, `enum`, etc.), an optional qualifier (e.g., `A::B::`), and the actual type being referred to (known as the "desugared" type).
+An [`ElaboratedTypeLoc` node](https://clang.llvm.org/doxygen/classclang_1_1ElaboratedTypeLoc.html) wraps a keyword (e.g., `struct`, `enum`, etc.), an optional qualifier (e.g., `A::B::`), and the actual type being referred to (known as the "desugared" type).
 ```text
 struct MyStruct {
     // ...
@@ -187,7 +187,7 @@ int main() {
 
 ## `Record` nodes
 
-Next, we’ll handle references to classes, structs, and unions, all of which fall under `RecordTypeLoc` nodes.
+Next, we’ll handle references to classes, structs, and unions, all of which fall under [`RecordTypeLoc` nodes](https://clang.llvm.org/doxygen/classclang_1_1RecordTypeLoc.html).
 We'll add a case to handle this to our `VisitTypeLoc` visitor:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,RecordTypeLoc]] r = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,RecordTypeLoc]]>()) {
@@ -306,7 +306,7 @@ int main() {
 ## Type aliases
 
 Next, we'll handle type aliases.
-Both `typedef` declarations and modern `using` aliases are referenced by the `TypedefTypeLoc` node.
+Both `typedef` declarations and modern `using` aliases are referenced by [`TypedefTypeLoc` nodes](https://clang.llvm.org/doxygen/classclang_1_1TypedefTypeLoc.html).
 We'll handle these types using the same structure as before:
 ```cpp title:{visitor.cpp}
 [[keyword,if]] ([[namespace-name,clang]]::[[class-name,TypedefTypeLoc]] t = node.[[function,getAs]]<[[namespace-name,clang]]::[[class-name,TypedefTypeLoc]]>()) {
@@ -386,7 +386,7 @@ int main() {
 
 ### Template parameters
 
-The `TemplateTypeParmTypeLoc` node references template parameters.
+The [`TemplateTypeParmTypeLoc` node](https://clang.llvm.org/doxygen/classclang_1_1TemplateTypeParmTypeLoc.html) references template parameters.
 Earlier, we added visitors for `ConceptDecl` and `ConceptSpecializationExpr` nodes to handle annotating concept declarations and constrained expressions like the `Container` concept used with `print()`.
 By visiting `TemplateTypeParmTypeLoc` nodes, we can also annotate references to the type parameter `T`, as well as the type itself - both in the unconstrained `template <typename T>` declaration and the constrained `template <Container T>` form.
 
@@ -483,7 +483,7 @@ int main() {
 
 ### Dependent type names
 
-The final `TypeLoc` node we’ll cover is `DependentNameTypeLoc`, which represents type names that cannot be fully resolved at parse time due to their dependency on an unknown type parameter.
+The final `TypeLoc` node we’ll cover is [`DependentNameTypeLoc`](https://clang.llvm.org/doxygen/classclang_1_1DependentNameTypeLoc.html), which represents type names that cannot be fully resolved at parse time due to their dependency on an unknown type parameter.
 These nodes are typically encountered in template or concept contexts.
 A good example of this comes from the `Container` concept in our earlier snippet, specifically this requirement:
 ```text
@@ -539,5 +539,5 @@ However, extending the visitor to handle new `TypeLoc` nodes is straightforward.
 
 In this post, we added support for annotating type references across a variety of contexts.
 This is a big improvement for syntax highlighting due to how frequently they appear in C++ source code.
-In the [next post](), we'll shift our focus to annotating qualifiers that appear on types, function calls, and other declarations.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 8: Qualifiers"}></LocalLink>, we'll shift our focus to annotating qualifiers that appear on types, function calls, and other declarations.
 Thanks for reading!

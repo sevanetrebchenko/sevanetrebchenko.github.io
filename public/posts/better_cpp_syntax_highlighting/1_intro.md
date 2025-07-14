@@ -806,7 +806,7 @@ Newlines and carriage returns are included in the line lengths to ensure offsets
 ### The `annotate()` function
 
 After AST traversal is complete, a call to `annotate()` generates the final annotated file.
-The full source for this function can be viewed [here]().
+The full source for this function can be viewed [here](https://github.com/sevanetrebchenko/syntax-highlighter/blob/master/src/annotator.cpp).
 
 The first step is to sort the annotations by their offsets:
 ```cpp title:{annotator.cpp}
@@ -1010,5 +1010,5 @@ In this case, we'll need to ability to pass references to the `Annotator` and `T
 ---
 
 We've completed the necessary setup to be able to traverse the AST.
-In the [next post](), we'll walk through a few basic visitor implementations to get familiarized with the process of extracting data from and annotating AST nodes.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 2: Enums"}></LocalLink>, we'll walk through a few basic visitor implementations to get familiarized with the process of extracting data from and annotating AST nodes.
 Thanks for reading!

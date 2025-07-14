@@ -546,7 +546,6 @@ A standalone `VisitCXXDependentScopeMemberExpr` visitor catches dependent refere
     [[keyword,return]] [[keyword,true]];
 }
 ```
-The implementation of this function follows closely with the [`CXXMemberExpr` visitor from an earlier post](), as it represents the same thing except in a type-agnostic context.
 Dependent class members are annotated with `member-variable`.
 
 For the sake of this example, let's add a requirement that our `Container` needs to have a public `data` member:
@@ -619,5 +618,5 @@ void print(const T& container);
 ---
 
 In addition to annotating template classes, functions, and parameters, we've added support for annotating concept definitions, specializations, and references to functions and concepts in `requires` clauses.
-In the [next post](), we'll implement adding annotations for type references in variable declarations, function parameters and return values, template arguments, and more.
+In the <LocalLink text={"next post"} to={"Better C++ Syntax Highlighting - Part 7: Types"}></LocalLink>, we'll implement adding annotations for type references in variable declarations, function parameters and return values, template arguments, and more.
 Thanks for reading!
