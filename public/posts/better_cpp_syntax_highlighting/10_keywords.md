@@ -145,7 +145,7 @@ To annotate keywords, we tokenize the source range of each cursor and tag any to
         [[class-name,CXString]] spelling = [[function,clang_getTokenSpelling]](translation_unit, token);
         
         [[class-name,CXSourceLocation]] location = [[function,clang_getTokenLocation]](translation_unit, token);
-        [[keywordm,unsigned]] line, column;
+        [[keyword,unsigned]] line, column;
         [[function,clang_getSpellingLocation]](location, &file, &line, &column, [[keyword,nullptr]]);
         
         [[member-variable,m_annotator]]->[[function,insert_annotation]]("keyword", line, column, [[function,strlen]]([[function,clang_getCString]](spelling)));
