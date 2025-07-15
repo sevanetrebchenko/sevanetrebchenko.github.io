@@ -16,7 +16,7 @@
 
 .post .header {
     display: grid;
-    grid-template-columns: 1fr var(--header) 1fr;
+    grid-template-columns: 1fr 1400px 1fr;
     margin: 0 auto;
 }
 
@@ -95,7 +95,7 @@
 
 .post .body {
     display: grid;
-    grid-template-columns: 1fr var(--width) 1fr;
+    grid-template-columns: 1fr 1400px 1fr;
 
     max-width: 1800px;
     margin: 0 auto;

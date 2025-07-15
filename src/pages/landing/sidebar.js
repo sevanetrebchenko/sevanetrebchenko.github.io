@@ -1,13 +1,18 @@
-import React from "react";
+import React, {Fragment, useState} from "react";
 import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
-import {sortByName} from "../../utils";
+import {isMobile, sortByName} from "../../utils";
 
 // Stylesheet
 import "./sidebar.css"
+import MenuIcon from "../icons";
 
-function Header() {
+function Header(props) {
     const navigateTo = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const { toggleDropdown } = props;
+    const [dropdownActive, setDropdownActive] = useState(false);
+    const mobile = isMobile();
 
     const onClick = (e) => {
         e.preventDefault();
@@ -21,15 +26,27 @@ function Header() {
     }
 
     return (
-        <div className="header" onClick={onClick}>
-            <span className="title">Seva Netrebchenko</span>
-            <span className="description">Software engineer and graphics enthusiast</span>
+        <div className="header-container">
+            <div className="header" onClick={onClick}>
+                <span className="title">Seva Netrebchenko</span>
+                <span className="description">Software engineer and graphics enthusiast</span>
+            </div>
+            {
+                mobile && <div className="dropdown-button" onClick={e => {
+                    setDropdownActive(!dropdownActive);
+                    if (toggleDropdown) {
+                        toggleDropdown();
+                    }
+                }}>
+                    <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
+                </div>
+            }
         </div>
     );
 }
 
 function Tags(props) {
-    const { tags } = props;
+    const {tags} = props;
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Determine selected / unselected tags from the page URL
@@ -159,14 +176,30 @@ function Footer() {
 
 export default function Sidebar(props) {
     const { tags, archive } = props;
+    const [dropdownActive, setDropdownActive] = useState(false);
+    const mobile = isMobile();
     return (
-        <div className="sidebar">
-            <Header></Header>
-            <div className="content">
-                <Tags tags={tags}></Tags>
-                <Archive archive={archive}></Archive>
-            </div>
-            <Footer></Footer>
+        <div className={"sidebar" + (mobile ? " mobile" : "")}>
+            <Header toggleDropdown={e => setDropdownActive(!dropdownActive)}></Header>
+            {
+                mobile ?
+                (
+                    dropdownActive && <div className={"content" + (mobile ? " mobile" : "")}>
+                        <Tags tags={tags}></Tags>
+                        <Archive archive={archive}></Archive>
+                    </div>
+                )
+                :
+                    (
+                        <div className={"content" + (mobile ? " mobile" : "")}>
+                            <Tags tags={tags}></Tags>
+                            <Archive archive={archive}></Archive>
+                        </div>
+                    )
+            }
+            {
+                !mobile && <Footer></Footer>
+            }
         </div>
     );
 }

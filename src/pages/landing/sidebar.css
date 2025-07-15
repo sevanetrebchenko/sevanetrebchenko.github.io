@@ -1,7 +1,5 @@
 
 .sidebar {
-    grid-column: 1 / 2;
-
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -10,28 +8,73 @@
     padding: 80px;
     row-gap: 30px;
 
-    min-width: 360px;
-    max-width: 360px;
+    box-sizing: border-box;
+    max-width: 520px;
+
+    max-height: 100vh;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+
+    z-index: 99;
+}
+.sidebar.mobile {
+    padding: 40px 60px;
+    max-width: unset;
+
+    display: flex;
+    background-color: white;
+    height: 100vh;
 }
 
-.sidebar > .header {
+.sidebar .dropdown {
+    display: flex;
+    align-self: center;
+
+    color: black;
+}
+.sidebar .dropdown i {
+    padding: 24px;
+    font-size: 28px;
+    color: gainsboro;
+}
+
+.sidebar .header-container {
+}
+.sidebar.mobile .header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.sidebar .header-container i {
+    padding: 24px;
+    font-size: 28px;
+    color: gainsboro;
+}
+
+.sidebar > .header-container .header {
     display: flex;
     flex-direction: column;
     row-gap: 10px;
     font-family: "Noto Serif", serif;
     color: black;
 }
-.sidebar > .header:hover {
+.sidebar > .header-container .header.mobile {
+    flex-direction: row;
+    justify-content: space-between;
+}
+.sidebar > .header-container .header:hover {
     cursor: pointer;
 }
 
-.sidebar > .header > .title {
+.sidebar > .header-container .header > .title {
     margin: 0;
     font-weight: 400;
     font-size: 36px;
 }
 
-.sidebar > .header > .description {
+.sidebar > .header-container .header > .description {
     font-size: 18px;
     font-family: "Noto Serif", serif;
     font-weight: 300;

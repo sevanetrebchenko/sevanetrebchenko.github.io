@@ -5,6 +5,5 @@ html, body {
 }
 
 :root {
-    --header: 1400px;
-    --width: 1080px;
+    overflow-y: scroll;
 }

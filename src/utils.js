@@ -1,3 +1,4 @@
+import {useMediaQuery} from "react-responsive";
 
 function getPostUrl(title) {
     // Remove all non-word characters and replace all spaces with -
@@ -26,4 +27,8 @@ async function get(url) {
     });
 }
 
-export { getPostUrl, sortByName, get }
+function isMobile() {
+    return useMediaQuery({ maxWidth: 1200 });
+}
+
+export { getPostUrl, sortByName, get, isMobile }

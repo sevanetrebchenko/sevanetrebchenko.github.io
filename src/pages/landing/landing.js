@@ -1,11 +1,13 @@
 
 import React, {Fragment, useEffect} from "react";
 import {useOutletContext, useParams, useSearchParams} from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
 
 // Components
 import Sidebar from "./sidebar"
 import Postcard from "./postcard";
 import Search from "./search";
+import {isMobile} from "../../utils";
 
 // Stylesheets
 import "./landing.css"
@@ -19,7 +21,7 @@ function Paginate(props) {
             // Add page to the URL on initial load
             const params = new URLSearchParams(searchParams);
             params.set("page", "1");
-            setSearchParams(params, { replace: false });
+            setSearchParams(params, {replace: false});
         }
     }, []);
 
@@ -39,48 +41,60 @@ function Paginate(props) {
 
         const params = new URLSearchParams(searchParams.toString());
         params.set("page", page.toString());
-        setSearchParams(params, { replace: false });
+        setSearchParams(params, {replace: false});
     };
 
     return (
         <Fragment>
             <div className="content">
-                {currentPosts.map((post, i) => (
-                    <Postcard post={post} key={startIndex + i}/>
-                ))}
-            </div>
-            <div className="pagination">
-                <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
-                    <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
-                        <i className="fa-fw fa-solid fa-chevron-left"></i>
-                        <span>Previous</span>
-                    </div>
-                </div>
+                {currentPosts.length > 0 ?
+                    <Fragment>
+                        {currentPosts.map((post, i) => (<Postcard post={post} key={startIndex + i}/>))}
+                        <div className="pagination">
+                            <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
+                                <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
+                                    <i className="fa-fw fa-solid fa-chevron-left"></i>
+                                    <span>Previous</span>
+                                </div>
+                            </div>
 
-                <div className="page-numbers">
-                    {[...Array(totalNumPages)].map((_, i) => {
-                        const page = i + 1;
-                        return (
-                            <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
+                            <div className="page-numbers">
+                                {[...Array(totalNumPages)].map((_, i) => {
+                                    const page = i + 1;
+                                    return (
+                                        <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
                                 {page}
                             </span>
-                        );
-                    })}
-                </div>
+                                    );
+                                })}
+                            </div>
 
-                <div className={"navigation-button align-right" + ((currentPage === totalNumPages || totalNumPages === 0) ? " disabled" : "")}>
-                    <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
-                        <span>Next</span>
-                        <i className="fa-fw fa-solid fa-chevron-right"></i>
-                    </div>
-                </div>
+                            <div className={"navigation-button align-right" + ((currentPage === totalNumPages || totalNumPages === 0) ? " disabled" : "")}>
+                                <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
+                                    <span>Next</span>
+                                    <i className="fa-fw fa-solid fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </Fragment>
+                    :
+                    (
+                        <div className="no-results">
+                            <div className="description">
+                                <span>No results found for </span>
+                                <span className="query">"{searchParams.get("q")}"</span>
+                            </div>
+                        </div>
+                    )
+                }
             </div>
+
         </Fragment>
     );
 }
 
 function Posts(props) {
-    const { posts } = props;
+    const {posts} = props;
     const {year, month} = useParams();
     const [searchParams] = useSearchParams();
 
@@ -102,8 +116,7 @@ function Posts(props) {
     let tags = searchParams.get("tags");
     if (tags) {
         tags = tags.split(",");
-    }
-    else {
+    } else {
         tags = []
     }
 
@@ -126,8 +139,10 @@ function Posts(props) {
         return true;
     });
 
+    const mobile = isMobile();
+
     return (
-        <div className="posts">
+        <div className={"posts" + (mobile ? " mobile" : "")}>
             <Search></Search>
             <Paginate posts={filtered} postsPerPage={7}></Paginate>
         </div>
@@ -136,14 +151,11 @@ function Posts(props) {
 
 export default function Landing(props) {
     const {posts, tags, archive} = props;
+    const mobile = isMobile();
     return (
-        <div className="landing">
-            <div className="sidebar-container">
-                <Sidebar tags={tags} archive={archive}/>
-            </div>
-            <div className="posts-container">
-                <Posts posts={posts}/>
-            </div>
+        <div className={"landing" + (mobile ? " mobile" : "")}>
+            <Sidebar tags={tags} archive={archive}/>
+            <Posts posts={posts}/>
         </div>
     );
 }

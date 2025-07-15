@@ -1,11 +1,40 @@
 
 .landing {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-}
-.landing .spacer {
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: visible;
+    position: absolute;
     width: 100%;
-    background-color: #eeeeee;
+}
+.landing::before {
+    content: "";
+    position: fixed;
+    top: 0; right: 50%; bottom: 0; left: 0;
+    background: white;
+    z-index: -1;
+}
+.landing::after {
+    content: "";
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 50%;
+    background: #eeeeee;
+    z-index: -1;
+}
+
+.landing.mobile::before {
+    background: #eeeeee;
+}
+.landing.mobile::after {
+    background: #eeeeee;
+}
+
+.landing.mobile {
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .landing .spacer.left {
@@ -21,34 +50,68 @@
     flex-direction: column;
     background-color: #eeeeee;
 
+    box-sizing: border-box;
+
     padding: 80px;
-    min-width: 1080px;
-    max-width: 1080px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.landing .posts.mobile {
+    width: unset;
+    padding: 36px;
+    box-sizing: border-box;
 }
 
 .landing .posts .content {
     display: flex;
     flex-direction: column;
     row-gap: 40px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.landing .posts .content .no-results {
+    display: flex;
+    justify-content: center;
+    font-family: "Noto Serif", serif;
+    color: gray;
+    font-size: 18px;
+}
+.landing .posts .content .no-results .description {
+    font-weight: 300;
+}
+.landing .posts .content .no-results .description .query {
+    font-weight: 500;
 }
 
 .landing .sidebar-container {
     display: flex;
     flex-direction: row;
     justify-content: end;
+    background-color: white;
+    height: 100vh;
+}
+
+.landing .bumper {
+    display: flex;
+    width: 100%;
+}
+
+.landing .sidebar-container.mobile {
+    justify-content: start;
+    flex-direction: row;
+    height: unset;
 }
 
 .landing .posts-container {
     display: flex;
-    background: #eeeeee;
-    grid-column: 2 / 4;
-
-    height: 100vh;
-    overflow-y: scroll;
+}
+.landing .posts-container.mobile {
 }
 
 .landing .pagination {
-    padding: 64px;
+    padding: 20px 64px 0;
 
     font-family: "JetBrains Mono", monospace;
     font-weight: 300;
@@ -60,6 +123,10 @@
 
     align-items: baseline;
     user-select: none;
+}
+
+.landing.mobile .pagination {
+    padding: 0 36px 0;
 }
 
 .landing .pagination .page-numbers {
