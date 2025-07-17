@@ -1,10 +1,16 @@
 import React, {Fragment, useState} from "react";
 import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
-import {isMobile, sortByName} from "../../utils";
+import {
+    getResponsiveClassName,
+    sortByName,
+    mobileDisplayWidthThreshold,
+    tabletDisplayWidthThreshold
+} from "../../utils";
 
 // Stylesheet
 import "./sidebar.css"
 import MenuIcon from "../icons";
+import {useMediaQuery} from "react-responsive";
 
 function Header(props) {
     const navigateTo = useNavigate();
@@ -12,7 +18,6 @@ function Header(props) {
 
     const { toggleDropdown } = props;
     const [dropdownActive, setDropdownActive] = useState(false);
-    const mobile = isMobile();
 
     const onClick = (e) => {
         e.preventDefault();
@@ -25,6 +30,9 @@ function Header(props) {
         navigateTo(`/?${searchParams}`); // Go to landing
     }
 
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
     return (
         <div className="header-container">
             <div className="header" onClick={onClick}>
@@ -32,7 +40,7 @@ function Header(props) {
                 <span className="description">Software engineer and graphics enthusiast</span>
             </div>
             {
-                mobile && <div className="dropdown-button" onClick={e => {
+                isMobile && <div className="dropdown-button" onClick={e => {
                     setDropdownActive(!dropdownActive);
                     if (toggleDropdown) {
                         toggleDropdown();
@@ -177,28 +185,31 @@ function Footer() {
 export default function Sidebar(props) {
     const { tags, archive } = props;
     const [dropdownActive, setDropdownActive] = useState(false);
-    const mobile = isMobile();
+
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
     return (
-        <div className={"sidebar" + (mobile ? " mobile" : "")}>
+        <div className={getResponsiveClassName("sidebar", isMobile, isTablet)}>
             <Header toggleDropdown={e => setDropdownActive(!dropdownActive)}></Header>
             {
-                mobile ?
+                isMobile ?
                 (
-                    dropdownActive && <div className={"content" + (mobile ? " mobile" : "")}>
+                    dropdownActive && <div className={getResponsiveClassName("content", isMobile, isTablet)}>
                         <Tags tags={tags}></Tags>
                         <Archive archive={archive}></Archive>
                     </div>
                 )
                 :
                     (
-                        <div className={"content" + (mobile ? " mobile" : "")}>
+                        <div className={getResponsiveClassName("content", isMobile, isTablet)}>
                             <Tags tags={tags}></Tags>
                             <Archive archive={archive}></Archive>
                         </div>
                     )
             }
             {
-                !mobile && <Footer></Footer>
+                !isMobile && <Footer></Footer>
             }
         </div>
     );

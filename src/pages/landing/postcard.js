@@ -1,9 +1,10 @@
 import React from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {getPostUrl, sortByName} from "../../utils";
+import {getPostUrl, getResponsiveClassName, sortByName} from "../../utils";
 
 // Stylesheet
 import "./postcard.css"
+import {useMediaQuery} from "react-responsive";
 
 export default function Postcard(props) {
     const {post} = props;
@@ -38,8 +39,11 @@ export default function Postcard(props) {
     // Post abstracts may contain inline code that should be parsed out
     const parts = post.abstract.split(/(`[^`]+`)/g);
 
+    const isMobile = useMediaQuery({ maxWidth: 480 });
+    const isTablet = useMediaQuery({ minWidth: 481, maxWidth: 1280 });
+
     return (
-        <div className="postcard" onClick={handleClick}>
+        <div className={getResponsiveClassName("postcard", isMobile, isTablet)} onClick={handleClick}>
             <div className="abstract">
                 <span className="title">{post.title}</span>
                 <span className="description">
@@ -72,7 +76,7 @@ export default function Postcard(props) {
                             if (selectedTags.includes(tag)) {
                                 classNames.push("selected");
                             }
-                            return <span key={id} className={classNames.join(" ")} onClick={(e) => handleTagClick(tag, e)}>#{tag}</span>
+                            return <span key={id} className={classNames.join(" ")} onClick={(e) => (isMobile || isTablet ? null : handleTagClick(tag, e))}>#{tag}</span>
                         })
                     }
                 </div>

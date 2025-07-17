@@ -1,13 +1,13 @@
 
-import React, {Fragment, useEffect} from "react";
-import {useOutletContext, useParams, useSearchParams} from "react-router-dom";
-import { useMediaQuery } from "react-responsive";
+import React, { Fragment, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import {useMediaQuery} from "react-responsive";
 
 // Components
 import Sidebar from "./sidebar"
 import Postcard from "./postcard";
 import Search from "./search";
-import {isMobile} from "../../utils";
+import {getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold} from "../../utils";
 
 // Stylesheets
 import "./landing.css"
@@ -44,13 +44,16 @@ function Paginate(props) {
         setSearchParams(params, {replace: false});
     };
 
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
     return (
         <Fragment>
-            <div className="content">
+            <div className={getResponsiveClassName("content", isMobile, isTablet)}>
                 {currentPosts.length > 0 ?
                     <Fragment>
                         {currentPosts.map((post, i) => (<Postcard post={post} key={startIndex + i}/>))}
-                        <div className="pagination">
+                        <div className={getResponsiveClassName("paginate", isMobile, isTablet)}>
                             <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
                                 <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
                                     <i className="fa-fw fa-solid fa-chevron-left"></i>
@@ -139,10 +142,19 @@ function Posts(props) {
         return true;
     });
 
-    const mobile = isMobile();
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
+    const classNames = ["posts"]
+    if (isMobile) {
+        classNames.push("mobile");
+    }
+    else if (isTablet) {
+        classNames.push("tablet");
+    }
 
     return (
-        <div className={"posts" + (mobile ? " mobile" : "")}>
+        <div className={classNames.join(" ")}>
             <Search></Search>
             <Paginate posts={filtered} postsPerPage={7}></Paginate>
         </div>
@@ -151,9 +163,20 @@ function Posts(props) {
 
 export default function Landing(props) {
     const {posts, tags, archive} = props;
-    const mobile = isMobile();
+
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
+    const classNames = ["landing"]
+    if (isMobile) {
+        classNames.push("mobile");
+    }
+    else if (isTablet) {
+        classNames.push("tablet");
+    }
+
     return (
-        <div className={"landing" + (mobile ? " mobile" : "")}>
+        <div className={classNames.join(" ")}>
             <Sidebar tags={tags} archive={archive}/>
             <Posts posts={posts}/>
         </div>

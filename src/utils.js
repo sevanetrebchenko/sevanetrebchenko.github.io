@@ -27,8 +27,18 @@ async function get(url) {
     });
 }
 
-function isMobile() {
-    return useMediaQuery({ maxWidth: 1200 });
+function getResponsiveClassName(classNames, isMobile, isTablet) {
+    classNames = classNames.split(" ");
+    if (isMobile) {
+        classNames.push("mobile");
+    }
+    else if (isTablet) {
+        classNames.push("tablet");
+    }
+    return classNames.join(" ");
 }
 
-export { getPostUrl, sortByName, get, isMobile }
+const mobileDisplayWidthThreshold = 480;
+const tabletDisplayWidthThreshold = 1280;
+
+export { getPostUrl, sortByName, get, getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold }
