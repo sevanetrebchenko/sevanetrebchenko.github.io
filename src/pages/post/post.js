@@ -7,7 +7,7 @@ import processLanguageCpp from "../languages/cpp";
 import { Link } from 'react-router-dom';
 
 import {useNavigate} from "react-router-dom";
-import {get, getPostUrl} from "../../utils";
+import {get, getPostUrl, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold, getResponsiveClassName} from "../../utils";
 import {compile, run} from "@mdx-js/mdx";
 import * as runtime from 'react/jsx-runtime'
 import { visit } from 'unist-util-visit';
@@ -27,6 +27,7 @@ import "../languages/cpp.css"
 import "../languages/json.css"
 import "../languages/yaml.css"
 import "../languages/css.css"
+import {useMediaQuery} from "react-responsive";
 
 function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;
@@ -37,12 +38,17 @@ function Header(props) {
         navigateTo("/");
     }
 
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
     return (
-        <div className="header">
-            <div className="back">
-                <i className="fa-solid fa-chevron-left"></i>
-                <span onClick={onClick}>BACK</span>
-            </div>
+        <div className={getResponsiveClassName("header", isMobile, isTablet)}>
+            {
+                isDesktop && <div className="back">
+                    <i className="fa-solid fa-chevron-left"></i>
+                    <span onClick={onClick}>BACK</span>
+                </div>
+            }
             <div className="title">
                 <span>{title}</span>
                 <div className="metadata">
@@ -731,6 +737,9 @@ export default function Post(props) {
         }
     }, [Content]);
 
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
     if (Content == null) {
         return;
     }
@@ -739,15 +748,11 @@ export default function Post(props) {
         LocalLink: LocalLink,
         code: CodeBlock,
     }
-
     return (
-        <div className="post" ref={postRef}>
+        <div className={getResponsiveClassName("post", isMobile, isTablet)} ref={postRef}>
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-            <div className="body">
-                {/*<SectionHeaders markdownRef={markdownRef}></SectionHeaders>*/}
-                <div className="content" ref={markdownRef}>
-                    <Content components={components}></Content>
-                </div>
+            <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
+                <Content components={components}></Content>
             </div>
             <div className="footer"></div>
         </div>

@@ -2,8 +2,19 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+
+    scrollbar-width: none;
 }
 
-:root {
-    overflow-y: scroll;
+::-webkit-scrollbar {
+    width: 5px;
+    margin: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: gray;
+}
+
+::-webkit-scrollbar-track {
+    background: inherit;
 }

@@ -1,6 +1,5 @@
 
 .post {
-    margin: 0 auto;
     overflow-y: scroll;
     height: 100vh;
 
@@ -11,12 +10,20 @@
     display: flex;
     flex: 1;
     flex-direction: column;
+    align-items: center;
     row-gap: 15px;
+
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.post.mobile {
 }
 
 .post .header {
-    display: grid;
-    grid-template-columns: 1fr 1400px 1fr;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     margin: 0 auto;
 }
 
@@ -46,7 +53,6 @@
 }
 .post .header .title {
     padding: 36px 72px;
-    grid-column: 2;
 }
 .post .header .title > span {
     display: flex;
@@ -61,7 +67,7 @@
     flex-direction: row;
     justify-content: center;
 
-    margin: 10px auto;
+    padding: 10px;
     column-gap: 40px;
 
     font-size: 0.85em;
@@ -69,6 +75,27 @@
 .post .header .metadata .separator {
     border-color: gray;
 }
+
+.post.mobile .header {
+    padding: 20px;
+}
+
+.post.mobile .body {
+    padding: 20px;
+}
+
+.post.mobile .header .title {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+}
+
+.post.mobile .header .title > span {
+    text-align: center;
+    font-size: 30px;
+}
+
 
 .post p,
 .post ul,
@@ -88,26 +115,26 @@
 
 .inline {
     color: rgb(73, 73, 73);
+    word-break: break-all;
 
     font-family: 'JetBrains Mono', monospace;
     font-weight: 300;
 }
 
 .post .body {
-    display: grid;
-    grid-template-columns: 1fr 1400px 1fr;
+    padding: 20px;
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+}
 
-    max-width: 1800px;
-    margin: 0 auto;
-
-    position: relative;
+.post.mobile .body {
 }
 
 .post .body .section {
 }
 
 .post .headers {
-    grid-column: 1 / 2;
     display: flex;
     flex-direction: column;
 
@@ -129,7 +156,10 @@
     font-weight: bold;
 }
 
-.post .content {
-    grid-column: 2 / 3;
-    width: 100%;
+.post.mobile .metadata {
+    font-size: 14px;
+}
+
+.post.mobile .metadata span {
+    width: 50%;
 }
