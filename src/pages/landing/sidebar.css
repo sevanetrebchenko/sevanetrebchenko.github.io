@@ -20,13 +20,6 @@
 
     z-index: 99;
 }
-.sidebar.mobile {
-    position: unset;
-
-    padding: 36px;
-    display: flex;
-    background-color: white;
-}
 
 .sidebar .dropdown {
     display: flex;
@@ -38,18 +31,6 @@
     padding: 24px;
     font-size: 28px;
     color: gainsboro;
-}
-
-.sidebar.mobile .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.sidebar.mobile .header .header-icons {
-    display: flex;
-    flex-direction: row;
 }
 
 .sidebar i {
@@ -90,11 +71,35 @@
     font-size: 18px;
     color: gray;
 }
+
+.sidebar.mobile {
+    position: unset;
+
+    padding: 0;
+    row-gap: 15px;
+    background-color: white;
+}
+
+.sidebar.mobile .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar.mobile .header i {
+    font-size: 4vw;
+}
 .sidebar.mobile .description {
     font-size: 16px;
 }
 .sidebar.mobile .header .title {
-    font-size: 24px;
+    font-size: 4.5vw;
+    padding: 12px 0;
+}
+.sidebar.mobile .content {
+    padding: 0 28px 44px 28px;
+    row-gap: 15px;
 }
 
 .sidebar > .header-container .header > .description {
@@ -112,15 +117,16 @@
     row-gap: 30px;
 }
 
-.sidebar > .content > .section {
+.sidebar .content .section {
     display: flex;
     flex-direction: column;
     font-family: "Noto Serif", serif;
     font-weight: 400;
-    row-gap: 10px;
+    row-gap: 14px;
     align-items: baseline;
-
-    column-gap: 20px;
+}
+.sidebar.mobile .content .section {
+    row-gap: 0;
 }
 
 .sidebar > .content > .section > .header {
@@ -132,6 +138,9 @@
     font-family: "Noto Serif", serif;
     font-weight: 400;
     font-size: 24px;
+}
+.sidebar.mobile .content .section .header .title {
+    font-size: 20px;
 }
 
 .sidebar > .content > .section > .header > .title {
@@ -156,6 +165,14 @@
 
     transition: color 0.15s;
 }
+.sidebar.mobile .content > .section > .header > .clear-button {
+    font-size: 15px;
+}
+
+.sidebar.mobile .header .mobile-search {
+    width: 100%;
+}
+
 .sidebar .content .section .header .clear-button:hover {
     color: unset;
 }
@@ -177,19 +194,7 @@
     align-items: baseline;
 
     flex-wrap: wrap;
-    column-gap: 15px;
-
-    color: gray;
-}
-
-.sidebar > .content > .section > .elements,
-.sidebar > .content > .section > .selected-elements {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-
-    flex-wrap: wrap;
-    column-gap: 15px;
+    column-gap: 14px;
 
     color: gray;
 }
@@ -198,6 +203,11 @@
 .sidebar.mobile .content .section .selected-elements {
     display: flex;
     flex-direction: column;
+    padding: 0;
+}
+
+.sidebar.mobile .content .section .selected-elements {
+    padding-bottom: 16px;
 }
 
 .sidebar > .content > .section .element {
@@ -215,15 +225,25 @@
     text-decoration: none;
     transition: color 0.15s;
 }
+.sidebar.mobile .content .section .element {
+    font-size: 14px;
+}
 .sidebar > .content > .section .element > i {
     transition: color 0.15s;
     color: gainsboro;
 }
+.sidebar.mobile > .content > .section .element > i {
+    padding: 0;
+}
+
 .sidebar > .content > .section .element.selected {
     color: orange;
 }
 .sidebar > .content > .section .element.selected > i {
     color: gainsboro;
+}
+.sidebar.mobile .content .section .element.selected i {
+    font-size: 14px;
 }
 .sidebar > .content > .section .element:hover {
     cursor: pointer;

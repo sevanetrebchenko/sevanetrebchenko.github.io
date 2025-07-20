@@ -1,10 +1,14 @@
-import React from "react";
+import React, {useEffect, useRef} from "react";
 import {useSearchParams} from "react-router-dom";
 
 // Stylesheet
 import "./search.css"
+import {getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold} from "../../utils";
+import {useMediaQuery} from "react-responsive";
 
-export default function Search() {
+export default function Search(props) {
+    const { focused } = props;
+    const inputRef = useRef(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const query = searchParams.get("q") || "";
 
@@ -33,9 +37,18 @@ export default function Search() {
         setSearchParams(params, { replace: true });
     }
 
+    useEffect(() => {
+        if (focused) {
+            inputRef.current?.focus();
+        }
+    }, []);
+
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+
     return (
-        <div className="search">
-            <input className="query" placeholder="Type something..." onInput={onInput} value={query}></input>
+        <div className={getResponsiveClassName("search", isMobile, isTablet)}>
+            <input className="query" ref={inputRef} placeholder="Type something..." onInput={onInput} value={query}></input>
             {
                 // Display "clear" button when the search field has input, otherwise display "search" button
                 query ? <i className="fa-solid fa-xmark fa-fw clear-button" onClick={onClear}/> : <i className="fa-solid fa-magnifying-glass fa-fw search-button"/>

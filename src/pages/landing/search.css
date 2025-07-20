@@ -6,6 +6,11 @@
     margin-bottom: 40px;
 }
 
+.search.mobile {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
 .search .query {
     display: flex;
     flex-direction: row;
@@ -17,6 +22,10 @@
     font-weight: 300;
     padding: 15px;
     padding-left: 10px;
+}
+
+.search.mobile .query {
+    font-size: 15px;
 }
 
 .search .search-button {
@@ -49,7 +58,7 @@
     border: none;
     color: black;
 
-    padding: 15px;
+    padding: 18px;
 
     font-size: 20px;
 }

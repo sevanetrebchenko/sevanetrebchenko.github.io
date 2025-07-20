@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from "react";
+import React, {forwardRef, Fragment, useEffect, useRef, useState} from "react";
 import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
 import {
     getResponsiveClassName,
@@ -11,60 +11,7 @@ import {
 import "./sidebar.css"
 import MenuIcon from "../icons";
 import {useMediaQuery} from "react-responsive";
-
-function Header(props) {
-    const navigateTo = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    const { toggleDropdown } = props;
-    const [dropdownActive, setDropdownActive] = useState(false);
-
-    const onClick = (e) => {
-        e.preventDefault();
-
-        searchParams.delete("tags");
-        searchParams.delete("q");
-        searchParams.set("page", "1");
-        setSearchParams(searchParams, { replace: true });
-
-        navigateTo(`/?${searchParams}`); // Go to landing
-    }
-
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
-
-
-    if (isMobile || isTablet) {
-        // Mobile and tablet header is significantly different
-        return (
-            <div className="header">
-                <div className="masthead">
-                    <span className="title">Seva's Programming Adventures</span>
-                </div>
-                <div className="header-icons">
-                    <i className="fa-fw fa-solid fa-search"></i>
-                    <div className="dropdown-button" onClick={e => {
-                        setDropdownActive(!dropdownActive);
-                        if (toggleDropdown) {
-                            toggleDropdown();
-                        }
-                    }}>
-                        <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
-                    </div>
-                </div>
-            </div>
-        );
-    } else {
-        return (
-            <div className="header">
-                <div className="masthead">
-                    <span className="title">Seva's Programming Adventures</span>
-                    <span className="description">A blog about graphics programming, low-level systems, and building things from scratch.</span>
-                </div>
-            </div>
-        );
-    }
-}
+import Search from "./search";
 
 function Tags(props) {
     const {tags} = props;
@@ -83,14 +30,13 @@ function Tags(props) {
         const params = new URLSearchParams(searchParams.toString());
         if (next.length) {
             params.set("tags", next.join(","));
-        }
-        else {
+        } else {
             params.delete("tags");
         }
 
         // Reset page number on tag change
         params.set("page", "1");
-        setSearchParams(params, { replace: true });
+        setSearchParams(params, {replace: true});
     }
 
     return (
@@ -195,35 +141,107 @@ function Footer() {
     );
 }
 
-export default function Sidebar(props) {
+const MobileSidebar = forwardRef((props, ref) => {
     const { tags, archive } = props;
-    const [dropdownActive, setDropdownActive] = useState(false);
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchActive, setSearchActive] = useState(false);
+    const [dropdownActive, setDropdownActive] = useState(false);
+    const searchRef = useRef(null);
+
+    // Close the dropdown if the user clicks outside of it
+    useEffect(() => {
+        function onClick(e) {
+            if (!ref.current?.contains(e.target)) {
+                setDropdownActive(false);
+            }
+        }
+        document.addEventListener("mousedown", onClick);
+        return () => {
+            document.removeEventListener("mousedown", onClick);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!searchActive) return;
+
+        function handleOutsideClick(e) {
+            searchRef.current && !searchRef.current.contains(e.target);
+
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                if (!searchParams.get("q")) {
+                    setSearchActive(false);
+                }
+            }
+        }
+
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [searchActive, searchParams]);
 
     return (
-        <div className={getResponsiveClassName("sidebar", isMobile, isTablet)}>
-            <Header toggleDropdown={e => setDropdownActive(!dropdownActive)}></Header>
-            {
-                isMobile ?
-                (
-                    dropdownActive && <div className={getResponsiveClassName("content", isMobile, isTablet)}>
-                        <span className="description">A blog about graphics programming, low-level systems, and the joy of building things from scratch.</span>
-                        <Tags tags={tags}></Tags>
-                        <Archive archive={archive}></Archive>
+        <Fragment>
+            <div className="header">
+                <div className="dropdown-button" onClick={() => {
+                    setDropdownActive(!dropdownActive);
+                }}>
+                    <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
+                </div>
+
+                {
+                    !searchActive && <div className="masthead">
+                        <span className="title">Seva's Programming Adventures</span>
                     </div>
-                )
-                    :
-                    (
-                        <div className={getResponsiveClassName("content", isMobile, isTablet)}>
-                        <Tags tags={tags}></Tags>
-                            <Archive archive={archive}></Archive>
-                        </div>
-                    )
-            }
+                }
+
+                {
+                    searchActive ? <div className="mobile-search" ref={searchRef}>
+                        <Search focused={true}></Search>
+                    </div> : <i className="fa-fw fa-solid fa-search" onClick={() => setSearchActive(!searchActive)}></i>
+                }
+            </div>
             {
-                !isMobile && <Footer></Footer>
+                dropdownActive && <div className="content">
+                    <span className="description">A blog about graphics programming, low-level systems, and building things from scratch.</span>
+                    <Tags tags={tags}></Tags>
+                    <Archive archive={archive}></Archive>
+                </div>
+            }
+        </Fragment>
+    );
+})
+
+function DesktopSidebar(props) {
+    const {tags, archive} = props;
+    return (
+        <div className="content">
+            <div className="header">
+                <div className="masthead">
+                    <span className="title">Seva's Programming Adventures</span>
+                    <span className="description">A blog about graphics programming, low-level systems, and building things from scratch.</span>
+                </div>
+            </div>
+            <Tags tags={tags}></Tags>
+            <Archive archive={archive}></Archive>
+            <Footer></Footer>
+        </div>
+    );
+}
+
+export default function Sidebar(props) {
+    const {tags, archive} = props;
+
+    const sidebarRef = useRef(null);
+
+    const isMobile = useMediaQuery({maxWidth: mobileDisplayWidthThreshold});
+    const isTablet = useMediaQuery({minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold});
+
+    return (
+        <div className={getResponsiveClassName("sidebar", isMobile, isTablet)} ref={sidebarRef}>
+            {
+                isMobile || isTablet ? <MobileSidebar tags={tags} archive={archive} ref={sidebarRef}/> : <DesktopSidebar tags={tags} archive={archive} />
             }
         </div>
     );
