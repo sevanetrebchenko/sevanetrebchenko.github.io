@@ -59,7 +59,7 @@ function Header(props) {
             <div className="header">
                 <div className="masthead">
                     <span className="title">Seva's Programming Adventures</span>
-                    <span className="description">A blog about graphics programming, low-level systems, and the joy of building things from scratch.</span>
+                    <span className="description">A blog about graphics programming, low-level systems, and building things from scratch.</span>
                 </div>
             </div>
         );
