@@ -33,24 +33,37 @@ function Header(props) {
     const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
     const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
 
-    return (
-        <div className="header-container">
-            <div className="header" onClick={onClick}>
-                <span className="title">Seva Netrebchenko</span>
-                <span className="description">Software engineer and graphics enthusiast</span>
-            </div>
-            {
-                isMobile && <div className="dropdown-button" onClick={e => {
-                    setDropdownActive(!dropdownActive);
-                    if (toggleDropdown) {
-                        toggleDropdown();
-                    }
-                }}>
-                    <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
+
+    if (isMobile || isTablet) {
+        // Mobile and tablet header is significantly different
+        return (
+            <div className="header">
+                <div className="masthead">
+                    <span className="title">Seva's Programming Adventures</span>
                 </div>
-            }
-        </div>
-    );
+                <div className="header-icons">
+                    <i className="fa-fw fa-solid fa-search"></i>
+                    <div className="dropdown-button" onClick={e => {
+                        setDropdownActive(!dropdownActive);
+                        if (toggleDropdown) {
+                            toggleDropdown();
+                        }
+                    }}>
+                        <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
+                    </div>
+                </div>
+            </div>
+        );
+    } else {
+        return (
+            <div className="header">
+                <div className="masthead">
+                    <span className="title">Seva's Programming Adventures</span>
+                    <span className="description">A blog about graphics programming, low-level systems, and the joy of building things from scratch.</span>
+                </div>
+            </div>
+        );
+    }
 }
 
 function Tags(props) {
@@ -196,14 +209,15 @@ export default function Sidebar(props) {
                 isMobile ?
                 (
                     dropdownActive && <div className={getResponsiveClassName("content", isMobile, isTablet)}>
+                        <span className="description">A blog about graphics programming, low-level systems, and the joy of building things from scratch.</span>
                         <Tags tags={tags}></Tags>
                         <Archive archive={archive}></Archive>
                     </div>
                 )
-                :
+                    :
                     (
                         <div className={getResponsiveClassName("content", isMobile, isTablet)}>
-                            <Tags tags={tags}></Tags>
+                        <Tags tags={tags}></Tags>
                             <Archive archive={archive}></Archive>
                         </div>
                     )

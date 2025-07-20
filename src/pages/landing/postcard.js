@@ -1,6 +1,6 @@
 import React from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {getPostUrl, getResponsiveClassName, sortByName} from "../../utils";
+import {getPostUrl, mobileDisplayWidthThreshold, sortByName, tabletDisplayWidthThreshold} from "../../utils";
 
 // Stylesheet
 import "./postcard.css"
@@ -15,11 +15,6 @@ export default function Postcard(props) {
     const selectedTags = (searchParams.get("tags") || "")
         .split(",")
         .filter(Boolean);
-
-    const handleClick = (e) => {
-        e.preventDefault();
-        navigateTo(getPostUrl(post.title));
-    }
 
     const handleTagClick = (tag, e) => {
         e.stopPropagation();
@@ -39,11 +34,11 @@ export default function Postcard(props) {
     // Post abstracts may contain inline code that should be parsed out
     const parts = post.abstract.split(/(`[^`]+`)/g);
 
-    const isMobile = useMediaQuery({ maxWidth: 480 });
-    const isTablet = useMediaQuery({ minWidth: 481, maxWidth: 1280 });
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
 
     return (
-        <div className={getResponsiveClassName("postcard", isMobile, isTablet)} onClick={handleClick}>
+        <div className="postcard" onClick={() => navigateTo(getPostUrl(post.title))}>
             <div className="abstract">
                 <span className="title">{post.title}</span>
                 <span className="description">
@@ -76,7 +71,7 @@ export default function Postcard(props) {
                             if (selectedTags.includes(tag)) {
                                 classNames.push("selected");
                             }
-                            return <span key={id} className={classNames.join(" ")} onClick={(e) => (isMobile || isTablet ? null : handleTagClick(tag, e))}>#{tag}</span>
+                            return <span key={id} className={classNames.join(" ")} onClick={() => (isMobile || isTablet ? null : handleTagClick(tag, e))}>#{tag}</span>
                         })
                     }
                 </div>

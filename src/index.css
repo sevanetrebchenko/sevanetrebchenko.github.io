@@ -6,15 +6,15 @@ html, body {
     scrollbar-width: none;
 }
 
-::-webkit-scrollbar {
-    width: 5px;
-    margin: 2px;
-}
+/*::-webkit-scrollbar {*/
+/*    width: 5px;*/
+/*    margin: 2px;*/
+/*}*/
 
-::-webkit-scrollbar-thumb {
-    background: gray;
-}
+/*::-webkit-scrollbar-thumb {*/
+/*    background: gray;*/
+/*}*/
 
-::-webkit-scrollbar-track {
-    background: inherit;
-}
+/*::-webkit-scrollbar-track {*/
+/*    background: inherit;*/
+/*}*/

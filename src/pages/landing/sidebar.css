@@ -16,13 +16,16 @@
     position: sticky;
     top: 0;
 
+    background-color: white;
+
     z-index: 99;
 }
 .sidebar.mobile {
+    position: unset;
+
     padding: 36px;
     display: flex;
     background-color: white;
-    height: 100vh;
 }
 
 .sidebar .dropdown {
@@ -37,17 +40,21 @@
     color: gainsboro;
 }
 
-.sidebar .header-container {
-}
-.sidebar.mobile .header-container {
+.sidebar.mobile .header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
 }
 
-.sidebar .header-container i {
-    padding: 24px;
-    font-size: 28px;
+.sidebar.mobile .header .header-icons {
+    display: flex;
+    flex-direction: row;
+}
+
+.sidebar i {
+    padding: 18px;
+    font-size: 20px;
     color: gainsboro;
 }
 
@@ -66,10 +73,28 @@
     cursor: pointer;
 }
 
-.sidebar > .header-container .header > .title {
+.sidebar .header .masthead {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+.sidebar .header .masthead .title {
     margin: 0;
     font-weight: 400;
     font-size: 36px;
+    font-family: "Noto Serif", serif;
+}
+.sidebar .description {
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: gray;
+}
+.sidebar.mobile .description {
+    font-size: 16px;
+}
+.sidebar.mobile .header .title {
+    font-size: 24px;
 }
 
 .sidebar > .header-container .header > .description {

@@ -10,7 +10,7 @@
             ],
             "date": "06-12-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/1_intro.md",
-            "last_modified_time": "2025-07-15T08:27:13.438Z"
+            "last_modified_time": "2025-07-14T00:56:15.492Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 2: Enums",
@@ -22,7 +22,7 @@
             ],
             "date": "06-14-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/2_enums.md",
-            "last_modified_time": "2025-07-15T08:27:13.438Z"
+            "last_modified_time": "2025-07-14T00:57:25.048Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 3: Namespaces",
@@ -34,7 +34,7 @@
             ],
             "date": "06-18-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/3_namespaces.md",
-            "last_modified_time": "2025-07-15T08:27:13.438Z"
+            "last_modified_time": "2025-07-14T01:18:21.464Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 4: Functions",
@@ -46,7 +46,7 @@
             ],
             "date": "06-20-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/4_functions.md",
-            "last_modified_time": "2025-07-15T08:27:13.438Z"
+            "last_modified_time": "2025-07-14T01:19:01.858Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 5: Classes",
@@ -58,7 +58,7 @@
             ],
             "date": "06-24-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/5_classes.md",
-            "last_modified_time": "2025-07-15T08:27:13.445Z"
+            "last_modified_time": "2025-07-14T01:20:37.959Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 6: Templates",
@@ -70,7 +70,7 @@
             ],
             "date": "06-29-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/6_templates.md",
-            "last_modified_time": "2025-07-15T08:27:13.445Z"
+            "last_modified_time": "2025-07-14T01:21:36.531Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 7: Types",
@@ -82,7 +82,7 @@
             ],
             "date": "07-08-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/7_types.md",
-            "last_modified_time": "2025-07-15T08:27:13.447Z"
+            "last_modified_time": "2025-07-14T01:24:30.528Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 8: Qualifiers",
@@ -94,7 +94,7 @@
             ],
             "date": "07-10-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/8_qualifiers.md",
-            "last_modified_time": "2025-07-15T08:27:13.448Z"
+            "last_modified_time": "2025-07-14T01:25:48.095Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 9: Preprocessor",
@@ -106,7 +106,7 @@
             ],
             "date": "07-12-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/9_preprocessor.md",
-            "last_modified_time": "2025-07-15T08:27:13.459Z"
+            "last_modified_time": "2025-07-14T01:25:48.090Z"
         },
         {
             "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
@@ -120,7 +120,442 @@
             ],
             "date": "07-13-2025",
             "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
-            "last_modified_time": "2025-07-15T08:27:13.438Z"
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },
+        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
+        },        {
+            "title": "Better C++ Syntax Highlighting - Part 10: Keywords",
+            "abstract": "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords.",
+            "tags": [
+                "c",
+                "c++",
+                "clang",
+                "libtooling",
+                "libclang"
+            ],
+            "date": "07-13-2025",
+            "filepath": "/posts/better_cpp_syntax_highlighting/10_keywords.md",
+            "last_modified_time": "2025-07-19T04:35:14.654Z"
         }
     ]
 }

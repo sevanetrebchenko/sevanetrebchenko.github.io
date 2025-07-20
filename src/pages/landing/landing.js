@@ -1,5 +1,5 @@
 
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import {useMediaQuery} from "react-responsive";
 
@@ -15,83 +15,149 @@ import "./landing.css"
 function Paginate(props) {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    useEffect(() => {
-        const page = parseInt(searchParams.get("page"), 10);
-        if (isNaN(page) || page < 1) {
-            // Add page to the URL on initial load
-            const params = new URLSearchParams(searchParams);
-            params.set("page", "1");
-            setSearchParams(params, {replace: false});
-        }
-    }, []);
+    // screen size checks
+    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
+    const isTablet = useMediaQuery({
+        minWidth: mobileDisplayWidthThreshold + 1,
+        maxWidth: tabletDisplayWidthThreshold,
+    });
+    const isHandheld = isMobile || isTablet;
 
-    const currentPage = parseInt(searchParams.get("page"), 10);
-
-    const {posts, postsPerPage} = props;
+    const { posts, postsPerPage } = props;
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
 
-    // Determine which posts should be shown on this page
-    const startIndex = (currentPage - 1) * postsPerPage;
-    const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
-
-    const navigateToPage = (page) => {
-        if (page < 1 || page > totalNumPages) {
-            return;
+    // Only on desktop do we manage the URL page param
+    useEffect(() => {
+        if (!isHandheld) {
+            const page = parseInt(searchParams.get("page"), 10);
+            if (isNaN(page) || page < 1) {
+                const params = new URLSearchParams(searchParams);
+                params.set("page", "1");
+                setSearchParams(params, { replace: false });
+            }
         }
+    }, [isHandheld]);
 
+    const [visibleCount, setVisibleCount] = useState(postsPerPage);
+
+    const currentPage = parseInt(searchParams.get("page"), 10) || 1;
+
+    // Determine which posts to show
+    let currentPosts;
+    if (isHandheld) {
+        // Handheld devices have a 'Load More' button instead of true pagination
+        currentPosts = posts.slice(0, visibleCount);
+    }
+    else {
+        const startIndex = (currentPage - 1) * postsPerPage;
+        currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
+    }
+
+    // helper for desktop “go to page”
+    const navigateToPage = (page) => {
+        if (page < 1 || page > totalNumPages) return;
         const params = new URLSearchParams(searchParams.toString());
         params.set("page", page.toString());
-        setSearchParams(params, {replace: false});
+        setSearchParams(params, { replace: false });
     };
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const getPageItems = () => {
+        const delta = 1;
+        const currentPage = parseInt(searchParams.get("page"), 10) || 1;
+        let left = currentPage - delta;
+        let right = currentPage + delta;
+
+        if (left < 2) {
+            right = Math.min(right + (2 - left), totalNumPages - 1);
+            left = 2;
+        }
+        if (right > totalNumPages - 1) {
+            left = Math.max(left - (right - (totalNumPages - 1)), 2);
+            right = totalNumPages - 1;
+        }
+
+        // First page is always visible
+        const pageNumbers = [1];
+
+        if (left > 2) {
+            pageNumbers.push("...");
+        }
+
+        for (let i = left; i <= right; i++) {
+            pageNumbers.push(i);
+        }
+
+        // Only add ellipsis if the replacement is not the next page number
+        if (right < totalNumPages - 1) {
+            pageNumbers.push("...");
+        }
+
+        // Last page is always visible
+        if (totalNumPages > 1) {
+            pageNumbers.push(totalNumPages);
+        }
+
+        return pageNumbers;
+    };
+
+    const pageNumbers = getPageItems();
 
     return (
         <Fragment>
-            <div className={getResponsiveClassName("content", isMobile, isTablet)}>
-                {currentPosts.length > 0 ?
+            <div className={"content"}>
+                {currentPosts.length > 0 ? (
                     <Fragment>
-                        {currentPosts.map((post, i) => (<Postcard post={post} key={startIndex + i}/>))}
-                        <div className={getResponsiveClassName("paginate", isMobile, isTablet)}>
-                            <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}>
-                                <div className="previous" onClick={() => navigateToPage(currentPage - 1)}>
-                                    <i className="fa-fw fa-solid fa-chevron-left"></i>
-                                    <span>Previous</span>
+                        {currentPosts.map((post, i) => (
+                            <Postcard post={post} key={i} />
+                        ))}
+                        {
+                            isHandheld ?
+                            (
+                                visibleCount < posts.length && (
+                                    <div className="load-more" onClick={() => setVisibleCount((prev) => prev + postsPerPage)}>
+                                        <span>Load More</span>
+                                        <i className="fa-solid fa-chevron-down fa-fw"></i>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="pagination">
+                                    <div className={"navigation-button" + (currentPage === 1 ? " disabled" : "")}
+                                         onClick={() => navigateToPage(currentPage - 1)}>
+                                        <i className="fa-fw fa-solid fa-chevron-left" />
+                                        <span>Prev</span>
+                                    </div>
+                                    <div className="page-numbers">
+                                        {pageNumbers.map((page, index) => {
+                                            if (typeof page === "number") {
+                                                return <span key={index} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
+                                                    {` ${page} `}
+                                                </span>
+                                            }
+                                            else {
+                                                return <span key={`${page}-${index}`} className="ellipsis">
+                                                    {page}
+                                                </span>
+                                            }
+                                        })}
+                                    </div>
+                                    <div className={"navigation-button align-right" + (currentPage === totalNumPages || totalNumPages === 0 ? " disabled" : "")}
+                                         onClick={() => navigateToPage(currentPage + 1)}>
+                                        <span>Next</span>
+                                        <i className="fa-fw fa-solid fa-chevron-right" />
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="page-numbers">
-                                {[...Array(totalNumPages)].map((_, i) => {
-                                    const page = i + 1;
-                                    return (
-                                        <span key={page} onClick={() => navigateToPage(page)} className={page === currentPage ? "active" : ""}>
-                                {page}
-                            </span>
-                                    );
-                                })}
-                            </div>
-
-                            <div className={"navigation-button align-right" + ((currentPage === totalNumPages || totalNumPages === 0) ? " disabled" : "")}>
-                                <div className="next" onClick={() => navigateToPage(currentPage + 1)}>
-                                    <span>Next</span>
-                                    <i className="fa-fw fa-solid fa-chevron-right"></i>
-                                </div>
-                            </div>
-                        </div>
+                            )
+                        }
                     </Fragment>
-                    :
-                    (
-                        <div className="no-results">
-                            <div className="description">
-                                <span>No results found for </span>
-                                <span className="query">"{searchParams.get("q")}"</span>
-                            </div>
+                ) : (
+                    <div className="no-results">
+                        <div className="description">
+                            <span>No results found for </span>
+                            <span className="query">"{searchParams.get("q")}"</span>
                         </div>
-                    )
-                }
+                    </div>
+                )}
             </div>
-
         </Fragment>
     );
 }
@@ -155,7 +221,7 @@ function Posts(props) {
 
     return (
         <div className={classNames.join(" ")}>
-            <Search></Search>
+            {!isMobile && <Search></Search>}
             <Paginate posts={filtered} postsPerPage={7}></Paginate>
         </div>
     );
@@ -167,18 +233,12 @@ export default function Landing(props) {
     const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
     const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
 
-    const classNames = ["landing"]
-    if (isMobile) {
-        classNames.push("mobile");
-    }
-    else if (isTablet) {
-        classNames.push("tablet");
-    }
-
     return (
-        <div className={classNames.join(" ")}>
+        <div className={getResponsiveClassName("landing", isMobile, isTablet)}>
+            <div className="spacer left"></div>
             <Sidebar tags={tags} archive={archive}/>
             <Posts posts={posts}/>
+            <div className="spacer right"></div>
         </div>
     );
 }
