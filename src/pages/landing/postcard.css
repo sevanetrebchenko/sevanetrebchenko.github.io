@@ -38,7 +38,7 @@
 }
 
 .postcard > .abstract .description {
-
+    color: gray;
 }
 
 .postcard > .metadata {
@@ -82,9 +82,7 @@
     row-gap: 10px;
 }
 .postcard.mobile .tags {
-    font-family: "Noto Serif", serif;
     font-size: 14px;
-    font-weight: 300;
     color: gray;
     justify-content: space-between;
 }
@@ -136,7 +134,7 @@
 
 .postcard.mobile .abstract .description {
     font-size: 16px;
-    line-height: 1.25em;
+    color: gray;
 }
 
 .postcard.mobile .metadata {
