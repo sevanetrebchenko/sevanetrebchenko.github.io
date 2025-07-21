@@ -39,7 +39,7 @@
 }
 
 .landing.mobile .posts {
-    padding: calc(36px + 52px) 36px 36px 36px;
+    padding: 36px;
     height: 100%;
     overflow-y: scroll;
 }

@@ -75,7 +75,6 @@
 }
 
 .sidebar.mobile {
-    position: absolute;
     flex: 1;
     width: 100%;
     max-height: unset;
@@ -84,6 +83,8 @@
     padding: 0;
     row-gap: 15px;
     background-color: white;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar.mobile .header {
