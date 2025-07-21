@@ -157,6 +157,9 @@ const MobileSidebar = forwardRef((props, ref) => {
                 setDropdownActive(false);
             }
         }
+
+        setSearchActive(searchParams.has("q"));
+
         document.addEventListener("mousedown", onClick);
         return () => {
             document.removeEventListener("mousedown", onClick);
