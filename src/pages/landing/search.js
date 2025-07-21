@@ -35,6 +35,7 @@ export default function Search(props) {
         params.delete("q");
         params.set("page", "1");
         setSearchParams(params, { replace: true });
+        inputRef.current?.focus();
     }
 
     useEffect(() => {

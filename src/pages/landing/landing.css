@@ -61,6 +61,16 @@
 .landing.mobile .posts .content {
 }
 
+.landing.mobile .posts .content .postcard {
+    padding: 32px;
+}
+.landing.mobile .posts .content .postcard .abstract .title {
+    font-size: 24px;
+}
+.landing.mobile .posts .content .postcard .abstract .description {
+    font-size: 16px;
+}
+
 .landing .posts .content .no-results {
     display: flex;
     justify-content: center;

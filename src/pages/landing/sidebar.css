@@ -1,7 +1,6 @@
 
 .sidebar {
     display: flex;
-    flex: 1;
     flex-direction: column;
     justify-content: right;
 
@@ -9,7 +8,7 @@
     row-gap: 30px;
 
     box-sizing: border-box;
-    max-width: 520px;
+    max-width: 460px;
 
     max-height: 100vh;
     height: 100vh;
@@ -34,9 +33,14 @@
 }
 
 .sidebar i {
-    padding: 18px;
     font-size: 20px;
     color: gainsboro;
+    align-self: center;
+}
+
+.sidebar.mobile i {
+    padding: 18px;
+    align-self: center;
 }
 
 .sidebar > .header-container .header {
@@ -74,6 +78,7 @@
 
 .sidebar.mobile {
     position: unset;
+    flex: 1;
 
     padding: 0;
     row-gap: 15px;
@@ -165,9 +170,13 @@
 
     transition: color 0.15s;
 }
-.sidebar.mobile .content > .section > .header > .clear-button {
+.sidebar.mobile .content .section .header .clear-button {
     font-size: 15px;
 }
+.sidebar.mobile .content .section .header .clear-button i {
+    padding: 0;
+}
+
 
 .sidebar.mobile .header .mobile-search {
     width: 100%;
@@ -261,19 +270,21 @@
     flex-direction: column;
 }
 
-.sidebar > .footer {
+.sidebar .footer {
     display: flex;
     flex-direction: column;
     row-gap: 20px;
+    flex: 1;
+    justify-content: flex-end;
 }
 
-.sidebar > .footer > .socials {
+.sidebar .footer .socials {
     display: flex;
     flex-direction: row;
     justify-content: center;
     column-gap: 40px;
 }
-.sidebar > .footer > .socials i {
+.sidebar .footer .socials i {
     font-size: 25px;
     width: 25px;
     height: 25px;
@@ -281,11 +292,11 @@
     transition: 0.15s;
     color: gray;
 }
-.sidebar > .footer > .socials i:hover {
+.sidebar .footer .socials i:hover {
     cursor: pointer;
     color: #9c9c9c;
 }
-.sidebar > .footer > .copyright {
+.sidebar .footer .copyright {
     font-family: "Noto Serif", serif;
     font-weight: 300;
     font-size: 12px;

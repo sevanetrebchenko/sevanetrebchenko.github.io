@@ -148,6 +148,7 @@ const MobileSidebar = forwardRef((props, ref) => {
     const [searchActive, setSearchActive] = useState(false);
     const [dropdownActive, setDropdownActive] = useState(false);
     const searchRef = useRef(null);
+    const hamburgerRef = useRef(null);
 
     // Close the dropdown if the user clicks outside of it
     useEffect(() => {
@@ -167,8 +168,9 @@ const MobileSidebar = forwardRef((props, ref) => {
 
         function handleOutsideClick(e) {
             searchRef.current && !searchRef.current.contains(e.target);
+            //
 
-            if (searchRef.current && !searchRef.current.contains(e.target)) {
+            if (!searchRef.current?.contains(e.target) && !ref.current?.contains(e.target)) {
                 if (!searchParams.get("q")) {
                     setSearchActive(false);
                 }
@@ -184,8 +186,11 @@ const MobileSidebar = forwardRef((props, ref) => {
     return (
         <Fragment>
             <div className="header">
-                <div className="dropdown-button" onClick={() => {
+                <div className="dropdown-button" ref={hamburgerRef} onClick={() => {
                     setDropdownActive(!dropdownActive);
+                    if (!searchParams.get("q")) {
+                        setSearchActive(false);
+                    }
                 }}>
                     <i className={"fa-fw fa-solid " + (dropdownActive ? "fa-xmark" : "fa-bars")}></i>
                 </div>
@@ -199,7 +204,10 @@ const MobileSidebar = forwardRef((props, ref) => {
                 {
                     searchActive ? <div className="mobile-search" ref={searchRef}>
                         <Search focused={true}></Search>
-                    </div> : <i className="fa-fw fa-solid fa-search" onClick={() => setSearchActive(!searchActive)}></i>
+                    </div> : <i className="fa-fw fa-solid fa-search" onClick={() => {
+                        setSearchActive(true);
+                        setDropdownActive(true);
+                    }}></i>
                 }
             </div>
             {
@@ -215,9 +223,23 @@ const MobileSidebar = forwardRef((props, ref) => {
 
 function DesktopSidebar(props) {
     const {tags, archive} = props;
+    const navigateTo = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const onClick = (e) => {
+        e.preventDefault();
+
+        searchParams.delete("tags");
+        searchParams.delete("q");
+        searchParams.set("page", "1");
+        setSearchParams(searchParams, { replace: true });
+
+        navigateTo(`/?${searchParams}`); // Go to landing
+    }
+
     return (
         <div className="content">
-            <div className="header">
+            <div className="header" onClick={onClick}>
                 <div className="masthead">
                     <span className="title">Seva's Programming Adventures</span>
                     <span className="description">A blog about graphics programming, low-level systems, and building things from scratch.</span>
