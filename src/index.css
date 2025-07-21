@@ -2,19 +2,14 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-
-    scrollbar-width: none;
 }
 
 /*::-webkit-scrollbar {*/
-/*    width: 5px;*/
-/*    margin: 2px;*/
+/*    width: 4px;*/
+/*    height: 4px;*/
+/*    background: #e6e6e6;*/
 /*}*/
 
 /*::-webkit-scrollbar-thumb {*/
 /*    background: gray;*/
-/*}*/
-
-/*::-webkit-scrollbar-track {*/
-/*    background: inherit;*/
 /*}*/

@@ -2,18 +2,21 @@
 .postcard {
     display: flex;
     flex-direction: column;
-    row-gap: 15px;
+    row-gap: 18px;
 
     background-color: white;
 
     box-shadow: none;
     transition: box-shadow 0.15s;
     padding: 50px;
-    border-radius: 5px;
+    border-radius: 8px;
 }
 
 .postcard:hover {
     cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+.postcard.mobile {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -48,7 +51,13 @@
     min-width: 200px;
     color: gray;
 }
-
+.postcard.mobile .metadata {
+    row-gap: 18px;
+    justify-content: space-between;
+}
+.postcard.mobile .metadata.open {
+    flex-direction: column;
+}
 .postcard > .metadata .date {
     font-family: "Noto Serif", serif;
     font-size: 19px;
@@ -60,15 +69,38 @@
     column-gap: 10px;
 }
 
-.postcard > .metadata .tags {
+.postcard.mobile .metadata .date {
+    font-size: 16px;
+    column-gap: 8px;
+}
+
+.postcard .tags {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     column-gap: 20px;
     row-gap: 10px;
 }
+.postcard.mobile .tags {
+    font-family: "Noto Serif", serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: gray;
+    justify-content: space-between;
+}
+.postcard.mobile .metadata .tag-label {
+    font-family: "Noto Serif", serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: black;
+    border-bottom: 1px solid gainsboro;
+    white-space: preserve;
+}
+.postcard.mobile .tags i {
+    font-size: 16px;
+}
 
-.postcard > .metadata .tag {
+.postcard .tag {
     font-family: "JetBrains Mono", monospace;
     font-weight: 200;
     transition: color 0.15s;
@@ -112,9 +144,4 @@
 }
 
 .postcard.mobile .metadata .date {
-}
-
-.postcard.mobile .metadata .tags {
-    user-select: none;
-    column-gap: 16px;
 }

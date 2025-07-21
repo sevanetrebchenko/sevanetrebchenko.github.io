@@ -16,8 +16,6 @@
     top: 0;
 
     background-color: white;
-
-    z-index: 99;
 }
 
 .sidebar .dropdown {
@@ -77,8 +75,11 @@
 }
 
 .sidebar.mobile {
-    position: unset;
+    position: absolute;
     flex: 1;
+    width: 100%;
+    max-height: unset;
+    height: unset;
 
     padding: 0;
     row-gap: 15px;
