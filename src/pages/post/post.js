@@ -41,6 +41,7 @@ function Header(props) {
     const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
     const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
     const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
+
     return (
         <div className={getResponsiveClassName("header", isMobile, isTablet)}>
             {
@@ -52,16 +53,18 @@ function Header(props) {
             <div className="title">
                 <span>{title}</span>
                 <div className="metadata">
-                <span>
+                    <span>
+                        {
+                            `Published ${publishedDate.toLocaleString('default', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                            })}`
+                        }
+                    </span>
                     {
-                        `Published ${publishedDate.toLocaleString('default', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                        })}`
+                        isDesktop && <div className="separator"></div>
                     }
-                </span>
-                    <div className="separator"></div>
                     <span>
                     {
                         `Last revised ${lastModifiedDate.toLocaleString('default', {
@@ -751,6 +754,9 @@ export default function Post(props) {
     return (
         <div className={getResponsiveClassName("post", isMobile, isTablet)} ref={postRef}>
             <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
+            {
+                (isMobile || isTablet) && <div className="separator"></div>
+            }
             <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
                 <Content components={components}></Content>
             </div>

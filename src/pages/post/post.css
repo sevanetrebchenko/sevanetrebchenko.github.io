@@ -18,6 +18,13 @@
 }
 
 .post.mobile {
+    row-gap: 0;
+}
+
+.post.mobile > .separator {
+    width: 90%;
+    margin: 0 auto;
+    border-bottom: 1px solid gainsboro;
 }
 
 .post .header {
@@ -82,6 +89,8 @@
 
 .post.mobile .body {
     padding: 20px;
+    padding-top: 15px;
+    padding-bottom: 40px;
 }
 
 .post.mobile .header .title {
@@ -92,21 +101,46 @@
 }
 
 .post.mobile .header .title > span {
-    text-align: center;
-    font-size: 30px;
+    font-size: 7vw;
 }
 
+.post.mobile p,
+.post.mobile li {
+    font-size: 3.8vw;
+}
+.post.mobile h1 {
+}
+.post.mobile h2 {
+    font-size: 5.5vw;
+    padding-top: 6vw;
+    padding-bottom: 3vw;
+}
+.post.mobile h3 {
+    font-size: 4.6vw;
+    padding-top: 4.5vw;
+    padding-bottom: 2.25vw;
+}
+.post.mobile pre {
+    padding: 3vw 0;
+    font-size: 4vw;
+}
 
 .post p,
 .post ul,
-.post > pre,
-.post > h1,
-.post > h2,
-.post > h3,
-.post > h4,
-.post > h5,
-.post > h6 {
+.post pre,
+.post h1,
+.post h2,
+.post h3,
+.post h4,
+.post h5,
+.post h6 {
     margin: 0;
+}
+
+.post hr {
+    border: 0;
+    border-bottom: 1px solid gainsboro;
+    margin: 20px 0;
 }
 
 .post p {
@@ -158,8 +192,7 @@
 
 .post.mobile .metadata {
     font-size: 14px;
-}
-
-.post.mobile .metadata span {
-    width: 50%;
+    flex-direction: column;
+    padding: 0;
+    padding-top: 16px;
 }
