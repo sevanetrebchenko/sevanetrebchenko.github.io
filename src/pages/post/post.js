@@ -44,12 +44,12 @@ function Header(props) {
 
     return (
         <div className={getResponsiveClassName("header", isMobile, isTablet)}>
-            {
-                isDesktop && <div className="back">
-                    <i className="fa-solid fa-chevron-left"></i>
-                    <span onClick={onClick}>BACK</span>
-                </div>
-            }
+            {/*{*/}
+            {/*    isDesktop && <div className="back">*/}
+            {/*        <i className="fa-solid fa-chevron-left"></i>*/}
+            {/*        <span onClick={onClick}>BACK</span>*/}
+            {/*    </div>*/}
+            {/*}*/}
             <div className="title">
                 <span>{title}</span>
                 <div className="metadata">
@@ -742,6 +742,7 @@ export default function Post(props) {
 
     const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
     const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const isDesktop = useMediaQuery({ minWidth: tabletDisplayWidthThreshold + 1 });
 
     if (Content == null) {
         return;
@@ -757,10 +758,15 @@ export default function Post(props) {
             {
                 (isMobile || isTablet) && <div className="separator"></div>
             }
+            { isDesktop && <div className="separator"></div> }
             <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
                 <Content components={components}></Content>
             </div>
-            <div className="footer"></div>
+            {
+                <div className="footer">
+                    <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
+                </div>
+            }
         </div>
     );
 }

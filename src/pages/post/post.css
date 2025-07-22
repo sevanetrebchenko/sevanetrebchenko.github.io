@@ -15,27 +15,33 @@
 
     box-sizing: border-box;
     width: 100%;
+
+    padding-bottom: 40px;
 }
 
 .post.mobile {
     row-gap: 0;
 }
 
-.post.mobile > .separator {
-    width: 90%;
-    margin: 0 auto;
+/* Same as an hr with 20px of padding on either side */
+.post > .separator {
+    width: min(1200px, calc(100% - 40px));
     border-bottom: 1px solid gainsboro;
 }
 
 .post .header {
     display: flex;
     flex-direction: row;
+    column-gap: 32px;
     justify-content: center;
-    margin: 0 auto;
+    width: 100%;
+    padding-top: 40px;
+
+    box-sizing: border-box;
 }
 
 .post .header .back {
-    margin: auto auto;
+    padding: 12px 24px;
 }
 .post .header .back i {
     color: gray;
@@ -48,8 +54,6 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 18px;
     font-weight: 200;
-
-    padding: 5px 15px;
 }
 .post .header .back:hover {
     cursor: pointer;
@@ -59,7 +63,6 @@
     color: gainsboro;
 }
 .post .header .title {
-    padding: 36px 72px;
 }
 .post .header .title > span {
     display: flex;
@@ -82,6 +85,9 @@
 .post .header .metadata .separator {
     border-color: gray;
 }
+.post.mobile .header .metadata .separator {
+    border-color: gray;
+}
 
 .post.mobile .header {
     padding: 20px;
@@ -90,7 +96,7 @@
 .post.mobile .body {
     padding: 20px;
     padding-top: 15px;
-    padding-bottom: 40px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
 .post.mobile .header .title {
@@ -104,6 +110,33 @@
     font-size: 7vw;
 }
 
+/* Desktop */
+.post p,
+.post li {
+    font-size: 18px;
+}
+.post h1 {
+}
+.post h2 {
+    font-size: 28px;
+    padding-top: 16px;
+    padding-bottom: 8px;
+}
+.post h3 {
+    font-size: 22px;
+    padding-top: 12px;
+    padding-bottom: 6px;
+}
+.post pre {
+    padding: 16px 0;
+}
+.post ol,
+.post ul {
+    padding-bottom: 16px;
+    padding-top: 16px;
+}
+
+/* Mobile */
 .post.mobile p,
 .post.mobile li {
     font-size: 3.8vw;
@@ -122,11 +155,20 @@
 }
 .post.mobile pre {
     padding: 3vw 0;
+}
+.post.mobile pre {
+    padding: 3vw 0;
     font-size: 4vw;
+}
+.post.mobile ol,
+.post.mobile ul {
+    padding-bottom: 3vw;
+    padding-top: 3vw;
 }
 
 .post p,
 .post ul,
+.post ol,
 .post pre,
 .post h1,
 .post h2,
@@ -156,10 +198,10 @@
 }
 
 .post .body {
-    padding: 20px;
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
     box-sizing: border-box;
+    padding-bottom: 80px;
 }
 
 .post.mobile .body {
@@ -190,7 +232,7 @@
     font-weight: bold;
 }
 
-.post.mobile .metadata {
+.post.mobile .header .metadata {
     font-size: 14px;
     flex-direction: column;
     padding: 0;
