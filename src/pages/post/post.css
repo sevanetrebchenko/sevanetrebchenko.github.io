@@ -1,6 +1,26 @@
 
-.post {
+.post-container {
+    display: flex;
+    justify-content: center;
+    flex: 1;
     overflow-y: scroll;
+    box-sizing: border-box;
+}
+
+.post-container .navigation {
+    position: sticky;
+    top: 0;
+
+    flex: 1;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.post-container .bumper {
+    flex: 1;
+}
+
+.post {
     height: 100vh;
 
     font-family: "Noto Serif", serif;
@@ -14,18 +34,26 @@
     row-gap: 15px;
 
     box-sizing: border-box;
-    width: 100%;
-
-    padding-bottom: 40px;
+    max-width: 1200px;
 }
+
+
 
 .post.mobile {
     row-gap: 0;
+    overflow-y: scroll;
+    padding-bottom: 60px;
+}
+
+.post .panel {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
 }
 
 /* Same as an hr with 20px of padding on either side */
 .post > .separator {
-    width: min(1200px, calc(100% - 40px));
+    width: 1200px;
     border-bottom: 1px solid gainsboro;
 }
 
@@ -40,26 +68,30 @@
     box-sizing: border-box;
 }
 
-.post .header .back {
+.post-container .navigation .back {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    align-items: center;
     padding: 12px 24px;
 }
-.post .header .back i {
+.post-container .navigation .back i {
     color: gray;
     transition: color 0.15s;
 }
-.post .header .back span {
+.post-container .navigation .back span {
     color: gray;
     transition: color 0.15s;
 
     font-family: "JetBrains Mono", monospace;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 200;
 }
-.post .header .back:hover {
+.post-container .navigation .back:hover {
     cursor: pointer;
 }
-.post .header .back:hover i,
-.post .header .back:hover span {
+.post-container .navigation .back:hover i,
+.post-container .navigation .back:hover span {
     color: gainsboro;
 }
 .post .header .title {
@@ -96,7 +128,7 @@
 .post.mobile .body {
     padding: 20px;
     padding-top: 15px;
-    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    padding-bottom: 40px;
 }
 
 .post.mobile .header .title {
@@ -129,6 +161,8 @@
 }
 .post pre {
     padding: 16px 0;
+    width: 99%;
+    justify-self: center;
 }
 .post ol,
 .post ul {

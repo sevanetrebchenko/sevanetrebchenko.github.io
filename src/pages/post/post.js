@@ -23,6 +23,7 @@ await import("prismjs/components/prism-glsl")
 
 // Stylesheet
 import "./post.css"
+import "../landing/footer.css"
 import "../languages/cpp.css"
 import "../languages/json.css"
 import "../languages/yaml.css"
@@ -33,23 +34,12 @@ function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;
     const navigateTo = useNavigate();
 
-    const onClick = (e) => {
-        e.preventDefault();
-        navigateTo("/");
-    }
-
     const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
     const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
     const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
 
     return (
         <div className={getResponsiveClassName("header", isMobile, isTablet)}>
-            {/*{*/}
-            {/*    isDesktop && <div className="back">*/}
-            {/*        <i className="fa-solid fa-chevron-left"></i>*/}
-            {/*        <span onClick={onClick}>BACK</span>*/}
-            {/*    </div>*/}
-            {/*}*/}
             <div className="title">
                 <span>{title}</span>
                 <div className="metadata">
@@ -701,6 +691,7 @@ function LocalLink(props) {
 
 export default function Post(props) {
     const {post} = props;
+    const navigateTo = useNavigate();
     const [Content, setContent] = useState(null);
     const category = useDimensions();
     const markdownRef = useRef(null);
@@ -721,10 +712,9 @@ export default function Post(props) {
                 }).then(response => response.toString());
 
                 // Execute compiled source to get MDX content
-                const { default: MDXContent } = await run(code, { ...runtime });
+                const {default: MDXContent} = await run(code, {...runtime});
                 setContent(() => MDXContent);
-            }
-            catch (error) {
+            } catch (error) {
                 console.error("Error loading post content: ", error);
             }
         }
@@ -740,9 +730,9 @@ export default function Post(props) {
         }
     }, [Content]);
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
-    const isDesktop = useMediaQuery({ minWidth: tabletDisplayWidthThreshold + 1 });
+    const isMobile = useMediaQuery({maxWidth: mobileDisplayWidthThreshold});
+    const isTablet = useMediaQuery({minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold});
+    const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
 
     if (Content == null) {
         return;
@@ -752,21 +742,36 @@ export default function Post(props) {
         LocalLink: LocalLink,
         code: CodeBlock,
     }
-    return (
-        <div className={getResponsiveClassName("post", isMobile, isTablet)} ref={postRef}>
-            <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-            {
-                (isMobile || isTablet) && <div className="separator"></div>
-            }
-            { isDesktop && <div className="separator"></div> }
-            <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
-                <Content components={components}></Content>
-            </div>
-            {
-                <div className="footer">
-                    <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
-                </div>
-            }
+
+    const element = <div className={getResponsiveClassName("post", isMobile, isTablet)} ref={postRef}>
+        <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
+        {
+            (isMobile || isTablet) && <div className="separator"></div>
+        }
+        {isDesktop && <div className="separator"></div>}
+        <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
+            <Content components={components}></Content>
         </div>
-    );
+        {
+            <div className="footer">
+                <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
+            </div>
+        }
+    </div>
+
+    const onClick = (e) => {
+        e.preventDefault();
+        navigateTo("/");
+    }
+
+    return isDesktop ? <div className="post-container">
+            <div className="navigation">
+                <div className="back">
+                    <i className="fa-solid fa-chevron-left"></i>
+                    <span onClick={onClick}>BACK</span>
+                </div>
+            </div>
+            {element}
+            <div className="bumper"></div>
+        </div> : element
 }
