@@ -80,6 +80,8 @@
 }
 .landing .posts .content .no-results .description {
     font-weight: 300;
+    word-break: break-all;
+    text-align: center;
 }
 .landing .posts .content .no-results .description .query {
     font-weight: 500;
