@@ -9,8 +9,12 @@
 .footer .copyright {
     font-family: "Noto Serif", serif;
     font-weight: 300;
-    font-size: 12px;
+    font-size: 14px;
     color: gray;
     margin: 0;
     text-align: center;
+}
+
+.footer.mobile .copyright {
+    font-size: 12px;
 }

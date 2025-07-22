@@ -753,7 +753,7 @@ export default function Post(props) {
             <Content components={components}></Content>
         </div>
         {
-            <div className="footer">
+            <div className={getResponsiveClassName("footer", isMobile, isTablet)}>
                 <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
             </div>
         }
