@@ -1,10 +1,9 @@
-import React, {Fragment, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {getPostUrl, getResponsiveClassName, mobileDisplayWidthThreshold, sortByName, tabletDisplayWidthThreshold} from "../../utils";
+import {getPostUrl, sortByName, useResponsiveBreakpoint} from "../../utils";
 
 // Stylesheet
 import "./postcard.css"
-import {useMediaQuery} from "react-responsive";
 
 export default function Postcard(props) {
     const {post} = props;
@@ -53,11 +52,10 @@ export default function Postcard(props) {
     // Post abstracts may contain inline code that should be parsed out
     const parts = post.abstract.split(/(`[^`]+`)/g);
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
 
     return (
-        <div className={getResponsiveClassName("postcard", isMobile, isTablet)} onClick={() => navigateTo(getPostUrl(post.title))}>
+        <div className="postcard" onClick={() => navigateTo(getPostUrl(post.title))}>
             <div className="abstract">
                 <span className="title">{post.title}</span>
                 <span className="description">
@@ -81,29 +79,25 @@ export default function Postcard(props) {
                 <div className="date">
                     <i className="fa fa-clock-o fa-fw"></i>
                     <span>
-                        {
-                            isMobile || isTablet ?
-                                `${post.date.getMonth() + 1}/${post.date.getDate()}/${post.date.getFullYear()}`
-                                : `${post.date.toLocaleString("default", {month: "long"})} ${post.date.getDate()}, ${post.date.getFullYear()}`
-                        }
+                        { !isDesktop ? `${post.date.getMonth() + 1}/${post.date.getDate()}/${post.date.getFullYear()}` : `${post.date.toLocaleString("default", {month: "long"})} ${post.date.getDate()}, ${post.date.getFullYear()}` }
                     </span>
                 </div>
                 {
-                    (isMobile || isTablet) && <span className="tag-label" ref={tagLabelRef} onClick={(e) => toggleTags(e)}>
+                    !isDesktop && <span className="tag-label" ref={tagLabelRef} onClick={(e) => toggleTags(e)}>
                         {
                             tagsVisible ? " Hide tags " : ` Show ${post.tags.length} tags `
                         }
                     </span>
                 }
                 {
-                    (((isMobile || isTablet) && tagsVisible) || !(isMobile || isTablet)) && <div className="tags">
+                    ((!isDesktop && tagsVisible) || isDesktop) && <div className="tags">
                         {
                             post.tags.map((tag, id) => {
                                 let classNames = ["tag"];
                                 if (selectedTags.includes(tag)) {
                                     classNames.push("selected");
                                 }
-                                return <span key={id} className={classNames.join(" ")} onClick={() => (isMobile || isTablet ? null : handleTagClick(tag, e))}>#{tag}</span>
+                                return <span key={id} className={classNames.join(" ")} onClick={(e) => (isDesktop ? handleTagClick(tag, e) : null)}>#{tag}</span>
                             })
                         }
                     </div>

@@ -27,18 +27,63 @@ async function get(url) {
     });
 }
 
-function getResponsiveClassName(classNames, isMobile, isTablet) {
-    classNames = classNames.split(" ");
+function useResponsiveBreakpoint() {
+    const breakpoints = {
+        mobile: 480,
+        compact: 768,
+        tablet: 1024,
+        desktop: 1280,
+        wide: 1536
+    }
+
+    const isMobile = useMediaQuery({ maxWidth: breakpoints.mobile - 1 });
+    const isCompact = useMediaQuery({
+        minWidth: breakpoints.mobile,
+        maxWidth: breakpoints.compact - 1,
+    });
+    const isTablet = useMediaQuery({
+        minWidth: breakpoints.compact,
+        maxWidth: breakpoints.tablet - 1,
+    });
+    const isDesktop = useMediaQuery({
+        minWidth: breakpoints.tablet,
+        maxWidth: breakpoints.desktop - 1,
+    });
+    const isWide = useMediaQuery({
+        minWidth: breakpoints.wide,
+    })
+
+    let label = "wide";
     if (isMobile) {
-        classNames.push("mobile");
+        label = "mobile";
+    }
+    else if (isCompact) {
+        label = "compact";
     }
     else if (isTablet) {
-        classNames.push("tablet");
+        label = "tablet";
     }
-    return classNames.join(" ");
+    else if (isDesktop) {
+        label = "desktop";
+    }
+
+    function atLeast(target) {
+        return breakpoints[label] >= breakpoints[target];
+    }
+    function atMost(target) {
+        return breakpoints[label] <= breakpoints[target];
+    }
+
+    return {
+        label,
+        isMobile,
+        isCompact,
+        isTablet,
+        isDesktop,
+        isWide,
+        atLeast,
+        atMost
+    };
 }
 
-const mobileDisplayWidthThreshold = 480;
-const tabletDisplayWidthThreshold = 1280;
-
-export { getPostUrl, sortByName, get, getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold }
+export { getPostUrl, sortByName, get, useResponsiveBreakpoint }

@@ -3,8 +3,7 @@ import {useSearchParams} from "react-router-dom";
 
 // Stylesheet
 import "./search.css"
-import {getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold} from "../../utils";
-import {useMediaQuery} from "react-responsive";
+import {useResponsiveBreakpoint} from "../../utils";
 
 export default function Search(props) {
     const { focused } = props;
@@ -44,11 +43,10 @@ export default function Search(props) {
         }
     }, []);
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
 
     return (
-        <div className={getResponsiveClassName("search", isMobile, isTablet)}>
+        <div className="search" data-size={label}>
             <input className="query" ref={inputRef} placeholder="Type something..." onInput={onInput} value={query}></input>
             {
                 // Display "clear" button when the search field has input, otherwise display "search" button

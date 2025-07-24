@@ -1,13 +1,12 @@
 
 import React, { Fragment, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import {useMediaQuery} from "react-responsive";
 
 // Components
 import Sidebar from "./sidebar"
 import Postcard from "./postcard";
 import Search from "./search";
-import {getResponsiveClassName, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold} from "../../utils";
+import {useResponsiveBreakpoint} from "../../utils";
 
 // Stylesheets
 import "./landing.css"
@@ -15,13 +14,8 @@ import "./landing.css"
 function Paginate(props) {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // screen size checks
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({
-        minWidth: mobileDisplayWidthThreshold + 1,
-        maxWidth: tabletDisplayWidthThreshold,
-    });
-    const isHandheld = isMobile || isTablet;
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
+    const isHandheld = atMost("tablet");
 
     const { posts, postsPerPage } = props;
     const totalNumPages = Math.ceil(posts.length / postsPerPage);
@@ -104,7 +98,7 @@ function Paginate(props) {
 
     return (
         <Fragment>
-            <div className={"content"}>
+            <div className="content">
                 {currentPosts.length > 0 ? (
                     <Fragment>
                         {currentPosts.map((post, i) => (
@@ -167,6 +161,8 @@ function Posts(props) {
     const {year, month} = useParams();
     const [searchParams] = useSearchParams();
 
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
+
     let filtered = posts;
     if (year) {
         filtered = filtered.filter(post => {
@@ -208,20 +204,9 @@ function Posts(props) {
         return true;
     });
 
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
-
-    const classNames = ["posts"]
-    if (isMobile) {
-        classNames.push("mobile");
-    }
-    else if (isTablet) {
-        classNames.push("tablet");
-    }
-
     return (
-        <div className={classNames.join(" ")}>
-            {!isMobile && <Search></Search>}
+        <div className="posts">
+            { isDesktop && <Search></Search>}
             <Paginate posts={filtered} postsPerPage={7}></Paginate>
         </div>
     );
@@ -229,12 +214,9 @@ function Posts(props) {
 
 export default function Landing(props) {
     const {posts, tags, archive} = props;
-
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
-
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
     return (
-        <div className={getResponsiveClassName("landing", isMobile, isTablet)}>
+        <div className="landing" data-size={label}>
             <div className="spacer left"></div>
             <Sidebar tags={tags} archive={archive}/>
             <Posts posts={posts}/>

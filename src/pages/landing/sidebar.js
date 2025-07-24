@@ -1,16 +1,9 @@
 import React, {forwardRef, Fragment, useEffect, useRef, useState} from "react";
 import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
-import {
-    getResponsiveClassName,
-    sortByName,
-    mobileDisplayWidthThreshold,
-    tabletDisplayWidthThreshold
-} from "../../utils";
+import {sortByName, useResponsiveBreakpoint} from "../../utils";
 
 // Stylesheet
 import "./sidebar.css"
-import MenuIcon from "../icons";
-import {useMediaQuery} from "react-responsive";
 import Search from "./search";
 
 function Tags(props) {
@@ -257,17 +250,11 @@ function DesktopSidebar(props) {
 
 export default function Sidebar(props) {
     const {tags, archive} = props;
-
     const sidebarRef = useRef(null);
-
-    const isMobile = useMediaQuery({maxWidth: mobileDisplayWidthThreshold});
-    const isTablet = useMediaQuery({minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold});
-
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
     return (
-        <div className={getResponsiveClassName("sidebar", isMobile, isTablet)} ref={sidebarRef}>
-            {
-                isMobile || isTablet ? <MobileSidebar tags={tags} archive={archive} ref={sidebarRef}/> : <DesktopSidebar tags={tags} archive={archive} />
-            }
+        <div className="sidebar" ref={sidebarRef}>
+            { isDesktop ? <DesktopSidebar tags={tags} archive={archive} /> : <MobileSidebar tags={tags} archive={archive} ref={sidebarRef}/> }
         </div>
     );
 }

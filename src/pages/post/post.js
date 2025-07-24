@@ -1,13 +1,10 @@
 import React, {Fragment, useEffect, useRef, useState} from "react";
-import ReactMarkdown from "react-markdown";
-import RehypeRaw from "rehype-raw";
-import RemarkGFM from "remark-gfm";
 import rangeParser from "parse-numeric-range";
 import processLanguageCpp from "../languages/cpp";
 import { Link } from 'react-router-dom';
 
 import {useNavigate} from "react-router-dom";
-import {get, getPostUrl, mobileDisplayWidthThreshold, tabletDisplayWidthThreshold, getResponsiveClassName} from "../../utils";
+import {get, getPostUrl, useResponsiveBreakpoint} from "../../utils";
 import {compile, run} from "@mdx-js/mdx";
 import * as runtime from 'react/jsx-runtime'
 import { visit } from 'unist-util-visit';
@@ -28,18 +25,14 @@ import "../languages/cpp.css"
 import "../languages/json.css"
 import "../languages/yaml.css"
 import "../languages/css.css"
-import {useMediaQuery} from "react-responsive";
 
 function Header(props) {
     const {title, tags, publishedDate, lastModifiedDate} = props;
     const navigateTo = useNavigate();
-
-    const isMobile = useMediaQuery({ maxWidth: mobileDisplayWidthThreshold });
-    const isTablet = useMediaQuery({ minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold });
-    const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
 
     return (
-        <div className={getResponsiveClassName("header", isMobile, isTablet)}>
+        <div className="header">
             <div className="title">
                 <span>{title}</span>
                 <div className="metadata">
@@ -52,9 +45,7 @@ function Header(props) {
                             })}`
                         }
                     </span>
-                    {
-                        isDesktop && <div className="separator"></div>
-                    }
+                    { isDesktop && <div className="separator"></div> }
                     <span>
                     {
                         `Last revised ${lastModifiedDate.toLocaleString('default', {
@@ -583,35 +574,6 @@ function extractSectionHeaders(sectionHeaders) {
     }
 }
 
-function useDimensions() {
-    // Define breakpoints
-    const getDeviceCategory = (width) => {
-        if (width < 768) return "mobile";
-        if (width < 1024) return "tablet";
-        return "desktop";
-    };
-
-    const [deviceCategory, setDeviceCategory] = useState(getDeviceCategory(window.innerWidth));
-    const prevCategory = useRef(deviceCategory); // Ref to track the previous category
-
-    useEffect(() => {
-        const handleResize = () => {
-            const newCategory = getDeviceCategory(window.innerWidth);
-
-            // Only update state if the category actually changes
-            if (prevCategory.current !== newCategory) {
-                prevCategory.current = newCategory; // Update ref first
-                setDeviceCategory(newCategory);
-            }
-        };
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    return deviceCategory;
-}
-
 function SectionHeaders(props) {
     const { markdownRef } = props;
 
@@ -693,8 +655,9 @@ export default function Post(props) {
     const {post} = props;
     const navigateTo = useNavigate();
     const [Content, setContent] = useState(null);
-    const category = useDimensions();
     const markdownRef = useRef(null);
+
+    const { label, isMobile, isCompact, isTablet, isDesktop, isWide, atLeast, atMost } = useResponsiveBreakpoint();
 
     // load post content
     useEffect(() => {
@@ -730,10 +693,6 @@ export default function Post(props) {
         }
     }, [Content]);
 
-    const isMobile = useMediaQuery({maxWidth: mobileDisplayWidthThreshold});
-    const isTablet = useMediaQuery({minWidth: mobileDisplayWidthThreshold + 1, maxWidth: tabletDisplayWidthThreshold});
-    const isDesktop = useMediaQuery({minWidth: tabletDisplayWidthThreshold + 1});
-
     if (Content == null) {
         return;
     }
@@ -743,17 +702,14 @@ export default function Post(props) {
         code: CodeBlock,
     }
 
-    const element = <div className={getResponsiveClassName("post", isMobile, isTablet)} ref={postRef}>
+    const element = <div className="post" data-size={label} ref={postRef}>
         <Header title={post.title} tags={post.tags} publishedDate={post.date} lastModifiedDate={post.lastModifiedTime}/>
-        {
-            (isMobile || isTablet) && <div className="separator"></div>
-        }
-        {isDesktop && <div className="separator"></div>}
-        <div className={getResponsiveClassName("body", isMobile, isTablet)} ref={markdownRef}>
+        <div className="separator"></div>
+        <div className="body" ref={markdownRef}>
             <Content components={components}></Content>
         </div>
         {
-            <div className={getResponsiveClassName("footer", isMobile, isTablet)}>
+            <div className="footer">
                 <span className="copyright">© {new Date().getFullYear()} Seva Netrebchenko</span>
             </div>
         }
