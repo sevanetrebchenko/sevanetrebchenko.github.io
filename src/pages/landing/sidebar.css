@@ -1,115 +1,225 @@
+/* Sidebar Component - Migrated to data-size attributes */
 
-.sidebar {
+.landing[data-size="desktop"] .sidebar {
     display: flex;
     flex-direction: column;
     justify-content: right;
-
     padding: 80px;
     row-gap: 30px;
-
     box-sizing: border-box;
     max-width: 460px;
-
     max-height: 100vh;
     height: 100vh;
     position: sticky;
     top: 0;
-
     background-color: white;
 }
 
-.sidebar .dropdown {
+.landing[data-size="tablet"] .sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+    padding: 80px;
+    row-gap: 30px;
+    box-sizing: border-box;
+    max-width: 460px;
+    max-height: 100vh;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background-color: white;
+}
+
+.landing[data-size="mobile"] .sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+    flex: 1;
+    width: 100%;
+    max-height: unset;
+    height: unset;
+    padding: 0;
+    row-gap: 15px;
+    background-color: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.landing[data-size="desktop"] .sidebar .dropdown {
     display: flex;
     align-self: center;
-
     color: black;
 }
-.sidebar .dropdown i {
+
+.landing[data-size="tablet"] .sidebar .dropdown {
+    display: flex;
+    align-self: center;
+    color: black;
+}
+
+.landing[data-size="mobile"] .sidebar .dropdown {
+    display: flex;
+    align-self: center;
+    color: black;
+}
+
+.landing[data-size="desktop"] .sidebar .dropdown i {
     padding: 24px;
     font-size: 28px;
     color: gainsboro;
 }
 
-.sidebar i {
+.landing[data-size="tablet"] .sidebar .dropdown i {
+    padding: 24px;
+    font-size: 28px;
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar .dropdown i {
+    padding: 24px;
+    font-size: 28px;
+    color: gainsboro;
+}
+
+.landing[data-size="desktop"] .sidebar i {
     font-size: 20px;
     color: gainsboro;
     align-self: center;
 }
 
-.sidebar.mobile i {
-    padding: 18px;
+.landing[data-size="tablet"] .sidebar i {
+    font-size: 20px;
+    color: gainsboro;
     align-self: center;
 }
 
-.sidebar > .header-container .header {
+.landing[data-size="mobile"] .sidebar i {
+    font-size: 20px;
+    color: gainsboro;
+    align-self: center;
+    padding: 18px;
+}
+
+.landing[data-size="desktop"] .sidebar > .header-container .header {
     display: flex;
     flex-direction: column;
     row-gap: 10px;
     font-family: "Noto Serif", serif;
     color: black;
 }
-.sidebar > .header-container .header.mobile {
+
+.landing[data-size="tablet"] .sidebar > .header-container .header {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    font-family: "Noto Serif", serif;
+    color: black;
+}
+
+.landing[data-size="mobile"] .sidebar > .header-container .header {
+    display: flex;
     flex-direction: row;
     justify-content: space-between;
+    row-gap: 10px;
+    font-family: "Noto Serif", serif;
+    color: black;
 }
-.sidebar > .header-container .header:hover {
+
+.landing[data-size="desktop"] .sidebar > .header-container .header:hover {
     cursor: pointer;
 }
 
-.sidebar .header .masthead {
+.landing[data-size="tablet"] .sidebar > .header-container .header:hover {
+    cursor: pointer;
+}
+
+.landing[data-size="mobile"] .sidebar > .header-container .header:hover {
+    cursor: pointer;
+}
+
+.landing[data-size="desktop"] .sidebar .header .masthead {
     display: flex;
     flex-direction: column;
     row-gap: 10px;
 }
-.sidebar .header .masthead .title {
+
+.landing[data-size="tablet"] .sidebar .header .masthead {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.landing[data-size="mobile"] .sidebar .header .masthead {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.landing[data-size="desktop"] .sidebar .header .masthead .title {
     margin: 0;
     font-weight: 400;
     font-size: 36px;
     font-family: "Noto Serif", serif;
 }
-.sidebar .description {
+
+.landing[data-size="tablet"] .sidebar .header .masthead .title {
+    margin: 0;
+    font-weight: 400;
+    font-size: 36px;
+    font-family: "Noto Serif", serif;
+}
+
+.landing[data-size="mobile"] .sidebar .header .masthead .title {
+    margin: 0;
+    font-weight: 400;
+    font-size: 4.5vw;
+    font-family: "Noto Serif", serif;
+    padding: 12px 0;
+}
+
+.landing[data-size="desktop"] .sidebar .description {
     font-family: "Noto Serif", serif;
     font-weight: 300;
     font-size: 18px;
     color: gray;
 }
 
-.sidebar.mobile {
-    flex: 1;
-    width: 100%;
-    max-height: unset;
-    height: unset;
-
-    padding: 0;
-    row-gap: 15px;
-    background-color: white;
-
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+.landing[data-size="tablet"] .sidebar .description {
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: gray;
 }
 
-.sidebar.mobile .header {
+.landing[data-size="mobile"] .sidebar .description {
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 16px;
+    color: gray;
+}
+
+.landing[data-size="mobile"] .sidebar .header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
 }
 
-.sidebar.mobile .header i {
+.landing[data-size="mobile"] .sidebar .header i {
     font-size: 4vw;
 }
-.sidebar.mobile .description {
-    font-size: 16px;
-}
-.sidebar.mobile .header .title {
+
+.landing[data-size="mobile"] .sidebar .header .title {
     font-size: 4.5vw;
     padding: 12px 0;
 }
-.sidebar.mobile .content {
+
+.landing[data-size="mobile"] .sidebar .content {
     padding: 0 28px 44px 28px;
     row-gap: 15px;
 }
 
-.sidebar > .header-container .header > .description {
+.landing[data-size="desktop"] .sidebar > .header-container .header > .description {
     font-size: 18px;
     font-family: "Noto Serif", serif;
     font-weight: 300;
@@ -117,14 +227,44 @@
     width: 100%;
 }
 
-.sidebar > .content {
+.landing[data-size="tablet"] .sidebar > .header-container .header > .description {
+    font-size: 18px;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    margin: 0;
+    width: 100%;
+}
+
+.landing[data-size="mobile"] .sidebar > .header-container .header > .description {
+    font-size: 18px;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    margin: 0;
+    width: 100%;
+}
+
+.landing[data-size="desktop"] .sidebar > .content {
     display: flex;
     flex: 1;
     flex-direction: column;
     row-gap: 30px;
 }
 
-.sidebar .content .section {
+.landing[data-size="tablet"] .sidebar > .content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    row-gap: 30px;
+}
+
+.landing[data-size="mobile"] .sidebar > .content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    row-gap: 15px;
+}
+
+.landing[data-size="desktop"] .sidebar .content .section {
     display: flex;
     flex-direction: column;
     font-family: "Noto Serif", serif;
@@ -132,147 +272,327 @@
     row-gap: 14px;
     align-items: baseline;
 }
-.sidebar.mobile .content .section {
-    row-gap: 0;
+
+.landing[data-size="tablet"] .sidebar .content .section {
+    display: flex;
+    flex-direction: column;
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    row-gap: 14px;
+    align-items: baseline;
 }
 
-.sidebar > .content > .section > .header {
+.landing[data-size="mobile"] .sidebar .content .section {
+    display: flex;
+    flex-direction: column;
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    row-gap: 0;
+    align-items: baseline;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header {
     display: flex;
     align-items: baseline;
     flex-direction: row;
     column-gap: 20px;
-
     font-family: "Noto Serif", serif;
     font-weight: 400;
     font-size: 24px;
 }
-.sidebar.mobile .content .section .header .title {
-    font-size: 20px;
-}
 
-.sidebar > .content > .section > .header > .title {
+.landing[data-size="tablet"] .sidebar > .content > .section > .header {
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    column-gap: 20px;
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
     font-size: 24px;
 }
 
-.sidebar > .content > .section > .header > .clear-button {
+.landing[data-size="mobile"] .sidebar > .content > .section > .header {
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    column-gap: 20px;
+    font-family: "Noto Serif", serif;
+    font-weight: 400;
+    font-size: 24px;
+}
+
+.landing[data-size="mobile"] .sidebar .content .section .header .title {
+    font-size: 20px;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header > .title {
+    font-size: 24px;
+}
+
+.landing[data-size="tablet"] .sidebar > .content > .section > .header > .title {
+    font-size: 24px;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .header > .title {
+    font-size: 20px;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header > .clear-button {
     display: flex;
     flex-direction: row;
-
     column-gap: 10px;
-
     align-items: center;
-
     color: gray;
-
     font-family: "JetBrains Mono", monospace;
     font-size: 16px;
     font-weight: 200;
-
     cursor: pointer;
-
     transition: color 0.15s;
 }
-.sidebar.mobile .content .section .header .clear-button {
-    font-size: 15px;
+
+.landing[data-size="tablet"] .sidebar > .content > .section > .header > .clear-button {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+    align-items: center;
+    color: gray;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 16px;
+    font-weight: 200;
+    cursor: pointer;
+    transition: color 0.15s;
 }
-.sidebar.mobile .content .section .header .clear-button i {
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .header > .clear-button {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+    align-items: center;
+    color: gray;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 15px;
+    font-weight: 200;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.landing[data-size="mobile"] .sidebar .content .section .header .clear-button i {
     padding: 0;
 }
 
-
-.sidebar.mobile .header .mobile-search {
+.landing[data-size="mobile"] .sidebar .header .mobile-search {
     width: 100%;
 }
 
-.sidebar .content .section .header .clear-button:hover {
-    color: unset;
-}
-.sidebar > .content > .section > .header > .clear-button:hover {
+.landing[data-size="desktop"] .sidebar .content .section .header .clear-button:hover {
     color: gainsboro;
 }
-.sidebar > .content > .section > .header > .clear-button > i {
+
+.landing[data-size="tablet"] .sidebar .content .section .header .clear-button:hover {
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar .content .section .header .clear-button:hover {
+    color: unset;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header > .clear-button:hover {
+    color: gainsboro;
+}
+
+.landing[data-size="tablet"] .sidebar > .content > .section > .header > .clear-button:hover {
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .header > .clear-button:hover {
+    color: gainsboro;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header > .clear-button > i {
     color: gainsboro;
     transition: color 0.15s;
 }
-.sidebar > .content > .section > .header > .clear-button:hover > i {
+
+.landing[data-size="tablet"] .sidebar > .content > .section > .header > .clear-button > i {
+    color: gainsboro;
+    transition: color 0.15s;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .header > .clear-button > i {
+    color: gainsboro;
+    transition: color 0.15s;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .header > .clear-button:hover > i {
     color: red;
 }
 
-.sidebar > .content > .section > .elements,
-.sidebar > .content > .section > .selected-elements {
+.landing[data-size="tablet"] .sidebar > .content > .section > .header > .clear-button:hover > i {
+    color: red;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .header > .clear-button:hover > i {
+    color: red;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .elements,
+.landing[data-size="desktop"] .sidebar > .content > .section > .selected-elements {
     display: flex;
     flex-direction: row;
     align-items: baseline;
-
     flex-wrap: wrap;
     column-gap: 14px;
-
     color: gray;
 }
 
-.sidebar.mobile .content .section .elements,
-.sidebar.mobile .content .section .selected-elements {
+.landing[data-size="tablet"] .sidebar > .content > .section > .elements,
+.landing[data-size="tablet"] .sidebar > .content > .section > .selected-elements {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 14px;
+    color: gray;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .elements,
+.landing[data-size="mobile"] .sidebar > .content > .section > .selected-elements {
     display: flex;
     flex-direction: column;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 14px;
+    color: gray;
     padding: 0;
 }
 
-.sidebar.mobile .content .section .selected-elements {
+.landing[data-size="mobile"] .sidebar .content .section .selected-elements {
     padding-bottom: 16px;
 }
 
-.sidebar > .content > .section .element {
+.landing[data-size="desktop"] .sidebar > .content > .section .element {
     font-family: "JetBrains Mono", monospace;
     font-weight: 200;
     font-size: 16px;
-
     display: flex;
     align-items: baseline;
     flex-direction: row;
     padding: 5px;
     column-gap: 5px;
-
     color: gray;
     text-decoration: none;
     transition: color 0.15s;
 }
-.sidebar.mobile .content .section .element {
-    font-size: 15px;
+
+.landing[data-size="tablet"] .sidebar > .content > .section .element {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    font-size: 16px;
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    padding: 5px;
+    column-gap: 5px;
+    color: gray;
+    text-decoration: none;
+    transition: color 0.15s;
 }
-.sidebar > .content > .section .element > i {
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    font-size: 15px;
+    display: flex;
+    align-items: baseline;
+    flex-direction: row;
+    padding: 5px;
+    column-gap: 5px;
+    color: gray;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section .element > i {
     transition: color 0.15s;
     color: gainsboro;
 }
-.sidebar.mobile > .content > .section .element > i {
+
+.landing[data-size="tablet"] .sidebar > .content > .section .element > i {
+    transition: color 0.15s;
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element > i {
+    transition: color 0.15s;
+    color: gainsboro;
     padding: 0;
 }
 
-.sidebar > .content > .section .element.selected {
+.landing[data-size="desktop"] .sidebar > .content > .section .element.selected {
     color: orange;
 }
-.sidebar > .content > .section .element.selected > i {
+
+.landing[data-size="tablet"] .sidebar > .content > .section .element.selected {
+    color: orange;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element.selected {
+    color: orange;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section .element.selected > i {
     color: gainsboro;
 }
-.sidebar.mobile .content .section .element.selected i {
+
+.landing[data-size="tablet"] .sidebar > .content > .section .element.selected > i {
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element.selected > i {
+    color: gainsboro;
     font-size: 14px;
 }
-.sidebar > .content > .section .element:hover {
+
+.landing[data-size="desktop"] .sidebar > .content > .section .element:hover {
     cursor: pointer;
     color: gainsboro;
 }
-.sidebar.mobile .content .section .element:hover {
+
+.landing[data-size="tablet"] .sidebar > .content > .section .element:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element:hover {
+    cursor: pointer;
     color: orange;
 }
-.sidebar > .content > .section .element:hover > i {
+
+.landing[data-size="desktop"] .sidebar > .content > .section .element:hover > i {
     color: red;
 }
 
-/* The Archive section should have one element per row */
-.sidebar > .content > .section > .elements.archive {
+.landing[data-size="tablet"] .sidebar > .content > .section .element:hover > i {
+    color: red;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section .element:hover > i {
+    color: red;
+}
+
+.landing[data-size="desktop"] .sidebar > .content > .section > .elements.archive {
     flex-direction: column;
 }
 
-.sidebar .footer {
+.landing[data-size="tablet"] .sidebar > .content > .section > .elements.archive {
+    flex-direction: column;
+}
+
+.landing[data-size="mobile"] .sidebar > .content > .section > .elements.archive {
+    flex-direction: column;
+}
+
+.landing[data-size="desktop"] .sidebar .footer {
     display: flex;
     flex-direction: column;
     row-gap: 20px;
@@ -280,13 +600,44 @@
     justify-content: flex-end;
 }
 
-.sidebar .footer .socials {
+.landing[data-size="tablet"] .sidebar .footer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.landing[data-size="mobile"] .sidebar .footer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.landing[data-size="desktop"] .sidebar .footer .socials {
     display: flex;
     flex-direction: row;
     justify-content: center;
     column-gap: 40px;
 }
-.sidebar .footer .socials i {
+
+.landing[data-size="tablet"] .sidebar .footer .socials {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    column-gap: 40px;
+}
+
+.landing[data-size="mobile"] .sidebar .footer .socials {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    column-gap: 40px;
+}
+
+.landing[data-size="desktop"] .sidebar .footer .socials i {
     font-size: 25px;
     width: 25px;
     height: 25px;
@@ -294,7 +645,36 @@
     transition: 0.15s;
     color: gray;
 }
-.sidebar .footer .socials i:hover {
+
+.landing[data-size="tablet"] .sidebar .footer .socials i {
+    font-size: 25px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    transition: 0.15s;
+    color: gray;
+}
+
+.landing[data-size="mobile"] .sidebar .footer .socials i {
+    font-size: 25px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    transition: 0.15s;
+    color: gray;
+}
+
+.landing[data-size="desktop"] .sidebar .footer .socials i:hover {
+    cursor: pointer;
+    color: #9c9c9c;
+}
+
+.landing[data-size="tablet"] .sidebar .footer .socials i:hover {
+    cursor: pointer;
+    color: #9c9c9c;
+}
+
+.landing[data-size="mobile"] .sidebar .footer .socials i:hover {
     cursor: pointer;
     color: #9c9c9c;
 }

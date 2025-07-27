@@ -1,5 +1,5 @@
 
-.landing {
+.landing[data-size="desktop"] {
     display: flex;
     justify-content: center;
     box-sizing: border-box;
@@ -9,85 +9,172 @@
     background-color: #eeeeee;
 }
 
-.landing .posts {
+.landing[data-size="tablet"] {
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    position: absolute;
+    width: 100%;
+    overflow-y: scroll;
+    background-color: #eeeeee;
+}
+
+.landing[data-size="mobile"] {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    background-color: #eeeeee;
+    height: 100vh;
+}
+
+.landing[data-size="desktop"] .posts {
     display: flex;
     flex-direction: column;
     background-color: #eeeeee;
-
     box-sizing: border-box;
-
     padding: 80px;
     max-width: 1200px;
     width: 100%;
     height: 100vh;
 }
 
-.landing .posts .content {
+.landing[data-size="tablet"] .posts {
+    display: flex;
+    flex-direction: column;
+    background-color: #eeeeee;
+    box-sizing: border-box;
+    padding: 80px;
+    max-width: 1200px;
+    width: 100%;
+    height: 100vh;
+}
+
+.landing[data-size="mobile"] .posts {
+    display: flex;
+    flex-direction: column;
+    background-color: #eeeeee;
+    box-sizing: border-box;
+    padding: 36px;
+    overflow-y: scroll;
+}
+
+.landing[data-size="desktop"] .posts .content {
+    display: flex;
+    flex-direction: column;
+    row-gap: 40px;
+}
+
+.landing[data-size="tablet"] .posts .content {
     display: flex;
     flex-direction: column;
     row-gap: 40px;
     box-sizing: border-box;
 }
 
-.landing.mobile {
+.landing[data-size="mobile"] .posts .content {
     display: flex;
     flex-direction: column;
-    overflow-y: unset;
+    row-gap: 40px;
     box-sizing: border-box;
-    width: 100%;
-    height: 100%;
 }
 
-.landing.mobile .posts {
-    padding: 36px;
-    height: 100%;
-    overflow-y: scroll;
+.landing[data-size="mobile"] .posts .content .postcard {
+    padding: 32px;
 }
 
-.landing .spacer {
+.landing[data-size="mobile"] .posts .content .postcard .abstract .title {
+    font-size: 24px;
+}
+
+.landing[data-size="mobile"] .posts .content .postcard .abstract .description {
+    font-size: 16px;
+}
+
+.landing[data-size="desktop"] .spacer {
     display: flex;
     flex: 1;
     position: sticky;
     top: 0;
 }
 
-.landing .spacer.left {
+.landing[data-size="tablet"] .spacer {
+    display: flex;
+    flex: 1;
+    position: sticky;
+    top: 0;
+}
+
+.landing[data-size="desktop"] .spacer.left {
     background-color: white;
 }
-.landing .spacer.right {
+
+.landing[data-size="tablet"] .spacer.left {
+    background-color: white;
+}
+
+.landing[data-size="desktop"] .spacer.right {
     background-color: #eeeeee;
 }
 
-.landing.mobile .posts .content {
+.landing[data-size="tablet"] .spacer.right {
+    background-color: #eeeeee;
 }
 
-.landing.mobile .posts .content .postcard {
-    padding: 32px;
-}
-.landing.mobile .posts .content .postcard .abstract .title {
-    font-size: 24px;
-}
-.landing.mobile .posts .content .postcard .abstract .description {
-    font-size: 16px;
-}
-
-.landing .posts .content .no-results {
+.landing[data-size="desktop"] .posts .content .no-results {
     display: flex;
     justify-content: center;
     font-family: "Noto Serif", serif;
     color: gray;
     font-size: 18px;
 }
-.landing .posts .content .no-results .description {
+
+.landing[data-size="tablet"] .posts .content .no-results {
+    display: flex;
+    justify-content: center;
+    font-family: "Noto Serif", serif;
+    color: gray;
+    font-size: 18px;
+}
+
+.landing[data-size="mobile"] .posts .content .no-results {
+    display: flex;
+    justify-content: center;
+    font-family: "Noto Serif", serif;
+    color: gray;
+    font-size: 18px;
+}
+
+.landing[data-size="desktop"] .posts .content .no-results .description {
     font-weight: 300;
     word-break: break-all;
     text-align: center;
 }
-.landing .posts .content .no-results .description .query {
+
+.landing[data-size="tablet"] .posts .content .no-results .description {
+    font-weight: 300;
+    word-break: break-all;
+    text-align: center;
+}
+
+.landing[data-size="mobile"] .posts .content .no-results .description {
+    font-weight: 300;
+    word-break: break-all;
+    text-align: center;
+}
+
+.landing[data-size="desktop"] .posts .content .no-results .description .query {
     font-weight: 500;
 }
 
-.landing .sidebar-container {
+.landing[data-size="tablet"] .posts .content .no-results .description .query {
+    font-weight: 500;
+}
+
+.landing[data-size="mobile"] .posts .content .no-results .description .query {
+    font-weight: 500;
+}
+
+.landing[data-size="desktop"] .sidebar-container {
     display: flex;
     flex-direction: row;
     justify-content: end;
@@ -95,38 +182,74 @@
     height: 100vh;
 }
 
-.landing .bumper {
+.landing[data-size="tablet"] .sidebar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    background-color: white;
+    height: 100vh;
+}
+
+.landing[data-size="mobile"] .sidebar-container {
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+    height: unset;
+    background-color: white;
+}
+
+.landing[data-size="desktop"] .bumper {
     display: flex;
     width: 100%;
 }
 
-.landing .sidebar-container.mobile {
-    justify-content: start;
-    flex-direction: row;
-    height: unset;
+.landing[data-size="tablet"] .bumper {
+    display: flex;
+    width: 100%;
 }
 
-.landing .pagination {
-    padding-bottom: 40px;
+.landing[data-size="mobile"] .bumper {
+    display: flex;
+    width: 100%;
+}
 
+.landing[data-size="desktop"] .pagination {
+    padding-bottom: 40px;
     font-family: "JetBrains Mono", monospace;
     font-weight: 300;
     color: gray;
-
     display: flex;
     flex-direction: row;
-
     align-items: baseline;
     user-select: none;
-
     column-gap: 20px;
 }
 
-.landing.mobile .pagination {
-    padding: 0;
+.landing[data-size="tablet"] .pagination {
+    padding-bottom: 40px;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 300;
+    color: gray;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    user-select: none;
+    column-gap: 20px;
 }
 
-.landing .pagination .page-numbers {
+.landing[data-size="mobile"] .pagination {
+    padding: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 300;
+    color: gray;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    user-select: none;
+    column-gap: 20px;
+}
+
+.landing[data-size="desktop"] .pagination .page-numbers {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -134,56 +257,164 @@
     white-space: preserve;
     align-items: end;
 }
-.landing.mobile .pagination .page-numbers {
-    column-gap: 20px;
-}
-.landing.tablet .pagination .page-numbers {
+
+.landing[data-size="tablet"] .pagination .page-numbers {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     column-gap: 10px;
+    white-space: preserve;
+    align-items: end;
 }
-.landing .pagination .page-numbers span {
+
+.landing[data-size="mobile"] .pagination .page-numbers {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    column-gap: 20px;
+    white-space: preserve;
+    align-items: end;
+}
+
+.landing[data-size="desktop"] .pagination .page-numbers span {
     padding: 10px;
 }
-.landing .pagination .page-numbers span.active {
+
+.landing[data-size="tablet"] .pagination .page-numbers span {
+    padding: 10px;
+}
+
+.landing[data-size="mobile"] .pagination .page-numbers span {
+    padding: 10px;
+}
+
+.landing[data-size="desktop"] .pagination .page-numbers span.active {
     color: black;
 }
 
-.landing .load-more {
+.landing[data-size="tablet"] .pagination .page-numbers span.active {
+    color: black;
+}
+
+.landing[data-size="mobile"] .pagination .page-numbers span.active {
+    color: black;
+}
+
+.landing[data-size="desktop"] .load-more {
     display: flex;
     flex-direction: column;
     margin: 0;
     padding-bottom: 20px;
     color: gray;
 }
-.landing .load-more:hover {
+
+.landing[data-size="tablet"] .load-more {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding-bottom: 20px;
+    color: gray;
+}
+
+.landing[data-size="mobile"] .load-more {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding-bottom: 20px;
+    color: gray;
+}
+
+.landing[data-size="desktop"] .load-more:hover {
     color: #afafaf;
     transition: 0.2s;
     cursor: pointer;
 }
 
-.landing .load-more span {
+.landing[data-size="tablet"] .load-more:hover {
+    color: #afafaf;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.landing[data-size="mobile"] .load-more:hover {
+    color: #afafaf;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.landing[data-size="desktop"] .load-more span {
     font-family: "JetBrains Mono", monospace;
     text-transform: uppercase;
     font-weight: 300;
     padding: 24px 40px 10px;
     align-self: center;
 }
-.landing .load-more i {
+
+.landing[data-size="tablet"] .load-more span {
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    font-weight: 300;
+    padding: 24px 40px 10px;
     align-self: center;
 }
 
-.landing .pagination .page-numbers span:hover {
+.landing[data-size="mobile"] .load-more span {
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    font-weight: 300;
+    padding: 24px 40px 10px;
+    align-self: center;
+}
+
+.landing[data-size="desktop"] .load-more i {
+    align-self: center;
+}
+
+.landing[data-size="tablet"] .load-more i {
+    align-self: center;
+}
+
+.landing[data-size="mobile"] .load-more i {
+    align-self: center;
+}
+
+.landing[data-size="desktop"] .pagination .page-numbers span:hover {
     color: black;
     cursor: pointer;
     transition: 0.2s;
 }
 
-.landing .pagination .navigation-button:hover {
+.landing[data-size="tablet"] .pagination .page-numbers span:hover {
+    color: black;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.landing[data-size="mobile"] .pagination .page-numbers span:hover {
+    color: black;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button:hover {
     cursor: pointer;
     color: black;
     transition: 0.2s;
 }
 
-.landing .pagination .navigation-button {
+.landing[data-size="tablet"] .pagination .navigation-button:hover {
+    cursor: pointer;
+    color: black;
+    transition: 0.2s;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button:hover {
+    cursor: pointer;
+    color: black;
+    transition: 0.2s;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button {
     display: flex;
     flex: 1;
     column-gap: 32px;
@@ -191,30 +422,120 @@
     text-transform: uppercase;
 }
 
-.landing .pagination .navigation-button.align-right {
+.landing[data-size="tablet"] .pagination .navigation-button {
+    display: flex;
+    flex: 1;
+    column-gap: 32px;
+    align-items: baseline;
+    text-transform: uppercase;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button {
+    display: flex;
+    flex: 1;
+    column-gap: 32px;
+    align-items: baseline;
+    text-transform: uppercase;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.align-right {
     justify-content: end;
 }
-.landing .pagination .navigation-button span {
-    padding: 12px 24px 12px 0;
+
+.landing[data-size="tablet"] .pagination .navigation-button.align-right {
+    justify-content: end;
 }
-.landing .pagination .navigation-button i {
-    padding: 12px 0 12px 24px;
+
+.landing[data-size="mobile"] .pagination .navigation-button.align-right {
+    justify-content: end;
 }
-.landing .pagination .navigation-button.align-right span {
-    padding: 12px 0 12px 24px;
-}
-.landing .pagination .navigation-button.align-right i {
+
+.landing[data-size="desktop"] .pagination .navigation-button span {
     padding: 12px 24px 12px 0;
 }
 
-.landing .pagination .navigation-button.disabled {
+.landing[data-size="tablet"] .pagination .navigation-button span {
+    padding: 12px 24px 12px 0;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button span {
+    padding: 12px 24px 12px 0;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button i {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="tablet"] .pagination .navigation-button i {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button i {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.align-right span {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="tablet"] .pagination .navigation-button.align-right span {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button.align-right span {
+    padding: 12px 0 12px 24px;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.align-right i {
+    padding: 12px 24px 12px 0;
+}
+
+.landing[data-size="tablet"] .pagination .navigation-button.align-right i {
+    padding: 12px 24px 12px 0;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button.align-right i {
+    padding: 12px 24px 12px 0;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.disabled {
     opacity: 0;
     cursor: default;
 }
-.landing .pagination .navigation-button.disabled:hover {
+
+.landing[data-size="tablet"] .pagination .navigation-button.disabled {
+    opacity: 0;
     cursor: default;
 }
-.landing .pagination .navigation-button.disabled .previous:hover,
-.landing .pagination .navigation-button.disabled .next:hover {
+
+.landing[data-size="mobile"] .pagination .navigation-button.disabled {
+    opacity: 0;
+    cursor: default;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.disabled:hover {
+    cursor: default;
+}
+
+.landing[data-size="tablet"] .pagination .navigation-button.disabled:hover {
+    cursor: default;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button.disabled:hover {
+    cursor: default;
+}
+
+.landing[data-size="desktop"] .pagination .navigation-button.disabled .previous:hover,
+.landing[data-size="desktop"] .pagination .navigation-button.disabled .next:hover {
+    cursor: default;
+}
+
+.landing[data-size="tablet"] .pagination .navigation-button.disabled .previous:hover,
+.landing[data-size="tablet"] .pagination .navigation-button.disabled .next:hover {
+    cursor: default;
+}
+
+.landing[data-size="mobile"] .pagination .navigation-button.disabled .previous:hover,
+.landing[data-size="mobile"] .pagination .navigation-button.disabled .next:hover {
     cursor: default;
 }

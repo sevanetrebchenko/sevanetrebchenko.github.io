@@ -1,47 +1,110 @@
+/* Postcard Component - Migrated to data-size attributes */
 
-.postcard {
+.landing[data-size="desktop"] .postcard {
     display: flex;
     flex-direction: column;
     row-gap: 18px;
-
     background-color: white;
-
     box-shadow: none;
     transition: box-shadow 0.15s;
     padding: 50px;
     border-radius: 8px;
 }
 
-.postcard:hover {
+.landing[data-size="tablet"] .postcard {
+    display: flex;
+    flex-direction: column;
+    row-gap: 18px;
+    background-color: white;
+    box-shadow: none;
+    transition: box-shadow 0.15s;
+    padding: 50px;
+    border-radius: 8px;
+}
+
+.landing[data-size="mobile"] .postcard {
+    display: flex;
+    flex-direction: column;
+    row-gap: 18px;
+    background-color: white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.15s;
+    padding: 50px;
+    border-radius: 8px;
+}
+
+.landing[data-size="desktop"] .postcard:hover {
     cursor: pointer;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
-.postcard.mobile {
+
+.landing[data-size="tablet"] .postcard:hover {
+    cursor: pointer;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-.postcard > .abstract {
+.landing[data-size="desktop"] .postcard > .abstract {
     display: flex;
     flex-direction: column;
     row-gap: 15px;
-
     font-family: "Noto Serif", serif;
     font-weight: 300;
     font-size: 18px;
 }
 
-.postcard > .abstract .title {
+.landing[data-size="tablet"] .postcard > .abstract {
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+}
+
+.landing[data-size="mobile"] .postcard > .abstract {
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+}
+
+.landing[data-size="desktop"] .postcard > .abstract .title {
     font-weight: 400;
     font-size: 32px;
     color: black;
     transition: color 0.15s;
 }
 
-.postcard > .abstract .description {
+.landing[data-size="tablet"] .postcard > .abstract .title {
+    font-weight: 400;
+    font-size: 32px;
+    color: black;
+    transition: color 0.15s;
+}
+
+.landing[data-size="mobile"] .postcard > .abstract .title {
+    font-weight: 400;
+    font-size: 28px;
+    color: black;
+    transition: color 0.15s;
+}
+
+.landing[data-size="desktop"] .postcard > .abstract .description {
     color: gray;
 }
 
-.postcard > .metadata {
+.landing[data-size="tablet"] .postcard > .abstract .description {
+    color: gray;
+}
+
+.landing[data-size="mobile"] .postcard > .abstract .description {
+    font-size: 16px;
+    color: gray;
+}
+
+.landing[data-size="desktop"] .postcard > .metadata {
     display: flex;
     flex-direction: row;
     column-gap: 40px;
@@ -51,14 +114,35 @@
     min-width: 200px;
     color: gray;
 }
-.postcard.mobile .metadata {
+
+.landing[data-size="tablet"] .postcard > .metadata {
+    display: flex;
+    flex-direction: row;
+    column-gap: 40px;
+    row-gap: 20px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    min-width: 200px;
+    color: gray;
+}
+
+.landing[data-size="mobile"] .postcard > .metadata {
+    display: flex;
+    flex-direction: row;
+    column-gap: 40px;
     row-gap: 18px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    min-width: 200px;
+    color: gray;
     justify-content: space-between;
 }
-.postcard.mobile .metadata.open {
+
+.landing[data-size="mobile"] .postcard > .metadata.open {
     flex-direction: column;
 }
-.postcard > .metadata .date {
+
+.landing[data-size="desktop"] .postcard > .metadata .date {
     font-family: "Noto Serif", serif;
     font-size: 19px;
     font-weight: 300;
@@ -69,24 +153,56 @@
     column-gap: 10px;
 }
 
-.postcard.mobile .metadata .date {
+.landing[data-size="tablet"] .postcard > .metadata .date {
+    font-family: "Noto Serif", serif;
+    font-size: 19px;
+    font-weight: 300;
+    color: black;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    column-gap: 10px;
+}
+
+.landing[data-size="mobile"] .postcard > .metadata .date {
+    font-family: "Noto Serif", serif;
     font-size: 16px;
+    font-weight: 300;
+    color: black;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
     column-gap: 8px;
 }
 
-.postcard .tags {
+.landing[data-size="desktop"] .postcard .tags {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     column-gap: 20px;
     row-gap: 10px;
 }
-.postcard.mobile .tags {
+
+.landing[data-size="tablet"] .postcard .tags {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 20px;
+    row-gap: 10px;
+}
+
+.landing[data-size="mobile"] .postcard .tags {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 20px;
+    row-gap: 10px;
     font-size: 14px;
     color: gray;
     justify-content: space-between;
 }
-.postcard.mobile .metadata .tag-label {
+
+.landing[data-size="mobile"] .postcard .metadata .tag-label {
     font-family: "Noto Serif", serif;
     font-size: 16px;
     font-weight: 300;
@@ -94,52 +210,70 @@
     border-bottom: 1px solid gainsboro;
     white-space: preserve;
 }
-.postcard.mobile .tags i {
+
+.landing[data-size="mobile"] .postcard .tags i {
     font-size: 16px;
 }
 
-.postcard .tag {
+.landing[data-size="desktop"] .postcard .tag {
     font-family: "JetBrains Mono", monospace;
     font-weight: 200;
     transition: color 0.15s;
-
-    /* Visually align text baseline with the date */
     transform: translateY(-2.5%);
 }
-.postcard > .metadata .tag.selected {
+
+.landing[data-size="tablet"] .postcard .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    transition: color 0.15s;
+    transform: translateY(-2.5%);
+}
+
+.landing[data-size="mobile"] .postcard .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 200;
+    transition: color 0.15s;
+    transform: translateY(-2.5%);
+}
+
+.landing[data-size="desktop"] .postcard > .metadata .tag.selected {
     color: orange;
 }
-.postcard > .metadata .tag:hover {
+
+.landing[data-size="tablet"] .postcard > .metadata .tag.selected {
+    color: orange;
+}
+
+.landing[data-size="mobile"] .postcard > .metadata .tag.selected {
+    color: orange;
+}
+
+.landing[data-size="desktop"] .postcard > .metadata .tag:hover {
     cursor: pointer;
     color: gainsboro;
 }
-.postcard > .metadata .tag.selected:hover {
+
+.landing[data-size="tablet"] .postcard > .metadata .tag:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+
+.landing[data-size="mobile"] .postcard > .metadata .tag:hover {
+    cursor: pointer;
+    color: gainsboro;
+}
+
+.landing[data-size="desktop"] .postcard > .metadata .tag.selected:hover {
     cursor: pointer;
     color: orange;
 }
 
-/* Mobile */
-
-.postcard.mobile {
-
+.landing[data-size="tablet"] .postcard > .metadata .tag.selected:hover {
+    cursor: pointer;
+    color: orange;
 }
 
-.postcard.mobile .abstract {
-
-}
-
-.postcard.mobile .abstract .title {
-    font-size: 28px;
-}
-
-.postcard.mobile .abstract .description {
-    font-size: 16px;
-    color: gray;
-}
-
-.postcard.mobile .metadata {
-
-}
-
-.postcard.mobile .metadata .date {
+.landing[data-size="mobile"] .postcard > .metadata .tag.selected:hover {
+    cursor: pointer;
+    color: orange;
 }

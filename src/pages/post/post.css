@@ -1,5 +1,6 @@
+/* Post Component - Migrated to data-size attributes */
 
-.post-container {
+.post-container[data-size="desktop"] {
     display: flex;
     justify-content: center;
     flex: 1;
@@ -7,100 +8,256 @@
     box-sizing: border-box;
 }
 
-.post-container .navigation {
+.post-container[data-size="tablet"] {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    overflow-y: scroll;
+    box-sizing: border-box;
+}
+
+.post-container[data-size="mobile"] {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    overflow-y: scroll;
+    box-sizing: border-box;
+}
+
+.post-container[data-size="desktop"] .navigation {
     position: sticky;
     top: 0;
-
     flex: 1;
     padding: 40px;
     box-sizing: border-box;
 }
 
-.post-container .bumper {
+.post-container[data-size="tablet"] .navigation {
+    position: sticky;
+    top: 0;
+    flex: 1;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.post-container[data-size="mobile"] .navigation {
+    position: sticky;
+    top: 0;
+    flex: 1;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.post-container[data-size="desktop"] .bumper {
     flex: 1;
 }
 
-.post {
-    height: 100vh;
+.post-container[data-size="tablet"] .bumper {
+    flex: 1;
+}
 
+.post-container[data-size="mobile"] .bumper {
+    flex: 1;
+}
+
+.post[data-size="desktop"] {
+    height: 100vh;
     font-family: "Noto Serif", serif;
     font-weight: 300;
     font-size: 18px;
-
     display: flex;
     flex: 1;
     flex-direction: column;
     align-items: center;
     row-gap: 15px;
-
     box-sizing: border-box;
     max-width: 1200px;
 }
 
+.post[data-size="tablet"] {
+    height: 100vh;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 15px;
+    box-sizing: border-box;
+    max-width: 1200px;
+}
 
-
-.post.mobile {
+.post[data-size="mobile"] {
+    height: 100vh;
+    font-family: "Noto Serif", serif;
+    font-weight: 300;
+    font-size: 18px;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
     row-gap: 0;
+    box-sizing: border-box;
+    max-width: 1200px;
     overflow-y: scroll;
     padding-bottom: 60px;
 }
 
-.post .panel {
+.post[data-size="desktop"] .panel {
     display: flex;
     width: 100%;
     max-width: 800px;
 }
 
-/* Same as an hr with 20px of padding on either side */
-.post > .separator {
+.post[data-size="tablet"] .panel {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+}
+
+.post[data-size="mobile"] .panel {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+}
+
+.post[data-size="desktop"] > .separator {
     width: 1200px;
     border-bottom: 1px solid gainsboro;
 }
 
-.post.mobile .separator {
-    width: calc(100% - 40px);
+.post[data-size="tablet"] > .separator {
+    width: 1200px;
+    border-bottom: 1px solid gainsboro;
 }
 
-.post .header {
+.post[data-size="mobile"] > .separator {
+    width: calc(100% - 40px);
+    border-bottom: 1px solid gainsboro;
+}
+
+.post[data-size="desktop"] .header {
     display: flex;
     flex-direction: row;
     column-gap: 32px;
     justify-content: center;
     width: 100%;
     padding-top: 40px;
-
     box-sizing: border-box;
 }
 
-.post-container .navigation .back {
+.post[data-size="tablet"] .header {
+    display: flex;
+    flex-direction: row;
+    column-gap: 32px;
+    justify-content: center;
+    width: 100%;
+    padding-top: 40px;
+    box-sizing: border-box;
+}
+
+.post[data-size="mobile"] .header {
+    display: flex;
+    flex-direction: row;
+    column-gap: 32px;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.post-container[data-size="desktop"] .navigation .back {
     display: flex;
     flex-direction: row;
     column-gap: 20px;
     align-items: center;
     padding: 12px 24px;
 }
-.post-container .navigation .back i {
+
+.post-container[data-size="tablet"] .navigation .back {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    align-items: center;
+    padding: 12px 24px;
+}
+
+.post-container[data-size="mobile"] .navigation .back {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    align-items: center;
+    padding: 12px 24px;
+}
+
+.post-container[data-size="desktop"] .navigation .back i {
     color: gray;
     transition: color 0.15s;
 }
-.post-container .navigation .back span {
+
+.post-container[data-size="tablet"] .navigation .back i {
     color: gray;
     transition: color 0.15s;
+}
 
+.post-container[data-size="mobile"] .navigation .back i {
+    color: gray;
+    transition: color 0.15s;
+}
+
+.post-container[data-size="desktop"] .navigation .back span {
+    color: gray;
+    transition: color 0.15s;
     font-family: "JetBrains Mono", monospace;
     font-size: 20px;
     font-weight: 200;
 }
-.post-container .navigation .back:hover {
+
+.post-container[data-size="tablet"] .navigation .back span {
+    color: gray;
+    transition: color 0.15s;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 20px;
+    font-weight: 200;
+}
+
+.post-container[data-size="mobile"] .navigation .back span {
+    color: gray;
+    transition: color 0.15s;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 20px;
+    font-weight: 200;
+}
+
+.post-container[data-size="desktop"] .navigation .back:hover {
     cursor: pointer;
 }
-.post-container .navigation .back:hover i,
-.post-container .navigation .back:hover span {
+
+.post-container[data-size="tablet"] .navigation .back:hover {
+    cursor: pointer;
+}
+
+.post-container[data-size="mobile"] .navigation .back:hover {
+    cursor: pointer;
+}
+
+.post-container[data-size="desktop"] .navigation .back:hover i,
+.post-container[data-size="desktop"] .navigation .back:hover span {
     color: gainsboro;
 }
-.post .header .title {
+
+.post-container[data-size="tablet"] .navigation .back:hover i,
+.post-container[data-size="tablet"] .navigation .back:hover span {
+    color: gainsboro;
 }
-.post .header .title > span {
+
+.post-container[data-size="mobile"] .navigation .back:hover i,
+.post-container[data-size="mobile"] .navigation .back:hover span {
+    color: gainsboro;
+}
+
+.post[data-size="desktop"] .header .title > span {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -108,171 +265,337 @@
     font-weight: bold;
 }
 
-.post .header .metadata {
+.post[data-size="tablet"] .header .title > span {
     display: flex;
     flex-direction: row;
     justify-content: center;
-
-    padding: 10px;
-    column-gap: 40px;
-
-    font-size: 0.85em;
-}
-.post .header .metadata .separator {
-    border-color: gray;
-}
-.post.mobile .header .metadata .separator {
-    border-color: gray;
+    font-size: 2em;
+    font-weight: bold;
 }
 
-.post.mobile .header {
-    padding: 20px;
-}
-
-.post.mobile .body {
-    padding: 20px;
-    padding-top: 15px;
-    padding-bottom: 40px;
-}
-
-.post.mobile .header .title {
+.post[data-size="mobile"] .header .title {
     padding: 0;
     display: flex;
     flex-direction: column;
     justify-items: center;
 }
 
-.post.mobile .header .title > span {
+.post[data-size="mobile"] .header .title > span {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     font-size: 7vw;
+    font-weight: bold;
 }
 
-/* Desktop */
-.post p,
-.post li {
+.post[data-size="desktop"] .header .metadata {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 10px;
+    column-gap: 40px;
+    font-size: 0.85em;
+}
+
+.post[data-size="tablet"] .header .metadata {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 10px;
+    column-gap: 40px;
+    font-size: 0.85em;
+}
+
+.post[data-size="mobile"] .header .metadata {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0;
+    padding-top: 16px;
+    column-gap: 40px;
+    font-size: 14px;
+}
+
+.post[data-size="desktop"] .header .metadata .separator {
+    border-color: gray;
+}
+
+.post[data-size="tablet"] .header .metadata .separator {
+    border-color: gray;
+}
+
+.post[data-size="mobile"] .header .metadata .separator {
+    border-color: gray;
+}
+
+.post[data-size="mobile"] .body {
+    padding: 20px;
+    padding-top: 15px;
+    padding-bottom: 40px;
+}
+
+.post[data-size="desktop"] p,
+.post[data-size="desktop"] li {
     font-size: 18px;
 }
-.post h1 {
+
+.post[data-size="tablet"] p,
+.post[data-size="tablet"] li {
+    font-size: 18px;
 }
-.post h2 {
+
+.post[data-size="mobile"] p,
+.post[data-size="mobile"] li {
+    font-size: 3.8vw;
+}
+
+.post[data-size="desktop"] h2 {
     font-size: 28px;
     padding-top: 16px;
     padding-bottom: 8px;
 }
-.post h3 {
-    font-size: 22px;
-    padding-top: 12px;
-    padding-bottom: 6px;
-}
-.post pre {
-    padding: 16px 0;
-    width: 99%;
-    justify-self: center;
-}
-.post ol,
-.post ul {
-    padding-bottom: 16px;
+
+.post[data-size="tablet"] h2 {
+    font-size: 28px;
     padding-top: 16px;
+    padding-bottom: 8px;
 }
 
-/* Mobile */
-.post.mobile p,
-.post.mobile li {
-    font-size: 3.8vw;
-}
-.post.mobile h1 {
-}
-.post.mobile h2 {
+.post[data-size="mobile"] h2 {
     font-size: 5.5vw;
     padding-top: 6vw;
     padding-bottom: 3vw;
 }
-.post.mobile h3 {
+
+.post[data-size="desktop"] h3 {
+    font-size: 22px;
+    padding-top: 12px;
+    padding-bottom: 6px;
+}
+
+.post[data-size="tablet"] h3 {
+    font-size: 22px;
+    padding-top: 12px;
+    padding-bottom: 6px;
+}
+
+.post[data-size="mobile"] h3 {
     font-size: 4.6vw;
     padding-top: 4.5vw;
     padding-bottom: 2.25vw;
 }
-.post.mobile pre {
-    padding: 3vw 0;
+
+.post[data-size="desktop"] pre {
+    padding: 16px 0;
+    width: 99%;
+    justify-self: center;
 }
-.post.mobile pre {
+
+.post[data-size="tablet"] pre {
+    padding: 16px 0;
+    width: 99%;
+    justify-self: center;
+}
+
+.post[data-size="mobile"] pre {
     padding: 3vw 0;
     font-size: 4vw;
 }
-.post.mobile ol,
-.post.mobile ul {
+
+.post[data-size="desktop"] ol,
+.post[data-size="desktop"] ul {
+    padding-bottom: 16px;
+    padding-top: 16px;
+}
+
+.post[data-size="tablet"] ol,
+.post[data-size="tablet"] ul {
+    padding-bottom: 16px;
+    padding-top: 16px;
+}
+
+.post[data-size="mobile"] ol,
+.post[data-size="mobile"] ul {
     padding-bottom: 3vw;
     padding-top: 3vw;
 }
 
-.post p,
-.post ul,
-.post ol,
-.post pre,
-.post h1,
-.post h2,
-.post h3,
-.post h4,
-.post h5,
-.post h6 {
+.post[data-size="desktop"] p,
+.post[data-size="desktop"] ul,
+.post[data-size="desktop"] ol,
+.post[data-size="desktop"] pre,
+.post[data-size="desktop"] h1,
+.post[data-size="desktop"] h2,
+.post[data-size="desktop"] h3,
+.post[data-size="desktop"] h4,
+.post[data-size="desktop"] h5,
+.post[data-size="desktop"] h6 {
     margin: 0;
 }
 
-.post hr {
+.post[data-size="tablet"] p,
+.post[data-size="tablet"] ul,
+.post[data-size="tablet"] ol,
+.post[data-size="tablet"] pre,
+.post[data-size="tablet"] h1,
+.post[data-size="tablet"] h2,
+.post[data-size="tablet"] h3,
+.post[data-size="tablet"] h4,
+.post[data-size="tablet"] h5,
+.post[data-size="tablet"] h6 {
+    margin: 0;
+}
+
+.post[data-size="mobile"] p,
+.post[data-size="mobile"] ul,
+.post[data-size="mobile"] ol,
+.post[data-size="mobile"] pre,
+.post[data-size="mobile"] h1,
+.post[data-size="mobile"] h2,
+.post[data-size="mobile"] h3,
+.post[data-size="mobile"] h4,
+.post[data-size="mobile"] h5,
+.post[data-size="mobile"] h6 {
+    margin: 0;
+}
+
+.post[data-size="desktop"] hr {
     border: 0;
     border-bottom: 1px solid gainsboro;
     margin: 20px 0;
 }
 
-.post p {
+.post[data-size="tablet"] hr {
+    border: 0;
+    border-bottom: 1px solid gainsboro;
+    margin: 20px 0;
+}
+
+.post[data-size="mobile"] hr {
+    border: 0;
+    border-bottom: 1px solid gainsboro;
+    margin: 20px 0;
+}
+
+.post[data-size="desktop"] p {
     padding: 5px 0;
 }
 
-.inline {
+.post[data-size="tablet"] p {
+    padding: 5px 0;
+}
+
+.post[data-size="mobile"] p {
+    padding: 5px 0;
+}
+
+.post[data-size="desktop"] .inline {
     color: rgb(73, 73, 73);
     word-break: break-all;
-
     font-family: 'JetBrains Mono', monospace;
     font-weight: 300;
 }
 
-.post .body {
+.post[data-size="tablet"] .inline {
+    color: rgb(73, 73, 73);
+    word-break: break-all;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+}
+
+.post[data-size="mobile"] .inline {
+    color: rgb(73, 73, 73);
+    word-break: break-all;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+}
+
+.post[data-size="desktop"] .body {
     width: 100%;
     max-width: 1200px;
     box-sizing: border-box;
     padding-bottom: 80px;
 }
 
-.post.mobile .body {
+.post[data-size="tablet"] .body {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+    padding-bottom: 80px;
 }
 
-.post .body .section {
+.post[data-size="mobile"] .body {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+    padding-bottom: 80px;
 }
 
-.post .headers {
+.post[data-size="desktop"] .body .section {
+}
+
+.post[data-size="tablet"] .body .section {
+}
+
+.post[data-size="mobile"] .body .section {
+}
+
+.post[data-size="desktop"] .headers {
     display: flex;
     flex-direction: column;
-
     position: sticky;
     top: 20px;
-    height: fit-content; /* Prevents it from stretching */
+    height: fit-content;
     padding-left: 20px;
     padding-right: 20px;
-
     width: 300px;
 }
 
-.section-header {
+.post[data-size="tablet"] .headers {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    padding-left: 20px;
+    padding-right: 20px;
+    width: 300px;
+}
+
+.post[data-size="mobile"] .headers {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    padding-left: 20px;
+    padding-right: 20px;
+    width: 300px;
+}
+
+.post[data-size="desktop"] .section-header {
     font-weight: inherit;
     transition: 0.1s;
 }
 
-.section-header.active {
+.post[data-size="tablet"] .section-header {
+    font-weight: inherit;
+    transition: 0.1s;
+}
+
+.post[data-size="mobile"] .section-header {
+    font-weight: inherit;
+    transition: 0.1s;
+}
+
+.post[data-size="desktop"] .section-header.active {
     font-weight: bold;
 }
 
-.post.mobile .header .metadata {
-    font-size: 14px;
-    flex-direction: column;
-    padding: 0;
-    padding-top: 16px;
+.post[data-size="tablet"] .section-header.active {
+    font-weight: bold;
+}
+
+.post[data-size="mobile"] .section-header.active {
+    font-weight: bold;
 }

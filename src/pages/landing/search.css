@@ -1,17 +1,27 @@
+/* Search Component - Migrated to data-size attributes */
 
-.search {
+.search[data-size="desktop"] {
     display: flex;
     flex-direction: row;
     border-bottom: gainsboro solid 1px;
     margin-bottom: 40px;
 }
 
-.search.mobile {
+.search[data-size="tablet"] {
+    display: flex;
+    flex-direction: row;
+    border-bottom: gainsboro solid 1px;
+    margin-bottom: 40px;
+}
+
+.search[data-size="mobile"] {
+    display: flex;
+    flex-direction: row;
     border-bottom: none;
     margin-bottom: 0;
 }
 
-.search .query {
+.search[data-size="desktop"] .query {
     display: flex;
     flex-direction: row;
     flex: 1;
@@ -24,41 +34,127 @@
     padding-left: 10px;
 }
 
-.search.mobile .query {
-    font-size: 16px;
+.search[data-size="tablet"] .query {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    background: none;
+    font-size: 18px;
+    border: none;
+    font-family: "Noto Serif", sans-serif;
+    font-weight: 300;
+    padding: 15px;
+    padding-left: 10px;
 }
 
-.search .search-button {
+.search[data-size="mobile"] .query {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    background: none;
+    font-size: 16px;
+    border: none;
+    font-family: "Noto Serif", sans-serif;
+    font-weight: 300;
+    padding: 15px;
+    padding-left: 10px;
+}
+
+.search[data-size="desktop"] .search-button {
     transition: 0.15s;
     color: gainsboro;
 }
 
-.search .clear-button {
+.search[data-size="tablet"] .search-button {
+    transition: 0.15s;
+    color: gainsboro;
+}
+
+.search[data-size="mobile"] .search-button {
+    transition: 0.15s;
+    color: gainsboro;
+}
+
+.search[data-size="desktop"] .clear-button {
     transition: 0.15s;
 }
-.search .clear-button:hover {
+
+.search[data-size="tablet"] .clear-button {
+    transition: 0.15s;
+}
+
+.search[data-size="mobile"] .clear-button {
+    transition: 0.15s;
+}
+
+.search[data-size="desktop"] .clear-button:hover {
     cursor: pointer;
     color: red;
 }
 
-.search .query:focus {
+.search[data-size="tablet"] .clear-button:hover {
+    cursor: pointer;
+    color: red;
+}
+
+.search[data-size="mobile"] .clear-button:hover {
+    cursor: pointer;
+    color: red;
+}
+
+.search[data-size="desktop"] .query:focus {
     outline: none;
 }
 
-.search .query input:hover {
+.search[data-size="tablet"] .query:focus {
+    outline: none;
+}
+
+.search[data-size="mobile"] .query:focus {
+    outline: none;
+}
+
+.search[data-size="desktop"] .query input:hover {
     content: "";
 }
 
-.search i {
+.search[data-size="tablet"] .query input:hover {
+    content: "";
+}
+
+.search[data-size="mobile"] .query input:hover {
+    content: "";
+}
+
+.search[data-size="desktop"] i {
     display: flex;
     justify-content: center;
     align-items: center;
-
     background: transparent;
     border: none;
     color: black;
-
     padding: 18px;
+    font-size: 20px;
+}
 
+.search[data-size="tablet"] i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: black;
+    padding: 18px;
+    font-size: 20px;
+}
+
+.search[data-size="mobile"] i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: black;
+    padding: 18px;
     font-size: 20px;
 }
