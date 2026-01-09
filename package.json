@@ -16,7 +16,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.7",
     "react-responsive": "^10.0.1",
-    "react-router-dom": "^6.7.0",
+    "react-router-dom": "^6.30.3",
     "rehype-raw": "^6.1.1",
     "remark-gfm": "^3.0.1",
     "unist-util-visit": "^5.0.0"
