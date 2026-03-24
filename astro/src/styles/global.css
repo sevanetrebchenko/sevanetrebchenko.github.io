@@ -252,7 +252,7 @@ body {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 220ms ease, opacity 160ms ease;
+  transition: grid-template-rows 250ms ease, opacity 250ms ease;
 }
 
 .tag-panel > div {
@@ -261,17 +261,17 @@ body {
 }
 
 .tag-filter-pill {
-  max-width: 20rem;
   white-space: nowrap;
   overflow: hidden;
   border: 1px solid transparent;
   margin-right: 0.5rem;
   transition:
-    max-width 200ms ease,
-    padding-left 200ms ease,
-    padding-right 200ms ease,
-    margin-right 200ms ease,
-    opacity 150ms ease,
+    width 250ms ease,
+    margin-right 250ms ease,
+    border-width 250ms ease,
+    padding-left 250ms ease,
+    padding-right 250ms ease,
+    opacity 250ms ease,
     background-color 150ms ease,
     color 150ms ease,
     border-color 150ms ease;

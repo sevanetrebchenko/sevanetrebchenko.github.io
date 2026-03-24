@@ -45,7 +45,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
 
     <!-- Tag panel: expands on focus -->
     <div id="tag-panel" class="tag-panel">
-      <div id="pills-container" class="flex flex-wrap gap-y-2 pt-3 items-center">
+      <div id="pills-container" class="flex flex-wrap gap-y-2 pt-3 items-center" style="transition: padding 250ms ease, gap 250ms ease;">
         {allTags.map(([tag, count]) => (
           <button
             class="tag-filter-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] cursor-pointer"
@@ -107,20 +107,32 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
   // ── Pill helpers ─────────────────────────────────────────────────────
 
   function hidePill(p) {
-    p.style.maxWidth     = '0';
-    p.style.paddingLeft  = '0';
-    p.style.paddingRight = '0';
-    p.style.marginRight  = '0';
-    p.style.opacity      = '0';
+    const cs = getComputedStyle(p);
+    const w = p.offsetWidth;
+    p.style.width         = w + 'px';
+    p.style.minWidth      = '0';
+    p.style.marginRight   = cs.marginRight;
+    p.style.borderWidth   = cs.borderWidth;
+    p.style.paddingLeft   = cs.paddingLeft;
+    p.style.paddingRight  = cs.paddingRight;
+    void p.offsetWidth;
+    p.style.width         = '0';
+    p.style.marginRight   = '0';
+    p.style.borderWidth   = '0';
+    p.style.paddingLeft   = '0';
+    p.style.paddingRight  = '0';
+    p.style.opacity       = '0';
     p.style.pointerEvents = 'none';
   }
 
   function showPill(p) {
-    p.style.maxWidth     = '';
-    p.style.paddingLeft  = '';
-    p.style.paddingRight = '';
-    p.style.marginRight  = '';
-    p.style.opacity      = '';
+    p.style.width         = '';
+    p.style.minWidth      = '';
+    p.style.marginRight   = '';
+    p.style.borderWidth   = '';
+    p.style.paddingLeft   = '';
+    p.style.paddingRight  = '';
+    p.style.opacity       = '';
     p.style.pointerEvents = '';
   }
 
@@ -135,8 +147,19 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
     kbdHint.style.pointerEvents = 'none';
     moreBtn.style.display = 'none';
 
-    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(showPill);
+    // Reset pills instantly (no transition) before revealing the panel
+    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
+      p.style.transition = 'none';
+      showPill(p);
+    });
+    pillsContainer.style.paddingTop = '';
+    pillsContainer.style.gap = '';
+    void pillsContainer.offsetWidth; // force layout with transitions disabled
 
+    // Re-enable transitions, then reveal
+    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
+      p.style.transition = '';
+    });
     tagPanel.style.gridTemplateRows = '1fr';
     tagPanel.style.opacity = '1';
   }
@@ -155,15 +178,19 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       const inactivePills = [...pillsContainer.querySelectorAll('.tag-filter-pill')]
         .filter(p => !activeTags.has(p.dataset.tag));
 
-      // Animate inactive pills out — width + opacity collapse simultaneously
+      // Animate inactive pills out and collapse row gap to prevent snap
+      // when an entire row of pills disappears
       inactivePills.forEach(hidePill);
+      pillsContainer.style.gap = '0';
 
-      // Show the more button only after pills finish collapsing
+      // Show the more button after pills finish collapsing, fading in
       const count = inactivePills.length;
+      moreBtn.textContent = `+${count} more`;
+      moreBtn.style.display = '';
+      moreBtn.style.opacity = '0';
       moreBtnTimer = setTimeout(() => {
-        moreBtn.textContent = `+${count} more`;
-        moreBtn.style.display = '';
-      }, 200);
+        moreBtn.style.opacity = '';
+      }, 250);
     } else {
       tagPanel.style.gridTemplateRows = '0fr';
       tagPanel.style.opacity = '0';
