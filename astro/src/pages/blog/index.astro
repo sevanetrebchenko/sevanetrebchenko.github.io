@@ -261,6 +261,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       const tag = pill.dataset.tag;
       activeTags.has(tag) ? activeTags.delete(tag) : activeTags.add(tag);
       filterPosts();
+      syncTagsToURL();
       if (!panelOpen) refreshSummary();
     });
   });
@@ -277,6 +278,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       e.preventDefault();
       activeTags.add(link.dataset.tag);
       filterPosts();
+      syncTagsToURL();
       if (!panelOpen) refreshSummary();
     });
   });
@@ -293,6 +295,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
     input.value = '';
     activeTags.clear();
     filterPosts();
+    syncTagsToURL();
     panelOpen = false;
     moreBtn.style.display = 'none';
     tagPanel.style.gridTemplateRows = '0fr';
@@ -312,5 +315,22 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       input.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
+
+  // ── URL ↔ tag sync ─────────────────────────────────────────────────
+
+  function syncTagsToURL() {
+    const url = new URL(window.location);
+    url.searchParams.delete('tag');
+    activeTags.forEach(t => url.searchParams.append('tag', t));
+    history.replaceState(null, '', url);
+  }
+
+  // Read tags from URL on load
+  const urlTags = new URLSearchParams(window.location.search).getAll('tag');
+  if (urlTags.length) {
+    urlTags.forEach(t => activeTags.add(t));
+    filterPosts();
+    refreshSummary();
+  }
 })();
 </script>

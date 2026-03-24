@@ -76,7 +76,7 @@ const modifiedDate = (() => {
           <div class="flex flex-wrap gap-1.5 mb-3">
             {frontmatter.tags.map((tag) => (
               <a
-                href={`/tags/${tag}`}
+                href={`/blog?tag=${encodeURIComponent(tag)}`}
                 class="font-mono text-xs px-2 py-0.5 rounded bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors no-underline"
               >
                 {tag}
