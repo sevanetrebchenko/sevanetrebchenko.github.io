@@ -31,7 +31,7 @@ export function metaTransformer() {
       const meta = options.meta?.__raw ?? '';
       const get  = (pattern) => (pattern.exec(meta) || [])[1] ?? null;
 
-      this._title     = get(/\btitle\b:\{([^}]*)\}/);
+      this._title     = null;
       this._added     = rangeParser(get(/\badded\b:\{([^}]+)\}/)   ?? '');
       this._removed   = rangeParser(get(/\bremoved\b:\{([^}]+)\}/) ?? '');
       this._lineNums  = /\bline-numbers\b:\{enabled?\}/i.test(meta);
@@ -115,9 +115,9 @@ export function metaTransformer() {
       }
       const codeBody = h('div', bodyProps, [codeRows]);
 
-      // Header — omit only when no lang, no title, and no-copy
+      // Header — omit only when no lang and no-copy
       const showCopy   = !this._noCopy;
-      const showHeader = this._lang || this._title || showCopy;
+      const showHeader = this._lang || showCopy;
 
       const copyButton = showCopy
         ? h('button', {
@@ -129,46 +129,12 @@ export function metaTransformer() {
 
       let header = null;
       if (showHeader) {
-        if (hasGutter) {
-          // Aligned header — language centered over gutter area, border aligns
-          // with the gutter separator in the code body.
-          const headerChildren = [];
+        const left = [];
+        if (this._lang) left.push(h('span', { class: 'code-language' }, [t(this._lang)]));
 
-          // Language area — contains the same gutter elements so it
-          // naturally sizes to match the body gutter (no calc needed).
-          const hg = [];
-          if (this._lineNums) {
-            hg.push(h('span', { class: 'gutter-number' },
-              this._lang ? [h('span', { class: 'code-language' }, [t(this._lang)])] : []
-            ));
-          } else if (this._lang) {
-            hg.push(h('span', { class: 'code-language' }, [t(this._lang)]));
-          }
-          if (hasDiff) {
-            hg.push(h('span', { class: 'gutter-diff' }));
-          }
-          headerChildren.push(h('div', { class: 'header-gutter' }, hg));
-
-          // Vertical border — same class as the gutter separator so it matches
-          headerChildren.push(h('div', { class: 'gutter-separator' }));
-
-          // Right side: title + copy button
-          const rightChildren = [];
-          if (this._title) rightChildren.push(h('span', { class: 'code-title' }, [t(this._title)]));
-          if (copyButton)  rightChildren.push(copyButton);
-          headerChildren.push(h('div', { class: 'header-content' }, rightChildren));
-
-          header = h('div', { class: 'code-header' }, headerChildren);
-        } else {
-          // Simple header — no gutter to align with
-          const left = [];
-          if (this._lang)  left.push(h('span', { class: 'code-language' }, [t(this._lang)]));
-          if (this._title) left.push(h('span', { class: 'code-title' },    [t(this._title)]));
-
-          const hChildren = [h('div', { class: 'code-header-left' }, left)];
-          if (copyButton) hChildren.push(copyButton);
-          header = h('div', { class: 'code-header' }, hChildren);
-        }
+        const hChildren = [h('div', { class: 'code-header-left' }, left)];
+        if (copyButton) hChildren.push(copyButton);
+        header = h('div', { class: 'code-header' }, hChildren);
       }
 
       // Expand/collapse overlay

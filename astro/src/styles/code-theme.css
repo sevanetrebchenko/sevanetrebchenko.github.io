@@ -36,30 +36,6 @@
   border-bottom:   1px solid rgb(55, 55, 55);
 }
 
-/* --- Aligned header (when gutter is present) --- */
-
-.header-gutter {
-  display:         flex;
-  align-items:     center;
-  flex-shrink:     0;
-  padding-left:    9px;
-}
-
-.header-content {
-  display:      flex;
-  align-items:  center;
-  flex:         1;
-  min-width:    0;
-  padding-left: 18px;
-}
-
-.header-content .code-title {
-  flex: 1;
-  min-width: 0;
-}
-
-/* --- Simple header (no gutter) --- */
-
 .code-header-left {
   display:     flex;
   align-items: center;
@@ -69,19 +45,10 @@
   flex:        1;
 }
 
-/* --- Language & title --- */
-
 .code-language {
   color:       rgb(100, 100, 100);
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-.code-title {
-  color:         rgb(200, 200, 200);
-  white-space:   nowrap;
-  overflow:      hidden;
-  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
@@ -91,7 +58,7 @@
 .copy-button {
   color:      rgb(100, 100, 100);
   transition: color 0.1s;
-  padding:    8px;
+  padding:    10px 18px;
   display:    flex;
   align-items:     center;
   justify-content: center;
@@ -127,7 +94,6 @@
 
 .code-body {
   overflow-x: auto;
-  transition: max-height 0.3s ease;
 }
 
 .code-body::-webkit-scrollbar {

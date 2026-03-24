@@ -25,6 +25,11 @@ document.querySelectorAll('.code-overlay').forEach(overlay => {
   const body            = overlay.previousElementSibling;
   const collapsedHeight = body.dataset.collapsedHeight;
 
+  // Enable the transition only after first paint so it doesn't animate on load.
+  requestAnimationFrame(() => {
+    body.style.transition = 'max-height 0.3s ease';
+  });
+
   overlay.addEventListener('click', () => {
     const isCollapsed = overlay.dataset.collapsed === 'true';
 
