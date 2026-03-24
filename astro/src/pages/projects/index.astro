@@ -1,0 +1,28 @@
+---
+import ProjectsLayout from '../../layouts/ProjectsLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('projects');
+const sorted = projects.sort((a, b) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  return b.data.date.valueOf() - a.data.date.valueOf();
+});
+---
+
+<ProjectsLayout>
+  {sorted.length > 0 ? (
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {sorted.map((project) => (
+        <ProjectCard project={project} />
+      ))}
+    </div>
+  ) : (
+    <div class="min-h-[40vh] flex items-center justify-center">
+      <p class="font-serif italic text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] text-lg">
+        Projects coming soon.
+      </p>
+    </div>
+  )}
+</ProjectsLayout>

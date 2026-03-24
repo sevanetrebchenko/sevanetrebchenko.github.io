@@ -1,0 +1,32 @@
+---
+import { getCollection, render } from 'astro:content';
+import BlogPostLayout from '../../layouts/BlogPostLayout.astro';
+import { getPublishedPosts, getSeriesPosts } from '../../lib/blog.js';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+// Build series data if this post belongs to a series
+let seriesPosts = null;
+if (post.data.series) {
+  const allPosts = await getPublishedPosts();
+  seriesPosts = getSeriesPosts(allPosts, post.data.series.name);
+}
+---
+
+<BlogPostLayout
+  frontmatter={post.data}
+  headings={headings}
+  seriesPosts={seriesPosts}
+  currentPostId={post.id}
+>
+  <Content />
+</BlogPostLayout>

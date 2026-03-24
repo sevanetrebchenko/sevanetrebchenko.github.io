@@ -1,0 +1,50 @@
+---
+import BlogLayout from '../../../layouts/BlogLayout.astro';
+import PostCard from '../../../components/PostCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getPublishedPosts } from '../../../lib/blog.js';
+
+export async function getStaticPaths({ paginate }) {
+  const posts = await getPublishedPosts();
+  const allTags = new Set(posts.flatMap(p => p.data.tags));
+
+  return Array.from(allTags).flatMap((tag) => {
+    const filtered = posts.filter(p => p.data.tags.includes(tag));
+    return paginate(filtered, { params: { tag }, pageSize: 7 });
+  });
+}
+
+const { page } = Astro.props;
+const { tag } = Astro.params;
+---
+
+<BlogLayout
+  title={`Posts tagged "${tag}"`}
+  description={`Blog posts tagged with ${tag}`}
+>
+  <!-- Filter context heading -->
+  <div class="flex items-center gap-3 mb-6 pb-6 border-b border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]">
+    <span class="font-mono text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+      Filtered by
+    </span>
+    <span class="font-mono text-sm px-2.5 py-1 rounded-md bg-[var(--color-light-accent)] dark:bg-[var(--color-dark-accent)] text-white dark:text-[var(--color-dark-bg)]">
+      {tag}
+    </span>
+    <a
+      href="/blog"
+      class="ml-auto font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors no-underline"
+      aria-label="Clear filter"
+    >
+      ✕ clear
+    </a>
+  </div>
+
+  {page.data.length > 0 ? (
+    page.data.map((post) => <PostCard post={post} />)
+  ) : (
+    <p class="text-center font-mono text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] py-12">
+      No posts found with tag "{tag}".
+    </p>
+  )}
+  <Pagination page={page} />
+</BlogLayout>

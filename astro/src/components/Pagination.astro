@@ -1,0 +1,81 @@
+---
+const { page } = Astro.props;
+if (!page || page.lastPage <= 1) return;
+
+const { currentPage, lastPage, url } = page;
+
+function getPageNumbers(current, last) {
+  const pages = [];
+  const delta = 1;
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= current - delta && i <= current + delta)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== '·') {
+      pages.push('·');
+    }
+  }
+  return pages;
+}
+
+const pageNumbers = getPageNumbers(currentPage, lastPage);
+
+function pageUrl(num) {
+  let base;
+  if (currentPage === 1) {
+    base = url.current.replace(/\/$/, '');
+  } else {
+    base = url.current.replace(/\/$/, '').replace(new RegExp('/' + currentPage + '$'), '');
+  }
+  if (num === 1) return base || '/blog';
+  if (!base) return '/blog/' + num;
+  return base + '/' + num;
+}
+---
+
+<nav
+  class="flex items-center justify-center gap-1 py-8 font-mono text-sm"
+  aria-label="Pagination"
+>
+  {url.prev && (
+    <a
+      href={url.prev}
+      class="px-3 py-1.5 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors no-underline"
+      aria-label="Previous page"
+    >
+      ←
+    </a>
+  )}
+
+  {pageNumbers.map((num) => {
+    if (num === '·') {
+      return (
+        <span class="px-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-40 select-none">·</span>
+      );
+    }
+    const isCurrent = num === currentPage;
+    return (
+      <a
+        href={pageUrl(num)}
+        class:list={[
+          'px-3 py-1.5 rounded no-underline transition-colors',
+          isCurrent
+            ? 'font-bold text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)]'
+            : 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)]',
+        ]}
+        aria-current={isCurrent ? 'page' : undefined}
+      >
+        {num}
+      </a>
+    );
+  })}
+
+  {url.next && (
+    <a
+      href={url.next}
+      class="px-3 py-1.5 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors no-underline"
+      aria-label="Next page"
+    >
+      →
+    </a>
+  )}
+</nav>

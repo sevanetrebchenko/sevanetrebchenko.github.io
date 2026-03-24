@@ -1,0 +1,120 @@
+---
+// variant: 'top' (banner with prev/next) | 'bottom' (full index)
+const { seriesPosts, currentPostId, variant = 'top' } = Astro.props;
+
+if (!seriesPosts || seriesPosts.length < 2) return;
+
+const currentIndex = seriesPosts.findIndex(p => p.id === currentPostId);
+if (currentIndex === -1) return;
+
+const seriesName = seriesPosts[0].data.series.name;
+const total = seriesPosts.length;
+const currentPart = currentIndex + 1;
+
+const prev = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
+const next = currentIndex < total - 1 ? seriesPosts[currentIndex + 1] : null;
+
+function truncate(str, max = 42) {
+  return str.length > max ? str.slice(0, max).trimEnd() + '\u2026' : str;
+}
+
+// For bottom index: show parts near current, plus first/last; hide middle completed parts
+const COLLAPSE_THRESHOLD = 6;
+const shouldCollapse = total > COLLAPSE_THRESHOLD;
+
+function isVisible(idx) {
+  if (!shouldCollapse) return true;
+  if (idx === 0 || idx === total - 1) return true;
+  if (Math.abs(idx - currentIndex) <= 1) return true;
+  return false;
+}
+---
+
+{variant === 'top' && (
+  <div class="not-prose my-6 rounded-md overflow-hidden bg-[var(--color-light-surface)] dark:bg-[var(--color-dark-surface)] border border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]" style="border-left: 3px solid var(--color-light-accent);">
+    <style is:inline>
+      .dark [style*="border-left: 3px solid var(--color-light-accent)"] {
+        border-left-color: var(--color-dark-accent) !important;
+      }
+    </style>
+    <div class="px-4 py-3">
+      <div class="flex items-baseline gap-3 flex-wrap">
+        <span class="font-mono text-[11px] uppercase tracking-widest text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)]">
+          {seriesName}
+        </span>
+        <span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+          Part {currentPart} of {total}
+        </span>
+      </div>
+      {(prev || next) && (
+        <div class="mt-2 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            {prev && (
+              <a href={`/blog/${prev.id}`} class="flex items-center gap-1.5 no-underline group">
+                <span class="text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors shrink-0">←</span>
+                <span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors truncate">{truncate(prev.data.title)}</span>
+              </a>
+            )}
+          </div>
+          <div class="min-w-0 text-right">
+            {next && (
+              <a href={`/blog/${next.id}`} class="flex items-center gap-1.5 no-underline group justify-end">
+                <span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors truncate">{truncate(next.data.title)}</span>
+                <span class="text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors shrink-0">→</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+{variant === 'bottom' && (
+  <div class="not-prose mt-12 pt-8 border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]">
+    <p class="font-mono text-[11px] uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] mb-3 opacity-60">
+      This series
+    </p>
+    <ol class="flex flex-col gap-0.5 list-none p-0 m-0">
+      {seriesPosts.map((post, idx) => {
+        const isCurrent = idx === currentIndex;
+        const isCompleted = idx < currentIndex;
+        const visible = isVisible(idx);
+        const prevVisible = idx === 0 || isVisible(idx - 1);
+        const showGap = !prevVisible && visible;
+
+        return (
+          <>
+            {showGap && (
+              <li class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] px-2 py-0.5 opacity-40 select-none">
+                · · ·
+              </li>
+            )}
+            {visible && (
+              <li>
+                <a
+                  href={`/blog/${post.id}`}
+                  class:list={[
+                    'flex items-baseline gap-2 px-2 py-1.5 rounded text-sm no-underline transition-colors',
+                    isCurrent
+                      ? 'text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)] font-semibold'
+                      : 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)]',
+                  ]}
+                  aria-current={isCurrent ? 'page' : undefined}
+                >
+                  <span class="font-mono text-xs w-4 shrink-0 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-50">
+                    {isCurrent ? '→' : isCompleted ? '✓' : ''}
+                  </span>
+                  <span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] shrink-0 opacity-50 tabular-nums">
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <span class="leading-snug font-serif text-sm">{post.data.title}</span>
+                </a>
+              </li>
+            )}
+          </>
+        );
+      })}
+    </ol>
+  </div>
+)}
