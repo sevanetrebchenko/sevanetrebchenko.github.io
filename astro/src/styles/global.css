@@ -24,15 +24,6 @@
   --color-light-border: #ddd8ce;
   --color-light-accent: #b8892a;
 
-  /* Code */
-  --color-code-bg: #2b2b2b;
-  --color-code-text: #a9b7c6;
-
-  /* Diff */
-  --color-diff-added: #2ea04333;
-  --color-diff-removed: #f8514933;
-  --color-diff-modified: #d2992233;
-  --color-diff-highlighted: #2563eb22;
 }
 
 /* =====================================================================
@@ -93,7 +84,6 @@ body {
 
 .prose {
   line-height: 1.85;
-  max-width: 68ch;
 }
 
 .prose h2 {
@@ -195,10 +185,10 @@ body {
 
 .toc-link {
   display: block;
-  padding: 0.2rem 0;
-  padding-left: 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
+  padding: 0.25rem 0;
+  padding-left: 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--color-light-text-secondary);
   text-decoration: none;
   border-left: 2px solid transparent;
@@ -220,7 +210,7 @@ body {
 .toc-link.active {
   color: var(--color-light-accent);
   border-left-color: var(--color-light-accent);
-  padding-left: 8px;
+  padding-left: 16px;
 }
 
 .dark .toc-link.active {

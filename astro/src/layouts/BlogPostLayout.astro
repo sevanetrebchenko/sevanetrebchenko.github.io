@@ -66,7 +66,7 @@ const modifiedDate = (() => {
     <!-- Article -->
     <article
       class="flex-1 min-w-0 px-4 sm:px-6 py-10"
-      style="max-width: 68ch;"
+      style="max-width: 900px;"
       data-pagefind-body
     >
       <!-- Post header: tags → title → date -->
@@ -106,8 +106,7 @@ const modifiedDate = (() => {
       <div class="prose prose-lg dark:prose-invert max-w-none
         prose-headings:font-serif
         prose-a:text-[var(--color-light-accent)] dark:prose-a:text-[var(--color-dark-accent)]
-        prose-code:font-mono prose-code:text-[0.9em]
-        prose-pre:bg-[var(--color-code-bg)] prose-pre:text-[var(--color-code-text)]">
+        prose-code:font-mono prose-code:text-[0.9em]">
         <slot />
       </div>
 
@@ -122,11 +121,11 @@ const modifiedDate = (() => {
       </footer>
     </article>
 
-    <script src="../scripts/code-blocks.js"></script>
-
     <!-- TOC (desktop xl+) -->
-    <div class="hidden xl:block w-52 shrink-0 pt-10 pl-6">
+    <div class="hidden xl:block w-64 shrink-0 pt-10 pl-8">
       <TableOfContents headings={headings} />
     </div>
   </div>
 </BaseLayout>
+
+<script src="../scripts/code-blocks.js"></script>

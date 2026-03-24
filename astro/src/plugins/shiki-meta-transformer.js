@@ -1,326 +1,195 @@
-/**
- * Shiki transformer for code block metadata.
- *
- * Parses meta strings like:
- *   title:{file.cpp} added:{1-3,5} removed:{7} line-numbers:{enable} show-lines:{20} hidden:{10-12}
- *
- * Applies line-level decorations and restructures the HAST tree into a
- * container with header, gutter, and overlay.
- */
+import rangeParser from 'parse-numeric-range';
 
-import parseRange from 'parse-numeric-range';
-
-/**
- * Parse the meta string into a structured object.
- */
-function parseMeta(raw) {
-  if (!raw) return {};
-
-  const meta = {};
-
-  // Match key:{value} patterns — value can contain anything except }
-  const RE = /(\S+?):\{([^}]*)\}/g;
-  let match;
-  while ((match = RE.exec(raw)) !== null) {
-    const [, key, value] = match;
-
-    switch (key) {
-      case 'title':
-        meta.title = value;
-        break;
-      case 'added':
-      case 'removed':
-      case 'modified':
-      case 'highlighted':
-      case 'hidden':
-        meta[key] = new Set(parseRange(value));
-        break;
-      case 'line-numbers':
-        meta.lineNumbers = value === 'enable' || value === 'enabled';
-        break;
-      case 'show-lines':
-        meta.showLines = parseInt(value, 10);
-        break;
-    }
-  }
-
-  // If any diff lines exist, mark hasDiff
-  meta.hasDiff = !!(meta.added?.size || meta.removed?.size || meta.modified?.size);
-
-  return meta;
+function h(tag, props, children) {
+  return { type: 'element', tagName: tag, properties: props || {}, children: children || [] };
 }
 
-/**
- * Get the text content of a HAST node.
- */
-function getTextContent(node) {
-  if (node.type === 'text') return node.value;
-  if (node.children) return node.children.map(getTextContent).join('');
-  return '';
+function t(value) {
+  return { type: 'text', value: String(value) };
 }
 
-/**
- * Create a HAST element node.
- */
-function h(tagName, properties, children = []) {
-  return {
-    type: 'element',
-    tagName,
-    properties: properties || {},
-    children,
-  };
+function raw(html) {
+  return { type: 'raw', value: html };
 }
 
-/**
- * Create a HAST text node.
- */
-function text(value) {
-  return { type: 'text', value };
+function hasClass(node, cls) {
+  const c = node.properties?.class ?? node.properties?.className;
+  if (!c) return false;
+  if (Array.isArray(c)) return c.includes(cls);
+  return c.split(/\s+/).includes(cls);
 }
 
-/**
- * Get the diff symbol for a line.
- */
-function getDiffSymbol(lineNum, meta) {
-  if (meta.added?.has(lineNum)) return '+';
-  if (meta.removed?.has(lineNum)) return '\u2212'; // minus sign
-  if (meta.modified?.has(lineNum)) return '~';
-  return ' ';
-}
-
-/**
- * Get the CSS class for a line's diff status.
- */
-function getLineClass(lineNum, meta) {
-  if (meta.added?.has(lineNum)) return 'line-added';
-  if (meta.removed?.has(lineNum)) return 'line-removed';
-  if (meta.modified?.has(lineNum)) return 'line-modified';
-  if (meta.highlighted?.has(lineNum)) return 'line-highlighted';
-  return '';
-}
+const COPY_ICON  = '<svg class="btn-icon copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>';
+const CHECK_ICON = '<svg class="btn-icon check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const CHEVRON    = '<svg class="overlay-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 
 export function metaTransformer() {
   return {
-    name: 'code-meta',
+    name: 'shiki-meta-transformer',
 
-    // preprocess runs before all HAST hooks — parse meta here so it's
-    // available in line/span/root hooks
     preprocess(code, options) {
-      const raw = options.meta?.__raw;
-      const meta = parseMeta(raw);
-      this.meta.__codeMeta = meta;
-      return code;
+      const meta = options.meta?.__raw ?? '';
+      const get  = (pattern) => (pattern.exec(meta) || [])[1] ?? null;
+
+      this._title     = get(/\btitle\b:\{([^}]*)\}/);
+      this._added     = rangeParser(get(/\badded\b:\{([^}]+)\}/)   ?? '');
+      this._removed   = rangeParser(get(/\bremoved\b:\{([^}]+)\}/) ?? '');
+      this._lineNums  = /\bline-numbers\b:\{enabled?\}/i.test(meta);
+      this._showLines = Number(get(/\bshow-lines\b:\{(\d+)\}/))    || null;
+      this._hidden    = rangeParser(get(/\bhidden\b:\{([^}]+)\}/)  ?? '');
+      this._noCopy    = /\bno-copy\b/.test(meta);
+      this._lang      = options.lang || null;
     },
 
-    // line hook: apply diff/highlight classes and data-line attributes
-    line(lineEl, lineNum) {
-      const meta = this.meta?.__codeMeta;
-      if (!meta) return;
-
-      // Add data-line attribute (1-based)
-      if (!lineEl.properties) lineEl.properties = {};
-      lineEl.properties['data-line'] = String(lineNum);
-
-      // Add diff/highlight class
-      const cls = getLineClass(lineNum, meta);
-      if (cls) {
-        this.addClassToHast(lineEl, cls);
-      }
-    },
-
-    // root hook: restructure HAST into container layout
-    // Runs AFTER line and span hooks
-    root(rootEl) {
-      const meta = this.meta?.__codeMeta;
-      const lang = this.options.lang || '';
-
-
-
-      // Find the <pre> element in the root
-      const preEl = rootEl.children.find(
-        (c) => c.type === 'element' && c.tagName === 'pre'
-      );
-      if (!preEl) return;
-
-      // Find the <code> element in the <pre>
-      const codeEl = preEl.children.find(
-        (c) => c.type === 'element' && c.tagName === 'code'
-      );
+    root(hast) {
+      const pre    = hast.children.find(n => n.type === 'element' && n.tagName === 'pre');
+      if (!pre) return;
+      const codeEl = pre.children?.find(n => n.type === 'element' && n.tagName === 'code');
       if (!codeEl) return;
 
-      // Collect all line elements (span.line)
-      const allLines = codeEl.children.filter(
-        (c) => c.type === 'element'
-      );
+      // Collect span.line elements
+      let allLines = (codeEl.children || []).filter(n => n.type === 'element' && hasClass(n, 'line'));
 
-      // Determine which lines are visible (not hidden)
-      const visibleLines = [];
-      for (let i = 0; i < allLines.length; i++) {
-        const lineNum = i + 1; // 1-based
-        if (meta?.hidden?.has(lineNum)) continue;
-        visibleLines.push({ el: allLines[i], lineNum });
+      // Shiki adds a trailing empty line for a trailing newline — drop it
+      if (allLines.length > 0) {
+        const last  = allLines[allLines.length - 1];
+        const blank = last.children.length === 0 ||
+          (last.children.length === 1 && last.children[0].type === 'text' && last.children[0].value === '');
+        if (blank) allLines.pop();
       }
 
-      // Remove trailing empty line if present (Shiki often adds one)
-      if (visibleLines.length > 0) {
-        const last = visibleLines[visibleLines.length - 1];
-        if (getTextContent(last.el).trim() === '') {
-          visibleLines.pop();
-        }
-      }
+      // Filter hidden lines, preserving original 1-based index for diff state lookup
+      const visible = allLines
+        .map((el, i) => ({ el, orig: i + 1 }))
+        .filter(({ orig }) => !this._hidden.includes(orig));
 
-      // Replace code children with only visible lines
-      codeEl.children = visibleLines.map((v) => v.el);
+      const hasDiff   = this._added.length > 0 || this._removed.length > 0;
+      const hasGutter = this._lineNums || hasDiff;
 
-      const showGutter = meta?.lineNumbers || meta?.hasDiff;
+      // Build rows
+      const rows = visible.map(({ el, orig }, idx) => {
+        const isAdded   = this._added.includes(orig);
+        const isRemoved = this._removed.includes(orig);
 
-      // Build gutter
-      let gutterEl = null;
-      if (showGutter) {
-        const gutterLines = [];
-        for (const { lineNum } of visibleLines) {
-          const lineNumText = meta.lineNumbers ? String(lineNum) : '';
-          const diffSymbol = meta.hasDiff ? getDiffSymbol(lineNum, meta) : '';
-          const lineClass = getLineClass(lineNum, meta);
+        const rowClass = isAdded   ? 'code-row line-added'
+                       : isRemoved ? 'code-row line-removed'
+                       : 'code-row';
 
-          const parts = [];
+        const children = [];
 
-          if (meta.lineNumbers) {
-            parts.push(
-              h('span', { class: ['gutter-number'] }, [text(lineNumText)])
-            );
+        if (hasGutter) {
+          const gc = [];
+
+          if (this._lineNums) {
+            gc.push(h('span', { class: 'gutter-number' }, [t(idx + 1)]));
           }
 
-          if (meta.hasDiff) {
-            const symbolClass = ['gutter-diff'];
-            if (diffSymbol === '+') symbolClass.push('diff-add');
-            else if (diffSymbol === '\u2212') symbolClass.push('diff-remove');
-            else if (diffSymbol === '~') symbolClass.push('diff-modify');
-
-            parts.push(
-              h('span', { class: symbolClass }, [text(diffSymbol)])
-            );
+          if (hasDiff) {
+            const sym = isAdded ? '+' : isRemoved ? '-' : '\u00a0';
+            const cls = isAdded   ? 'gutter-diff diff-add'
+                      : isRemoved ? 'gutter-diff diff-remove'
+                      : 'gutter-diff';
+            gc.push(h('span', { class: cls }, [t(sym)]));
           }
 
-          gutterLines.push(
-            h('div', {
-              class: ['gutter-line', ...(lineClass ? [lineClass] : [])],
-            }, parts)
-          );
+          gc.push(h('div', { class: 'gutter-separator' }, []));
+          gc.push(h('div', { class: 'gutter-spacer' },    []));
+          children.push(h('div', { class: 'gutter-cell' }, gc));
         }
 
-        gutterEl = h('div', { class: ['code-gutter'] }, gutterLines);
+        children.push(h('div', { class: 'line-content' }, el.children));
+
+        return h('div', { class: rowClass }, children);
+      });
+
+      // Rows wrapper
+      const codeRows = h('div', { class: 'code-rows' }, rows);
+
+      // Body
+      const bodyClass = this._showLines ? 'code-body collapsed' : 'code-body';
+      const bodyProps = { class: bodyClass };
+      if (this._showLines) {
+        const ch = `${1.2 + this._showLines * 1.5}em`;
+        bodyProps.style                    = `max-height: ${ch}`;
+        bodyProps['data-collapsed-height'] = ch;
       }
+      const codeBody = h('div', bodyProps, [codeRows]);
 
-      // Build header
-      const hasTitle = !!meta?.title;
-      const headerChildren = [];
+      // Header — omit only when no lang, no title, and no-copy
+      const showCopy   = !this._noCopy;
+      const showHeader = this._lang || this._title || showCopy;
 
-      if (hasTitle) {
-        headerChildren.push(
-          h('span', { class: ['code-title'] }, [text(meta.title)])
-        );
-      } else {
-        // Spacer to push copy button right
-        headerChildren.push(h('span', {}, []));
-      }
-
-      // Copy button with SVG icon
-      headerChildren.push(
-        h(
-          'button',
-          {
-            class: ['copy-button'],
-            'data-copy': true,
+      const copyButton = showCopy
+        ? h('button', {
+            class:        'copy-button',
+            type:         'button',
             'aria-label': 'Copy code',
-            type: 'button',
-          },
-          [
-            h('svg', {
-              xmlns: 'http://www.w3.org/2000/svg',
-              width: '18',
-              height: '18',
-              viewBox: '0 0 24 24',
-              fill: 'none',
-              stroke: 'currentColor',
-              'stroke-width': '2',
-              'stroke-linecap': 'round',
-              'stroke-linejoin': 'round',
-            }, [
-              h('rect', { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' }),
-              h('path', { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' }),
-            ]),
-          ]
-        )
-      );
+          }, [raw(COPY_ICON), raw(CHECK_ICON)])
+        : null;
 
-      const headerClasses = ['code-header'];
-      if (!hasTitle) headerClasses.push('no-title');
+      let header = null;
+      if (showHeader) {
+        if (hasGutter) {
+          // Aligned header — language centered over gutter area, border aligns
+          // with the gutter separator in the code body.
+          const headerChildren = [];
 
-      const headerEl = h('div', { class: headerClasses }, headerChildren);
+          // Language area — contains the same gutter elements so it
+          // naturally sizes to match the body gutter (no calc needed).
+          const hg = [];
+          if (this._lineNums) {
+            hg.push(h('span', { class: 'gutter-number' },
+              this._lang ? [h('span', { class: 'code-language' }, [t(this._lang)])] : []
+            ));
+          } else if (this._lang) {
+            hg.push(h('span', { class: 'code-language' }, [t(this._lang)]));
+          }
+          if (hasDiff) {
+            hg.push(h('span', { class: 'gutter-diff' }));
+          }
+          headerChildren.push(h('div', { class: 'header-gutter' }, hg));
 
-      // Build code body — wraps gutter + pre
-      const codeBodyChildren = [];
-      if (gutterEl) codeBodyChildren.push(gutterEl);
+          // Vertical border — same class as the gutter separator so it matches
+          headerChildren.push(h('div', { class: 'gutter-separator' }));
 
-      // Strip Shiki's inline styles from pre
-      if (preEl.properties?.style) {
-        preEl.properties.style = preEl.properties.style
-          .replace(/background-color:[^;]+;?/g, '')
-          .replace(/color:[^;]+;?/g, '')
-          .replace(/--shiki[^;]+;?/g, '')
-          .trim();
-        if (!preEl.properties.style) delete preEl.properties.style;
-      }
-      if (preEl.properties?.tabindex) delete preEl.properties.tabindex;
+          // Right side: title + copy button
+          const rightChildren = [];
+          if (this._title) rightChildren.push(h('span', { class: 'code-title' }, [t(this._title)]));
+          if (copyButton)  rightChildren.push(copyButton);
+          headerChildren.push(h('div', { class: 'header-content' }, rightChildren));
 
-      codeBodyChildren.push(preEl);
+          header = h('div', { class: 'code-header' }, headerChildren);
+        } else {
+          // Simple header — no gutter to align with
+          const left = [];
+          if (this._lang)  left.push(h('span', { class: 'code-language' }, [t(this._lang)]));
+          if (this._title) left.push(h('span', { class: 'code-title' },    [t(this._title)]));
 
-      const codeBodyEl = h('div', { class: ['code-body'] }, codeBodyChildren);
-
-      // Build overlay (for show-lines expand/collapse)
-      let overlayEl = null;
-      if (meta?.showLines && meta.showLines > 0) {
-        overlayEl = h(
-          'div',
-          { class: ['code-overlay'], 'data-collapsed': 'true' },
-          [
-            h('span', { class: ['overlay-label'] }, [text('Show more')]),
-            h('svg', {
-              xmlns: 'http://www.w3.org/2000/svg',
-              width: '14',
-              height: '14',
-              viewBox: '0 0 24 24',
-              fill: 'none',
-              stroke: 'currentColor',
-              'stroke-width': '2',
-              'stroke-linecap': 'round',
-              'stroke-linejoin': 'round',
-              class: ['overlay-icon'],
-            }, [
-              h('polyline', { points: '6 9 12 15 18 9' }),
-            ]),
-          ]
-        );
+          const hChildren = [h('div', { class: 'code-header-left' }, left)];
+          if (copyButton) hChildren.push(copyButton);
+          header = h('div', { class: 'code-header' }, hChildren);
+        }
       }
 
-      // Build the container
-      const containerClasses = ['code-container', `language-${lang}`];
-      if (meta?.hasDiff) containerClasses.push('has-diff');
-      if (showGutter) containerClasses.push('has-gutter');
-
-      const containerProps = { class: containerClasses };
-      if (meta?.showLines && meta.showLines > 0) {
-        containerProps['data-show-lines'] = String(meta.showLines);
+      // Expand/collapse overlay
+      let overlay = null;
+      if (this._showLines) {
+        overlay = h('div', { class: 'code-overlay', 'data-collapsed': 'true' }, [
+          h('span', { class: 'overlay-label' }, [t('Expand')]),
+          raw(CHEVRON),
+        ]);
       }
 
-      const containerChildren = [headerEl, codeBodyEl];
-      if (overlayEl) containerChildren.push(overlayEl);
+      // Assemble container
+      const containerClass = hasGutter ? 'code-container has-gutter' : 'code-container';
+      const containerProps = { class: containerClass };
 
-      const containerEl = h('div', containerProps, containerChildren);
+      const cc = [];
+      if (header)  cc.push(header);
+      cc.push(codeBody);
+      if (overlay) cc.push(overlay);
 
-      // Replace root children with our container
-      rootEl.children = [containerEl];
+      hast.children = [h('div', containerProps, cc)];
     },
   };
 }

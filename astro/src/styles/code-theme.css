@@ -1,258 +1,267 @@
 /* ==========================================================================
-   Code Block Container
+   Container
    ========================================================================== */
 
 .code-container {
-  background-color: rgb(43, 43, 43);
-  color: rgb(169, 183, 198);
+  background:            rgb(43, 43, 43);
+  color:                 rgb(169, 183, 198);
+  border:                1px solid rgb(75, 75, 75);
+  border-radius:         10px;
+  overflow:              clip;
+  display:               flex;
+  flex-direction:        column;
+  position:              relative;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family:           'JetBrains Mono', monospace;
   font-variant-ligatures: none;
-  font-style: normal;
-  font-weight: 300;
-  font-size: min(3.6vw, 15px);
-  line-height: 1.5em;
+  font-weight:           300;
+  font-size:             min(3.6vw, 15px);
+  line-height:           1.5em;
+  -moz-tab-size:         4;
+  tab-size:              4;
+  -webkit-hyphens:       none;
+  hyphens:               none;
 
-  display: flex;
-  flex-direction: column;
-
-  border-radius: 10px;
-  position: relative;
-
-  -moz-tab-size: 4;
-  tab-size: 4;
-
-  -webkit-hyphens: none;
-  -moz-hyphens: none;
-  -ms-hyphens: none;
-  hyphens: none;
-
-  overflow: hidden;
 }
 
 /* ==========================================================================
-   Code Header
+   Header
    ========================================================================== */
 
 .code-header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 10px;
-
-  background-color: rgb(56, 56, 56);
-  color: rgb(128, 128, 128);
-
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  display:         flex;
+  flex-direction:  row;
+  align-items:     stretch;
+  background:      rgb(56, 56, 56);
+  border-bottom:   1px solid rgb(55, 55, 55);
 }
 
-.code-header.no-title {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background-color: transparent;
-  z-index: 1;
+/* --- Aligned header (when gutter is present) --- */
+
+.header-gutter {
+  display:         flex;
+  align-items:     center;
+  flex-shrink:     0;
+  padding-left:    9px;
+}
+
+.header-content {
+  display:      flex;
+  align-items:  center;
+  flex:         1;
+  min-width:    0;
+  padding-left: 18px;
+}
+
+.header-content .code-title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Simple header (no gutter) --- */
+
+.code-header-left {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  padding:     10px 18px;
+  min-width:   0;
+  flex:        1;
+}
+
+/* --- Language & title --- */
+
+.code-language {
+  color:       rgb(100, 100, 100);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .code-title {
-  display: flex;
-  align-items: center;
-  padding-left: 18px;
-  padding-right: 18px;
+  color:         rgb(200, 200, 200);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
-   Copy Button
+   Copy button
    ========================================================================== */
 
 .copy-button {
-  color: rgb(100, 100, 100);
-  transition: 0.1s color;
-  padding: 6px;
-  line-height: 1em;
-  display: flex;
-  flex-direction: row;
+  color:      rgb(100, 100, 100);
+  transition: color 0.1s;
+  padding:    8px;
+  display:    flex;
+  align-items:     center;
   justify-content: center;
-  align-items: center;
   background: none;
-  border: none;
-  cursor: pointer;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 14px;
+  border:     none;
+  cursor:     pointer;
+  flex-shrink: 0;
 }
 
 .copy-button:hover {
   color: rgb(169, 183, 198);
 }
 
-.copy-button .copied-label {
-  font-size: 13px;
-  opacity: 1;
-  transition: opacity 0.3s;
+.btn-icon {
+  display: block;
 }
 
-.copy-button .copied-label.fade-out {
-  opacity: 0;
-}
-
-/* ==========================================================================
-   Code Body (gutter + pre)
-   ========================================================================== */
-
-.code-body {
-  display: flex;
-  flex-direction: row;
-  overflow: auto;
-  padding-top: 18px;
-  padding-bottom: 18px;
-  transition: max-height 0.3s ease;
-}
-
-.code-body::-webkit-scrollbar-thumb {
-  background-color: rgb(100, 100, 100);
-}
-
-/* Pre/code reset inside container */
-.code-container pre {
-  margin: 0;
-  padding: 0;
-  background: transparent !important;
-  border: none;
-  overflow: visible;
-  flex-grow: 1;
-  min-width: 0;
-}
-
-.code-container pre code {
-  display: flex;
-  flex-direction: column;
-  padding-left: 18px;
-  padding-right: 18px;
-}
-
-/* When there's a diff gutter, reduce left padding on code */
-.code-container.has-diff pre code {
-  padding-left: 0;
-}
-
-/* Line spans */
-.code-container pre code .line {
-  display: inline;
-  min-height: 1.5em;
-}
-
-/* ==========================================================================
-   Gutter (line numbers + diff symbols)
-   ========================================================================== */
-
-.code-gutter {
-  display: flex;
-  flex-direction: column;
-  color: rgb(93, 96, 99);
-  user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  flex-shrink: 0;
-}
-
-.gutter-line {
-  display: flex;
-  flex-direction: row;
-  min-height: 1.5em;
-  line-height: 1.5em;
-}
-
-.gutter-number {
-  text-align: right;
-  padding: 0 9px;
-  min-width: 2em;
-}
-
-.gutter-diff {
-  padding: 0 9px;
-  min-width: 1.2em;
-  text-align: center;
-}
-
-.gutter-diff.diff-add {
-  color: rgb(80, 160, 100);
-}
-
-.gutter-diff.diff-remove {
-  color: rgb(200, 80, 80);
-}
-
-.gutter-diff.diff-modify {
-  color: rgb(200, 180, 60);
-}
-
-/* Gutter separator (right border) */
-.code-gutter::after {
+.check-icon {
   display: none;
 }
 
+.copy-button.copied .copy-icon {
+  display: none;
+}
+
+.copy-button.copied .check-icon {
+  display: block;
+}
+
 /* ==========================================================================
-   Diff Line Backgrounds
+   Body
    ========================================================================== */
 
-.line-added {
-  background-color: rgb(41, 68, 54);
+.code-body {
+  overflow-x: auto;
+  transition: max-height 0.3s ease;
 }
 
-.line-removed {
-  background-color: rgb(88, 49, 49);
+.code-body::-webkit-scrollbar {
+  height: 6px;
 }
 
-.line-modified {
-  background-color: rgb(75, 74, 54);
+.code-body::-webkit-scrollbar-thumb {
+  background:    rgb(100, 100, 100);
+  border-radius: 3px;
 }
 
-.line-highlighted {
-  background-color: rgb(45, 74, 88);
-}
-
-/* Apply line backgrounds to both gutter and code lines */
-.gutter-line.line-added {
-  background-color: rgb(41, 68, 54);
-}
-.gutter-line.line-removed {
-  background-color: rgb(88, 49, 49);
-}
-.gutter-line.line-modified {
-  background-color: rgb(75, 74, 54);
-}
-.gutter-line.line-highlighted {
-  background-color: rgb(45, 74, 88);
+.code-body.collapsed {
+  overflow-y: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+          mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
 /* ==========================================================================
-   Expand/Collapse Overlay
+   Rows
+   ========================================================================== */
+
+.code-rows {
+  display:        flex;
+  flex-direction: column;
+  min-width:      max-content;
+  width:          100%;
+  padding-top:    1.2em;
+  padding-bottom: 1.2em;
+}
+
+.code-row {
+  display:    flex;
+  align-items: stretch;
+  height:     1.5em;
+  width:      100%;
+  background: rgb(43, 43, 43);
+}
+
+.code-row.line-added   { background: rgb(41, 68, 54); }
+.code-row.line-removed { background: rgb(88, 49, 49); }
+
+/* ==========================================================================
+   Gutter
+   ========================================================================== */
+
+.gutter-cell {
+  position:  sticky;
+  left:      0;
+  z-index:   1;
+  background: inherit;
+
+  display:        flex;
+  flex-direction: row;
+  align-items:    stretch;
+  flex-shrink:    0;
+
+  padding-left:      9px;
+  user-select:       none;
+  -webkit-user-select: none;
+}
+
+.gutter-number {
+  display:         flex;
+  align-items:     center;
+  justify-content: flex-end;
+  box-sizing:      content-box;
+  min-width:       2em;
+  margin-right:    9px;
+  color:           rgb(93, 96, 99);
+  flex-shrink:     0;
+}
+
+.gutter-diff {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       1.2em;
+  margin-right:    9px;
+  flex-shrink:     0;
+}
+
+.gutter-diff.diff-add    { color: rgb(80, 160, 100); }
+.gutter-diff.diff-remove { color: rgb(200, 80, 80);  }
+
+.gutter-separator {
+  width:      1px;
+  flex-shrink: 0;
+  background:  rgb(75, 75, 75);
+  align-self:  stretch;
+}
+
+.gutter-spacer {
+  width:      9px;
+  flex-shrink: 0;
+  background:  inherit;
+}
+
+/* ==========================================================================
+   Line content
+   ========================================================================== */
+
+.line-content {
+  flex-grow:     1;
+  padding-right: 18px;
+  white-space:   pre;
+}
+
+.code-container:not(.has-gutter) .line-content {
+  padding-left: 18px;
+}
+
+/* ==========================================================================
+   Expand / collapse
    ========================================================================== */
 
 .code-overlay {
-  display: flex;
-  flex-direction: row;
+  display:         flex;
+  flex-direction:  row;
+  align-items:     center;
   justify-content: center;
-  column-gap: 10px;
-  align-items: center;
+  gap:             8px;
 
-  transition: 0.125s;
-  color: rgb(100, 100, 100);
+  padding:    10px 0;
+  background: rgb(43, 43, 43);
+  color:      rgb(100, 100, 100);
+  cursor:     pointer;
+  transition: color 0.125s;
 
-  padding: 10px;
-  cursor: pointer;
+  user-select:       none;
+  -webkit-user-select: none;
 }
 
 .code-overlay:hover {
   color: gainsboro;
-}
-
-.overlay-label {
-  font-size: 13px;
 }
 
 .overlay-icon {
@@ -264,147 +273,40 @@
 }
 
 /* ==========================================================================
-   C++ Annotation Token Colors
+   Prose overrides — prevent Tailwind Typography from fighting our styles
    ========================================================================== */
-
-.language-cpp .comment,
-.language-c\+\+ .comment,
-.language-c .comment {
-  color: rgb(128, 128, 128) !important;
-}
-
-/* Keywords and booleans */
-.language-cpp .keyword,
-.language-c\+\+ .keyword {
-  color: rgb(206, 136, 70) !important;
-}
-
-/* Strings */
-.language-cpp .string,
-.language-c\+\+ .string {
-  color: rgb(106, 171, 115) !important;
-}
-
-/* Preprocessor */
-.language-cpp .preprocessor-directive,
-.language-c\+\+ .preprocessor-directive {
-  color: rgb(187, 181, 41) !important;
-}
-
-.language-cpp .macro-name,
-.language-c\+\+ .macro-name {
-  color: rgb(149, 144, 51) !important;
-}
-
-.language-cpp .macro-argument,
-.language-c\+\+ .macro-argument {
-  color: rgb(149, 144, 51) !important;
-}
-
-.language-cpp .macro,
-.language-c\+\+ .macro {
-  color: rgb(187, 181, 41) !important;
-}
-
-/* Functions */
-.language-cpp .function,
-.language-c\+\+ .function {
-  color: rgb(255, 198, 109) !important;
-}
-
-/* Class/namespace/enum/concept names */
-.language-cpp .class-name,
-.language-c\+\+ .class-name,
-.language-cpp .namespace-name,
-.language-c\+\+ .namespace-name,
-.language-cpp .enum-name,
-.language-c\+\+ .enum-name,
-.language-cpp .concept,
-.language-c\+\+ .concept {
-  color: rgb(181, 182, 227) !important;
-}
-
-/* Enum values */
-.language-cpp .enum-value,
-.language-c\+\+ .enum-value {
-  color: rgb(199, 125, 187) !important;
-}
-
-/* Numbers */
-.language-cpp .number,
-.language-c\+\+ .number {
-  color: rgb(42, 172, 184) !important;
-}
-
-/* Member variables */
-.language-cpp .member-variable,
-.language-c\+\+ .member-variable {
-  color: rgb(152, 118, 170) !important;
-}
-
-/* Operators */
-.language-cpp .operator,
-.language-c\+\+ .operator,
-.language-cpp .unary-operator,
-.language-c\+\+ .unary-operator,
-.language-cpp .binary-operator,
-.language-c\+\+ .binary-operator,
-.language-cpp .function-operator,
-.language-c\+\+ .function-operator {
-  color: rgb(95, 140, 138) !important;
-}
-
-/* Punctuation */
-.language-cpp .punctuation,
-.language-c\+\+ .punctuation {
-  color: rgb(169, 183, 198) !important;
-}
-
-/* Plain — default text color (no special highlighting) */
-.language-cpp .plain,
-.language-c\+\+ .plain {
-  color: rgb(169, 183, 198) !important;
-}
-
-/* ==========================================================================
-   Shiki CSS Variables Theme Overrides
-   Override Shiki's css-variables theme defaults for our dark code blocks.
-   ========================================================================== */
-
-.code-container {
-  --shiki-color-text: rgb(169, 183, 198);
-  --shiki-color-background: rgb(43, 43, 43);
-  --shiki-token-constant: rgb(206, 136, 70);
-  --shiki-token-string: rgb(106, 171, 115);
-  --shiki-token-comment: rgb(128, 128, 128);
-  --shiki-token-keyword: rgb(206, 136, 70);
-  --shiki-token-parameter: rgb(169, 183, 198);
-  --shiki-token-function: rgb(255, 198, 109);
-  --shiki-token-string-expression: rgb(106, 171, 115);
-  --shiki-token-punctuation: rgb(169, 183, 198);
-  --shiki-token-link: rgb(42, 172, 184);
-}
-
-/* ==========================================================================
-   Prose overrides — prevent Tailwind typography from fighting our styles
-   ========================================================================== */
-
-.prose .code-container {
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
 
 .prose pre {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding:          0    !important;
+  margin:           0    !important;
   background-color: transparent !important;
-  border-radius: 0 !important;
-  color: inherit !important;
+  border-radius:    0    !important;
+  color:            inherit !important;
+  font-size:        inherit !important;
+  line-height:      inherit !important;
 }
 
 .prose pre code {
-  background: transparent !important;
-  padding: 0 !important;
-  font-size: inherit !important;
-  color: inherit !important;
+  background:  transparent !important;
+  font-size:   inherit !important;
+  color:       inherit !important;
 }
+
+.prose .code-container {
+  margin-top:    1.25em;
+  margin-bottom: 1.25em;
+}
+
+/* ==========================================================================
+   Syntax token colors (github-dark palette)
+   Change a color here to update every matching token across all code blocks.
+   ========================================================================== */
+
+.tk-fg       { color: #c9d1d9; }
+.tk-comment  { color: #8b949e; font-style: italic; }
+.tk-keyword  { color: #ff7b72; }
+.tk-type     { color: #ffa657; }
+.tk-constant { color: #79c0ff; }
+.tk-string   { color: #a5d6ff; }
+.tk-function { color: #d2a8ff; }
+.tk-green    { color: #7ee787; }

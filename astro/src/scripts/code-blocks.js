@@ -1,101 +1,56 @@
-/**
- * Client-side code block interactivity:
- *  - Copy to clipboard
- *  - Expand/collapse for show-lines
- */
+// Copy to clipboard
+document.querySelectorAll('.copy-button').forEach(btn => {
+  let timeout = null;
 
-function initCodeBlocks() {
-  // --- Copy to clipboard ---
-  document.querySelectorAll('.copy-button[data-copy]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const container = button.closest('.code-container');
-      if (!container) return;
+  btn.addEventListener('click', async () => {
+    const container = btn.closest('.code-container');
+    const text = Array.from(container.querySelectorAll('.line-content'))
+      .map(el => el.textContent)
+      .join('\n');
 
-      const codeEl = container.querySelector('pre code');
-      if (!codeEl) return;
-
-      // Get text content (excludes gutter since it's outside pre)
-      const text = codeEl.textContent || '';
-
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
-
-      // Show "Copied!" feedback
-      const svg = button.querySelector('svg');
-      if (svg) svg.style.display = 'none';
-
-      const label = document.createElement('span');
-      label.className = 'copied-label';
-      label.textContent = 'Copied!';
-      button.appendChild(label);
-
-      setTimeout(() => {
-        label.classList.add('fade-out');
-        setTimeout(() => {
-          label.remove();
-          if (svg) svg.style.display = '';
-        }, 300);
-      }, 1000);
-    });
-  });
-
-  // --- Expand/collapse ---
-  document.querySelectorAll('.code-container[data-show-lines]').forEach((container) => {
-    const showLines = parseInt(container.dataset.showLines, 10);
-    if (!showLines || showLines <= 0) return;
-
-    const codeBody = container.querySelector('.code-body');
-    const overlay = container.querySelector('.code-overlay');
-    if (!codeBody || !overlay) return;
-
-    // Measure line height from an actual line element
-    const firstLine = codeBody.querySelector('.line');
-    if (!firstLine) return;
-
-    const lineHeight = firstLine.getBoundingClientRect().height || parseFloat(getComputedStyle(firstLine).lineHeight);
-    const padding = 36; // 18px top + 18px bottom padding on code-body
-    const collapsedHeight = lineHeight * showLines + padding;
-
-    // Only collapse if the content is actually taller than the limit
-    if (codeBody.scrollHeight <= collapsedHeight + lineHeight) {
-      // Content fits — remove overlay
-      overlay.remove();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
       return;
     }
 
-    // Set initial collapsed state
-    codeBody.style.maxHeight = collapsedHeight + 'px';
-    codeBody.style.overflow = 'hidden';
-
-    overlay.addEventListener('click', () => {
-      const isCollapsed = overlay.dataset.collapsed === 'true';
-
-      if (isCollapsed) {
-        codeBody.style.maxHeight = codeBody.scrollHeight + 'px';
-        overlay.dataset.collapsed = 'false';
-        overlay.querySelector('.overlay-label').textContent = 'Show less';
-      } else {
-        codeBody.style.maxHeight = collapsedHeight + 'px';
-        overlay.dataset.collapsed = 'true';
-        overlay.querySelector('.overlay-label').textContent = 'Show more';
-      }
-    });
+    btn.classList.add('copied');
+    clearTimeout(timeout);
+    timeout = setTimeout(() => btn.classList.remove('copied'), 1500);
   });
-}
+});
 
-// Run on initial load
-initCodeBlocks();
+// Expand / collapse
+document.querySelectorAll('.code-overlay').forEach(overlay => {
+  const body            = overlay.previousElementSibling;
+  const collapsedHeight = body.dataset.collapsedHeight;
 
-// Re-run after Astro view transitions (if used)
-document.addEventListener('astro:page-load', initCodeBlocks);
+  overlay.addEventListener('click', () => {
+    const isCollapsed = overlay.dataset.collapsed === 'true';
+
+    if (isCollapsed) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      body.classList.remove('collapsed');
+      overlay.dataset.collapsed = 'false';
+      overlay.querySelector('.overlay-label').textContent = 'Collapse';
+
+      // After transition, remove the max-height constraint so the body
+      // can grow freely if the viewport changes.
+      body.addEventListener('transitionend', () => {
+        if (overlay.dataset.collapsed === 'false') {
+          body.style.maxHeight = '';
+        }
+      }, { once: true });
+    } else {
+      // Anchor at the current rendered height before transitioning down.
+      // If max-height was removed after a previous expand, scrollHeight
+      // gives us the full content height to transition from.
+      body.style.maxHeight = body.scrollHeight + 'px';
+      void body.offsetHeight; // force layout so the browser registers the value
+      body.style.maxHeight = collapsedHeight;
+      body.classList.add('collapsed');
+      overlay.dataset.collapsed = 'true';
+      overlay.querySelector('.overlay-label').textContent = 'Expand';
+    }
+  });
+});
