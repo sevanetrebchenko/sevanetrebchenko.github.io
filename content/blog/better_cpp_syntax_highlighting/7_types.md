@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 7: Types"
+abstract: "Earlier posts in this series focused only on the declarations of types. References to types, such as in variable declarations, function parameters, and return statements, often appear as plain text in browser-based syntax highlighters. This post implements a dedicated visitor to annotate these type references, ensuring every type name is styled consistently."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-07-08
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 7
+---
 
 In this post, we're finally tackling annotating type references.
 So far, our visitors have only annotated type declarations for classes, structs, enums, templates, etc.

@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 3: Namespaces"
+abstract: "This post builds on the previous post by adding new AST visitors for namespace declarations, aliases, and `using namespace` directives."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-18
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 3
+---
 
 Namespaces are up next.
 Their declarations and references appear frequently in C++ code, and Clang exposes several node types for processing them.

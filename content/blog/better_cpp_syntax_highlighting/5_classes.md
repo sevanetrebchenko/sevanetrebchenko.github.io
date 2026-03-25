@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 5: Classes"
+abstract: "Classes in C++ are comprised of many elements: constructors, destructors, class methods, member variables (both static and instance), and (optionally) nested types. This post shows how to implement visitors that traverse and annotate each component of a complex class definition."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-24
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 5
+---
 
 Classes introduce significantly more complexity than enums, namespaces, or functions, but the same core principles apply.
 Consider the following example:

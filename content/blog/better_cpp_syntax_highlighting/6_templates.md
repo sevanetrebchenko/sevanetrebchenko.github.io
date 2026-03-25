@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 6: Templates"
+abstract: "Templates are ubiquitous in modern C++ code and pose unique challenges for implementing accurate syntax highlighting. This post dives into the intricacies of visiting and annotating template functions, classes, and C++20 concepts."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-29
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 6
+---
 
 Templates and concepts make up a huge part of modern C++.
 In this post, we’ll cover how to annotate template declarations, template parameters, and C++20 concepts.

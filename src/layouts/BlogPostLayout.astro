@@ -99,26 +99,22 @@ const modifiedDate = (() => {
         </div>
       </header>
 
-      <!-- Series top banner -->
+      <!-- Post body -->
+      <div class="prose prose-base dark:prose-invert max-w-none
+        prose-headings:font-serif prose-headings:tracking-[0.01em]
+        prose-a:text-[var(--color-light-accent)] dark:prose-a:text-[var(--color-dark-accent)]
+        prose-code:font-mono prose-code:text-[0.95em]
+        prose-hr:border-[var(--color-light-border)] dark:prose-hr:border-[var(--color-dark-border)]">
+        <slot />
+      </div>
+
+      <!-- Series navigation -->
       {hasSeries && (
         <SeriesWidget seriesPosts={seriesPosts} currentPostId={currentPostId} variant="top" />
       )}
 
-      <!-- Post body -->
-      <div class="prose prose-base dark:prose-invert max-w-none
-        prose-headings:font-serif
-        prose-a:text-[var(--color-light-accent)] dark:prose-a:text-[var(--color-dark-accent)]
-        prose-code:font-mono prose-code:text-[0.9em]">
-        <slot />
-      </div>
-
-      <!-- Series bottom index -->
-      {hasSeries && (
-        <SeriesWidget seriesPosts={seriesPosts} currentPostId={currentPostId} variant="bottom" />
-      )}
-
       <!-- Post footer -->
-      <footer class="mt-12 pt-6 border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]">
+      <footer class="mt-12 pt-6">
         <Footer />
       </footer>
     </article>

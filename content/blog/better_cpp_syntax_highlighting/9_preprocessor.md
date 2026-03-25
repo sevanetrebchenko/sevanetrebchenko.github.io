@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 9: Preprocessor"
+abstract: "Annotating preprocessor directives requires hooking into Clang's preprocessing stage before the AST is generated. This post explains how to annotate common directives like `#define`, `#include`, and conditional blocks before they're stripped out of the AST."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-07-12
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 9
+---
 
 Part of the reason we added the `Annotator` and `Tokenizer` as member variables of the `ASTFrontendAction` is so that they could be reused in different contexts.
 Up until now, we've worked exclusively with nodes of the AST.

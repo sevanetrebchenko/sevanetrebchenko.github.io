@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 4: Functions"
+abstract: "C++ function come in many forms, each requiring a different approach for proper syntax highlighting. This post covers the implementation of visitors for annotating function declarations, calls, and several kinds of operators, including operator overloads and user-defined literals."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-20
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 4
+---
 
 Functions are next on our list.
 Their declarations, definitions, and calls appear throughout C++ code, and Clang provides a rich set of node types for processing them.

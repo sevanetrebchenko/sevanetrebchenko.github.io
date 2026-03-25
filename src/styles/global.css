@@ -93,7 +93,6 @@ body {
 .prose h2 {
   font-size: 1.65rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
   margin-top: 2em;
   margin-bottom: 0.75em;
 }
@@ -110,7 +109,7 @@ body {
   background-color: rgba(0, 0, 0, 0.07);
   padding: 0.15em 0.4em;
   border-radius: 3px;
-  font-size: 0.875em;
+  font-size: 0.95em;
   font-family: var(--font-mono);
   font-weight: 400;
 }
@@ -121,6 +120,20 @@ body {
 }
 
 .dark .prose :not(pre) > code {
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.toc-link code {
+  background-color: rgba(0, 0, 0, 0.07);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.95em;
+  font-family: var(--font-mono);
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+.dark .toc-link code {
   background-color: rgba(255, 255, 255, 0.10);
 }
 
@@ -197,6 +210,9 @@ body {
   text-decoration: none;
   border-left: 2px solid transparent;
   transition: color 150ms ease, padding-left 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dark .toc-link {

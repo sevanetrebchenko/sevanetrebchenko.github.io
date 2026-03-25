@@ -4,6 +4,7 @@ if (!headings || headings.length === 0) return;
 
 const tocItems = headings.filter(h => h.depth === 2 || h.depth === 3);
 if (tocItems.length === 0) return;
+
 ---
 
 <nav
@@ -28,6 +29,16 @@ if (tocItems.length === 0) return;
     ))}
   </ul>
 </nav>
+
+<script is:inline>
+// Sync inline HTML from rendered headings into TOC links before first paint
+document.querySelectorAll('.toc-link').forEach(function(link) {
+  var heading = document.getElementById(link.getAttribute('data-heading'));
+  if (heading && heading.querySelector('code')) {
+    link.innerHTML = heading.innerHTML;
+  }
+});
+</script>
 
 <script>
   const links = document.querySelectorAll('.toc-link');

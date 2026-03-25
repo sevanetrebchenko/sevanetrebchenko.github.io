@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 10: Keywords"
+abstract: "One of the most important features of a language are its keywords. This post provides a brief overview of the libclang C API and explores two different methods for annotating language keywords."
+tags: ["c", "c++", "clang", "libtooling", "libclang"]
+date: 2025-07-13
+lastModified: 2025-07-19
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 10
+---
 
 The final piece of the annotation puzzle are language keywords.
 While it's possible to detect keywords by adding specific AST visitors, like `VisitIfStmt` for `if` or `VisitWhileStmt` for `while` statements, this approach quickly becomes tedious due to the sheer number of keywords (and subsequently visitors) this would require to implement.

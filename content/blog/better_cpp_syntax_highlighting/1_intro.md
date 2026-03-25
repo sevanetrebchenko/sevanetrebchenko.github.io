@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 1: Introduction"
+abstract: "Ever wondered why modern syntax highlighting for browsers struggles with C++? This post introduces a new method for context-aware syntax highlighting for browsers by leveraging Clang's LibTooling API and AST to inject semantic hints into C++ code snippets."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-12
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 1
+---
 
 I created this blog to have a place to discuss interesting problems I encounter while working on my personal projects.
 Many of these projects, particularly those focused on computer graphics, are written in C++.

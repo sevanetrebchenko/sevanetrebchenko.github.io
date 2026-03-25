@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 8: Qualifiers"
+abstract: "Similar to type names, qualifiers on functions and types (such as namespaces and other class names) are annotated as plain tokens in browser-based syntax highlighters. This post introduces a technique to traverse the qualifier chain of an AST node and addresses the challenges of adding annotations for each qualifier."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-07-10
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 8
+---
 
 Throughout this series, we've focused on annotating the *targets* of AST nodes — types, functions, member variables, and so on.
 However, many of these nodes also contain *qualifiers*, such as namespaces or class names, that appear on type names, static member references, and function calls.

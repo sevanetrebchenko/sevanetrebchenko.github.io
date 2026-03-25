@@ -1,3 +1,13 @@
+---
+title: "Better C++ Syntax Highlighting - Part 2: Enums"
+abstract: "Enum definitions and constants can be hard to distinguish in complex C++ code, often going completely overlooked in browser syntax highlighting. This post introduces the basic structure of a visitor for the Clang AST and implements several visitors for annotating enums and their values."
+tags: ["c++", "clang", "libtooling"]
+date: 2025-06-14
+lastModified: 2025-07-14
+series:
+  name: "Better C++ Syntax Highlighting"
+  part: 2
+---
 
 Enums are a great starting point as their declarations are simple and their usage easy to follow.
 Consider the following example:
