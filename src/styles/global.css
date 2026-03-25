@@ -23,11 +23,11 @@ html {
 
   /* Light theme */
   --color-light-bg: #f5f0e8;
-  --color-light-surface: #ffffff;
+  --color-light-surface: #fffcf7;
   --color-light-text: #3d3229;
   --color-light-text-secondary: #6b6560;
   --color-light-border: #e8e0d4;
-  --color-light-accent: #9a7b5a;
+  --color-light-accent: #c0825a;
 
 }
 
@@ -37,6 +37,13 @@ html {
 
 html {
   scroll-behavior: smooth;
+}
+
+html.no-transitions,
+html.no-transitions *,
+html.no-transitions *::before,
+html.no-transitions *::after {
+  transition: none !important;
 }
 
 a, button, [role="button"] {
@@ -107,7 +114,8 @@ body {
 
 /* Inline code */
 .prose :not(pre) > code {
-  background-color: color-mix(in srgb, var(--color-light-text) 7%, transparent);
+  background-color: var(--color-light-border);
+  color: inherit;
   padding: 0.15em 0.4em;
   border-radius: 3px;
   font-size: 0.95em;
@@ -121,11 +129,11 @@ body {
 }
 
 .dark .prose :not(pre) > code {
-  background-color: color-mix(in srgb, var(--color-dark-text) 10%, transparent);
+  background-color: var(--color-dark-border);
 }
 
 .toc-link code {
-  background-color: color-mix(in srgb, var(--color-light-text) 7%, transparent);
+  background-color: var(--color-light-border);
   padding: 0.1em 0.35em;
   border-radius: 3px;
   font-size: 0.95em;
@@ -135,7 +143,7 @@ body {
 }
 
 .dark .toc-link code {
-  background-color: color-mix(in srgb, var(--color-dark-text) 10%, transparent);
+  background-color: var(--color-dark-border);
 }
 
 /* =====================================================================
@@ -328,7 +336,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-light-border);
+  background: var(--color-light-text-secondary);
   border-radius: 3px;
 }
 

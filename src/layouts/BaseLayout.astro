@@ -6,12 +6,12 @@ import '../styles/global.css';
 const { title, description, ogType } = Astro.props;
 ---
 
-<html lang="en">
+<html lang="en" class="no-transitions">
   <head>
     <!-- Theme: must run before any CSS to prevent flash -->
     <script is:inline>
       (function() {
-        const saved = localStorage.getItem('theme');
+        var saved = localStorage.getItem('theme');
         if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
         } else {
@@ -20,6 +20,11 @@ const { title, description, ogType } = Astro.props;
       })();
     </script>
     <Head title={title} description={description} ogType={ogType} />
+    <script is:inline>
+      requestAnimationFrame(function() {
+        document.documentElement.classList.remove('no-transitions');
+      });
+    </script>
   </head>
   <body class="min-h-screen">
     <SiteHeader />
