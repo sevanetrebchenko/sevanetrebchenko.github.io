@@ -1,12 +1,3 @@
----
-title: "Better C++ Syntax Highlighting"
-abstract: "Ever wondered why modern syntax highlighting for browsers struggles with C++? This post introduces a new method for context-aware syntax highlighting by leveraging Clang's LibTooling API and AST to inject semantic hints into C++ code snippets."
-tags: ["c++", "clang", "libtooling", "libclang"]
-date: 2025-06-12
-lastModified: 2025-07-19
-draft: false
----
-
 
 Part of the reason we added the `Annotator` and `Tokenizer` as member variables of the `ASTFrontendAction` is so that they could be reused in different contexts.
 Up until now, we've worked exclusively with nodes of the AST.
@@ -67,7 +58,7 @@ To process them, we override the `MacroDefined` hook:
 In this function, we'll annotate four things:
 1. The macro name,
 2. The macro arguments (if any),
-3. References to macro arguments or other macros within the body,
+3. References to macro arguments or other macros within the body, 
 4. The `#define` directive itself.
 
 Consider the following example:
