@@ -1,8 +1,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
-import { metaTransformer } from './src/plugins/shiki-meta-transformer.js';
-import { classTransformer } from './src/plugins/shiki-class-transformer.js';
+import rehypePrism from './src/plugins/rehype-prism.js';
 
 export default defineConfig({
   site: 'https://sevanetrebchenko.com',
@@ -10,10 +9,8 @@ export default defineConfig({
     sitemap(),
   ],
   markdown: {
-    shikiConfig: {
-      theme: 'github-dark',
-      transformers: [metaTransformer(), classTransformer()],
-    },
+    syntaxHighlight: false,
+    rehypePlugins: [rehypePrism],
   },
   vite: {
     plugins: [tailwindcss()],

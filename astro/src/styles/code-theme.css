@@ -292,15 +292,61 @@
 }
 
 /* ==========================================================================
-   Syntax token colors (github-dark palette)
-   Change a color here to update every matching token across all code blocks.
+   Syntax token colors
+   Change a variable here to update every matching token across all code blocks.
    ========================================================================== */
 
-.tk-fg       { color: #c9d1d9; }
-.tk-comment  { color: #8b949e; font-style: italic; }
-.tk-keyword  { color: #ff7b72; }
-.tk-type     { color: #ffa657; }
-.tk-constant { color: #79c0ff; }
-.tk-string   { color: #a5d6ff; }
-.tk-function { color: #d2a8ff; }
-.tk-green    { color: #7ee787; }
+:root {
+  /* Base token colors — matched to old site styling */
+  --tk-fg:                      rgb(169, 183, 198);
+  --tk-plain:                   rgb(169, 183, 198);
+  --tk-punctuation:             rgb(169, 183, 198);
+  --tk-comment:                 rgb(128, 128, 128);
+  --tk-keyword:                 #cf8e6d;
+  --tk-string:                  rgb(106, 171, 115);
+  --tk-number:                  rgb(42, 172, 184);
+  --tk-constant:                rgb(42, 172, 184);
+  --tk-function:                #56a8f5;
+  --tk-type:                    rgb(181, 182, 227);
+  --tk-green:                   rgb(106, 171, 115);
+  --tk-double-colon:            rgb(169, 183, 198);
+
+  /* Custom annotations */
+  --tk-class-name:              rgb(181, 182, 227);
+  --tk-namespace-name:          rgb(181, 182, 227);
+  --tk-enum-name:               rgb(181, 182, 227);
+  --tk-concept:                 rgb(181, 182, 227);
+  --tk-enum-value:              rgb(199, 125, 187);
+  --tk-member-variable:         rgb(152, 118, 170);
+  --tk-operator:                rgb(95, 140, 138);
+  --tk-preprocessor-directive:  rgb(187, 181, 41);
+  --tk-macro:                   rgb(187, 181, 41);
+  --tk-macro-name:              rgb(149, 144, 51);
+  --tk-macro-argument:          rgb(149, 144, 51);
+}
+
+.tk-fg              { color: var(--tk-fg); }
+.tk-comment         { color: var(--tk-comment); }
+.tk-keyword         { color: var(--tk-keyword); }
+.tk-type            { color: var(--tk-type); }
+.tk-constant        { color: var(--tk-constant); }
+.tk-string          { color: var(--tk-string); }
+.tk-function        { color: var(--tk-function); }
+.tk-green           { color: var(--tk-green); }
+
+.tk-punctuation             { color: var(--tk-punctuation); }
+.tk-number                  { color: var(--tk-number); }
+.tk-double-colon            { color: var(--tk-double-colon); }
+.tk-macro                   { color: var(--tk-macro); }
+
+.tk-class-name              { color: var(--tk-class-name); }
+.tk-namespace-name          { color: var(--tk-namespace-name); }
+.tk-enum-name               { color: var(--tk-enum-name); }
+.tk-concept                 { color: var(--tk-concept); }
+.tk-enum-value              { color: var(--tk-enum-value); }
+.tk-member-variable         { color: var(--tk-member-variable); }
+.tk-operator                { color: var(--tk-operator); }
+.tk-plain                   { color: var(--tk-plain); }
+.tk-preprocessor-directive  { color: var(--tk-preprocessor-directive); }
+.tk-macro-name              { color: var(--tk-macro-name); }
+.tk-macro-argument          { color: var(--tk-macro-argument); }
