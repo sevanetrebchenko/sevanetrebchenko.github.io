@@ -1,0 +1,17 @@
+---
+import TagList from './TagList.astro';
+
+const { tags, activeTag } = Astro.props;
+---
+
+<aside
+  class="hidden lg:flex flex-col gap-4 w-56 shrink-0 sticky overflow-y-auto px-5 py-6 bg-[var(--color-light-surface)] dark:bg-[var(--color-dark-surface)] border-r border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]"
+  style="top: var(--header-height); height: calc(100vh - var(--header-height));"
+>
+  <div class="sidebar-scroll flex-1 overflow-y-auto flex flex-col gap-4 min-h-0">
+    <span class="font-mono text-[11px] uppercase tracking-widest text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)]">
+      Browse by topic
+    </span>
+    <TagList tags={tags} activeTag={activeTag} />
+  </div>
+</aside>

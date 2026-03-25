@@ -1,0 +1,366 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPublishedPosts, getTagCounts } from '../../utils/blog.js';
+
+const posts = await getPublishedPosts();
+const tagCounts = getTagCounts(posts);
+const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+---
+
+<BlogLayout title="Blog" description="Writing about graphics programming, C++, and software development.">
+
+  <!-- Search + filter UI -->
+  <div id="blog-search-wrapper" class="mb-10">
+
+    <!-- Input row -->
+    <div class="blog-search-row flex items-center gap-3 pb-3">
+      <svg
+        class="blog-search-icon w-5 h-5 shrink-0 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] transition-colors duration-150"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+      </svg>
+      <input
+        id="blog-search-input"
+        type="text"
+        placeholder="Type something..."
+        autocomplete="off"
+        spellcheck="false"
+        class="flex-1 bg-transparent outline-none font-serif text-base text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
+      />
+      <kbd
+        id="search-kbd-hint"
+        class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-50 shrink-0"
+      >/</kbd>
+      <button
+        id="clear-search"
+        class="hidden text-lg leading-none text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors shrink-0 px-2"
+        aria-label="Clear search and filters"
+        type="button"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Tag panel: expands on focus -->
+    <div id="tag-panel" class="tag-panel">
+      <div id="pills-container" class="flex flex-wrap gap-y-2 pt-3 items-center" style="transition: padding 250ms ease, gap 250ms ease;">
+        {allTags.map(([tag, count]) => (
+          <button
+            class="tag-filter-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-sm bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] cursor-pointer"
+            data-tag={tag}
+            type="button"
+          >
+            {tag}
+            <span class="opacity-40">{count}</span>
+          </button>
+        ))}
+        <button
+          id="more-tags-btn"
+          type="button"
+          style="display:none"
+          class="more-tags-btn inline-flex items-center px-2.5 py-1 rounded-md font-mono text-sm cursor-pointer shrink-0"
+        ></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Post list -->
+  <div id="post-list">
+    {posts.map((post) => (
+      <div
+        class="post-item"
+        data-title={post.data.title.toLowerCase()}
+        data-abstract={(post.data.abstract || '').toLowerCase()}
+        data-tags={post.data.tags.join(',')}
+      >
+        <PostCard post={post} />
+      </div>
+    ))}
+  </div>
+
+  <p id="no-results" class="hidden text-center font-serif text-base italic text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] py-12">
+    No posts found.
+  </p>
+
+</BlogLayout>
+
+<script is:inline>
+(function () {
+  const wrapper        = document.getElementById('blog-search-wrapper');
+  const input          = document.getElementById('blog-search-input');
+  const tagPanel       = document.getElementById('tag-panel');
+  const pillsContainer = document.getElementById('pills-container');
+  const moreBtn        = document.getElementById('more-tags-btn');
+  const clearBtn       = document.getElementById('clear-search');
+  const kbdHint        = document.getElementById('search-kbd-hint');
+  const noResults      = document.getElementById('no-results');
+  const searchRow      = wrapper.querySelector('.blog-search-row');
+
+  let activeTags    = new Set();
+  let panelOpen     = false;
+  let debounce;
+  let moreBtnTimer  = null;
+
+  // ── Pill helpers ─────────────────────────────────────────────────────
+
+  function hidePill(p) {
+    const cs = getComputedStyle(p);
+    const w = p.offsetWidth;
+    p.style.width         = w + 'px';
+    p.style.minWidth      = '0';
+    p.style.marginRight   = cs.marginRight;
+    p.style.borderWidth   = cs.borderWidth;
+    p.style.paddingLeft   = cs.paddingLeft;
+    p.style.paddingRight  = cs.paddingRight;
+    void p.offsetWidth;
+    p.style.width         = '0';
+    p.style.marginRight   = '0';
+    p.style.borderWidth   = '0';
+    p.style.paddingLeft   = '0';
+    p.style.paddingRight  = '0';
+    p.style.opacity       = '0';
+    p.style.pointerEvents = 'none';
+  }
+
+  function showPill(p) {
+    p.style.width         = '';
+    p.style.minWidth      = '';
+    p.style.marginRight   = '';
+    p.style.borderWidth   = '';
+    p.style.paddingLeft   = '';
+    p.style.paddingRight  = '';
+    p.style.opacity       = '';
+    p.style.pointerEvents = '';
+  }
+
+  // ── Expand ───────────────────────────────────────────────────────────
+
+  function expandPanel() {
+    if (panelOpen) return;
+    panelOpen = true;
+    clearTimeout(moreBtnTimer);
+    searchRow.classList.add('focused');
+    kbdHint.style.opacity = '0';
+    kbdHint.style.pointerEvents = 'none';
+    moreBtn.style.display = 'none';
+
+    // Reset pills instantly (no transition) before revealing the panel
+    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
+      p.style.transition = 'none';
+      showPill(p);
+    });
+    pillsContainer.style.paddingTop = '';
+    pillsContainer.style.gap = '';
+    void pillsContainer.offsetWidth; // force layout with transitions disabled
+
+    // Re-enable transitions, then reveal
+    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
+      p.style.transition = '';
+    });
+    tagPanel.style.gridTemplateRows = '1fr';
+    tagPanel.style.opacity = '1';
+  }
+
+  // ── Collapse ─────────────────────────────────────────────────────────
+
+  function collapsePanel() {
+    if (!panelOpen) return;
+    panelOpen = false;
+
+    const hasFilters = !!(input.value.trim()) || activeTags.size > 0;
+    searchRow.classList.toggle('focused', hasFilters);
+    if (!hasFilters) { kbdHint.style.opacity = ''; kbdHint.style.pointerEvents = ''; }
+
+    if (activeTags.size > 0) {
+      const inactivePills = [...pillsContainer.querySelectorAll('.tag-filter-pill')]
+        .filter(p => !activeTags.has(p.dataset.tag));
+
+      // Animate inactive pills out and collapse row gap to prevent snap
+      // when an entire row of pills disappears
+      inactivePills.forEach(hidePill);
+      pillsContainer.style.gap = '0';
+
+      // Show the more button after pills finish collapsing, fading in
+      const count = inactivePills.length;
+      moreBtn.textContent = `+${count} more`;
+      moreBtn.style.display = '';
+      moreBtn.style.opacity = '0';
+      moreBtnTimer = setTimeout(() => {
+        moreBtn.style.opacity = '';
+      }, 250);
+    } else {
+      tagPanel.style.gridTemplateRows = '0fr';
+      tagPanel.style.opacity = '0';
+    }
+  }
+
+  wrapper.addEventListener('focusin', expandPanel);
+  wrapper.addEventListener('focusout', () => {
+    setTimeout(() => { if (!wrapper.contains(document.activeElement)) collapsePanel(); }, 0);
+  });
+
+  // ── Filter ──────────────────────────────────────────────────────────
+
+  function filterPosts() {
+    const query = input.value.trim().toLowerCase();
+    const items = document.querySelectorAll('.post-item');
+    let count = 0;
+
+    items.forEach(item => {
+      const title    = item.dataset.title    || '';
+      const abstract = item.dataset.abstract || '';
+      const itemTags = (item.dataset.tags || '').split(',').map(t => t.trim().toLowerCase());
+
+      const textMatch = !query || title.includes(query) || abstract.includes(query) || itemTags.some(t => t.includes(query));
+      const tagMatch  = activeTags.size === 0 || [...activeTags].every(t => itemTags.includes(t));
+
+      const visible = textMatch && tagMatch;
+      item.style.display = visible ? '' : 'none';
+      if (visible) count++;
+    });
+
+    noResults.classList.toggle('hidden', count > 0);
+    syncPillStates();
+    const hasFilters = !!input.value.trim() || activeTags.size > 0;
+    clearBtn.classList.toggle('hidden', !hasFilters);
+    if (!panelOpen) { kbdHint.style.opacity = hasFilters ? '0' : ''; kbdHint.style.pointerEvents = hasFilters ? 'none' : ''; }
+  }
+
+  // ── Pill states ─────────────────────────────────────────────────────
+
+  function syncPillStates() {
+    const applyActive = (el, active) => {
+      el.classList.toggle('bg-[var(--color-light-accent)]',               active);
+      el.classList.toggle('dark:bg-[var(--color-dark-accent)]',           active);
+      el.classList.toggle('text-white',                                   active);
+      el.classList.toggle('dark:text-[var(--color-dark-bg)]',             active);
+      el.classList.toggle('bg-[var(--color-light-border)]',              !active);
+      el.classList.toggle('dark:bg-[var(--color-dark-border)]',          !active);
+      el.classList.toggle('text-[var(--color-light-text-secondary)]',    !active);
+      el.classList.toggle('dark:text-[var(--color-dark-text-secondary)]',!active);
+    };
+
+    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
+      applyActive(pill, activeTags.has(pill.dataset.tag));
+    });
+
+    document.querySelectorAll('.post-tag').forEach(tag => {
+      applyActive(tag, activeTags.has(tag.dataset.tag));
+    });
+  }
+
+  // ── Summary refresh (pill clicked while panel is closed) ────────────
+
+  function refreshSummary() {
+    const hasFilters = !!input.value.trim() || activeTags.size > 0;
+    searchRow.classList.toggle('focused', hasFilters);
+
+    if (activeTags.size > 0) {
+      let inactiveCount = 0;
+      pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
+        if (activeTags.has(pill.dataset.tag)) {
+          showPill(pill);
+        } else {
+          hidePill(pill);
+          inactiveCount++;
+        }
+      });
+      moreBtn.textContent = `+${inactiveCount} more`;
+      moreBtn.style.display = inactiveCount > 0 ? '' : 'none';
+      tagPanel.style.gridTemplateRows = '1fr';
+      tagPanel.style.opacity = '1';
+    } else {
+      moreBtn.style.display = 'none';
+      input.focus();
+    }
+  }
+
+  // ── Tag pill clicks ─────────────────────────────────────────────────
+
+  pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
+    pill.addEventListener('mousedown', (e) => {
+      if (!panelOpen) e.preventDefault();
+    });
+    pill.addEventListener('click', () => {
+      const tag = pill.dataset.tag;
+      activeTags.has(tag) ? activeTags.delete(tag) : activeTags.add(tag);
+      filterPosts();
+      syncTagsToURL();
+      if (!panelOpen) refreshSummary();
+    });
+  });
+
+  // ── More tags button ────────────────────────────────────────────────
+
+  moreBtn.addEventListener('mousedown', (e) => e.preventDefault());
+  moreBtn.addEventListener('click', () => input.focus());
+
+  // ── Post card tag clicks ────────────────────────────────────────────
+
+  document.querySelectorAll('.post-tag').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      activeTags.add(link.dataset.tag);
+      filterPosts();
+      syncTagsToURL();
+      if (!panelOpen) refreshSummary();
+    });
+  });
+
+  // ── Input ───────────────────────────────────────────────────────────
+
+  input.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(filterPosts, 80); });
+
+  // ── Clear ───────────────────────────────────────────────────────────
+
+  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    activeTags.clear();
+    filterPosts();
+    syncTagsToURL();
+    panelOpen = false;
+    moreBtn.style.display = 'none';
+    tagPanel.style.gridTemplateRows = '0fr';
+    tagPanel.style.opacity = '0';
+    searchRow.classList.remove('focused');
+    kbdHint.style.opacity = '';
+    kbdHint.style.pointerEvents = '';
+    input.blur();
+  });
+
+  // ── / shortcut ──────────────────────────────────────────────────────
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (e.key === 'Escape' && document.activeElement === input) {
+      input.blur();
+    }
+  });
+
+  // ── URL ↔ tag sync ─────────────────────────────────────────────────
+
+  function syncTagsToURL() {
+    const url = new URL(window.location);
+    url.searchParams.delete('tag');
+    activeTags.forEach(t => url.searchParams.append('tag', t));
+    history.replaceState(null, '', url);
+  }
+
+  // Read tags from URL on load
+  const urlTags = new URLSearchParams(window.location.search).getAll('tag');
+  if (urlTags.length) {
+    urlTags.forEach(t => activeTags.add(t));
+    filterPosts();
+    refreshSummary();
+  }
+})();
+</script>

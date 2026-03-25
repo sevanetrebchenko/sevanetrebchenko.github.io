@@ -1,0 +1,26 @@
+---
+import Head from '../components/Head.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import '../styles/global.css';
+
+const { title, description, ogType } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <Head title={title} description={description} ogType={ogType} />
+    <!-- Theme: runs before paint to prevent flash of wrong theme -->
+    <script is:inline>
+      (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen">
+    <SiteHeader />
+    <slot />
+  </body>
+</html>
