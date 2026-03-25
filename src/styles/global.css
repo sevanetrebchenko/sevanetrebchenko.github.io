@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./code-theme.css";
 @plugin "@tailwindcss/typography";
+@variant dark (&:where(.dark, .dark *));
 
 html {
   scroll-padding-top: calc(var(--header-height) + 2rem);
@@ -22,11 +23,11 @@ html {
 
   /* Light theme */
   --color-light-bg: #f5f0e8;
-  --color-light-surface: #faf6ef;
-  --color-light-text: #1c1a16;
+  --color-light-surface: #ffffff;
+  --color-light-text: #3d3229;
   --color-light-text-secondary: #6b6560;
-  --color-light-border: #ddd8ce;
-  --color-light-accent: #b8892a;
+  --color-light-border: #e8e0d4;
+  --color-light-accent: #9a7b5a;
 
 }
 
@@ -106,7 +107,7 @@ body {
 
 /* Inline code */
 .prose :not(pre) > code {
-  background-color: rgba(0, 0, 0, 0.07);
+  background-color: color-mix(in srgb, var(--color-light-text) 7%, transparent);
   padding: 0.15em 0.4em;
   border-radius: 3px;
   font-size: 0.95em;
@@ -120,11 +121,11 @@ body {
 }
 
 .dark .prose :not(pre) > code {
-  background-color: rgba(255, 255, 255, 0.10);
+  background-color: color-mix(in srgb, var(--color-dark-text) 10%, transparent);
 }
 
 .toc-link code {
-  background-color: rgba(0, 0, 0, 0.07);
+  background-color: color-mix(in srgb, var(--color-light-text) 7%, transparent);
   padding: 0.1em 0.35em;
   border-radius: 3px;
   font-size: 0.95em;
@@ -134,7 +135,7 @@ body {
 }
 
 .dark .toc-link code {
-  background-color: rgba(255, 255, 255, 0.10);
+  background-color: color-mix(in srgb, var(--color-dark-text) 10%, transparent);
 }
 
 /* =====================================================================
@@ -166,7 +167,7 @@ body {
 }
 
 .search-overlay.open {
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   pointer-events: all;
@@ -183,6 +184,10 @@ body {
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.dark .search-overlay.open {
+  background-color: rgba(0, 0, 0, 0.65);
 }
 
 .dark .search-panel {
@@ -323,10 +328,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: gainsboro;
+  background: var(--color-light-border);
   border-radius: 3px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #555;
+  background: var(--color-dark-text-secondary);
 }
