@@ -1,42 +1,27 @@
 {
   "name": "sevanetrebchenko.github.io",
-  "version": "1.0.0",
-  "description": "sevanetrebchenko.github.io",
-  "devDependencies": {
-    "gh-pages": "^6.3.0",
-    "react-scripts": "^5.0.1"
-  },
-  "dependencies": {
-    "@hugeicons/react": "^1.0.5",
-    "@mdx-js/mdx": "^3.1.0",
-    "parse-numeric-range": "^1.3.0",
-    "prism-react-renderer": "^1.3.5",
-    "prismjs": "^1.29.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-markdown": "^8.0.7",
-    "react-responsive": "^10.0.1",
-    "react-router-dom": "^6.7.0",
-    "rehype-raw": "^6.1.1",
-    "remark-gfm": "^3.0.1",
-    "unist-util-visit": "^5.0.0"
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
   },
   "scripts": {
-    "pre": "node ./scripts/generate-metadata.js public",
-    "start": "npm run pre && react-scripts start",
-    "build": "npm run pre && react-scripts build",
-    "deploy": "npm run build && gh-pages -d build --cname sevanetrebchenko.com"
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@astrojs/rss": "^4.0.17",
+    "@astrojs/sitemap": "^3.7.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^6.0.8",
+    "parse-numeric-range": "^1.3.0",
+    "prismjs": "^1.30.0",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "pagefind": "^1.4.0"
   }
 }
