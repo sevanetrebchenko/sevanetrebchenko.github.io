@@ -2,6 +2,10 @@
 @import "./code-theme.css";
 @plugin "@tailwindcss/typography";
 
+html {
+  scroll-padding-top: calc(var(--header-height) + 2rem);
+}
+
 @theme {
   --font-serif: "Noto Serif", serif;
   --font-mono: "JetBrains Mono", monospace;

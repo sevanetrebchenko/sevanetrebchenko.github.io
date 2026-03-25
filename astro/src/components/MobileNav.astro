@@ -32,7 +32,7 @@ function isActive(href) {
   >
     <!-- Drawer header -->
     <div class="flex items-center justify-between px-5 border-b border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]" style="height: var(--header-height)">
-      <span class="font-mono text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-60">Menu</span>
+      <span class="font-serif text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-60">Menu</span>
       <button
         id="mobile-nav-close"
         class="p-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
@@ -50,7 +50,7 @@ function isActive(href) {
         <a
           href={href}
           class:list={[
-            'block px-3 py-2.5 rounded-md font-mono text-sm transition-colors no-underline',
+            'block px-3 py-2.5 rounded-md font-serif text-sm transition-colors no-underline',
             isActive(href)
               ? 'text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)] font-semibold bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)]'
               : 'text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)]',
@@ -70,7 +70,7 @@ function isActive(href) {
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
         </svg>
-        <span class="font-mono text-xs">Search</span>
+        <span class="font-serif text-xs">Search</span>
       </button>
     </div>
   </div>

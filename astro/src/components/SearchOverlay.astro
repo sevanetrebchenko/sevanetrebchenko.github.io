@@ -27,7 +27,7 @@ const postsData = allPosts.map(p => ({
         placeholder="Search posts..."
         autocomplete="off"
         spellcheck="false"
-        class="flex-1 bg-transparent outline-none font-mono text-sm text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
+        class="flex-1 bg-transparent outline-none font-serif text-sm text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
       />
       <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
         Esc
@@ -36,7 +36,7 @@ const postsData = allPosts.map(p => ({
 
     <!-- Topics -->
     <div class="px-4 pt-4 pb-3 border-b border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] shrink-0">
-      <p class="font-mono text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-70 mb-3">
+      <p class="font-serif text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-70 mb-3">
         Topics
       </p>
       <div class="flex flex-wrap gap-2 max-h-28 overflow-y-auto" id="topic-pills">
@@ -56,7 +56,7 @@ const postsData = allPosts.map(p => ({
     <!-- Results -->
     <div class="flex-1 overflow-y-auto min-h-0">
       <div id="search-results-list" class="p-2"></div>
-      <div id="search-empty" class="hidden py-10 text-center font-mono text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+      <div id="search-empty" class="hidden py-10 text-center font-serif text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
         No results for "<span id="search-empty-query"></span>"
       </div>
     </div>
@@ -111,27 +111,27 @@ const postsData = allPosts.map(p => ({
     // ── Result HTML ─────────────────────────────────────────────────────
 
     function sectionLabel(text) {
-      return `<p class="font-mono text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-70 px-3 pt-3 pb-2">${text}</p>`;
+      return `<p class="font-serif text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-70 px-3 pt-3 pb-2">${text}</p>`;
     }
 
     function postHTML(post) {
       return `
         <a href="${post.url}" class="flex items-baseline justify-between gap-4 px-3 py-2.5 rounded-md hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors no-underline group">
           <span class="font-serif text-sm font-semibold text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors leading-snug">${post.title}</span>
-          <span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] shrink-0 opacity-60">${post.date}</span>
+          <span class="font-serif text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] shrink-0 opacity-60">${post.date}</span>
         </a>`;
     }
 
     function searchResultHTML(r) {
       const date = r.meta?.date ?? '';
       const excerpt = r.excerpt
-        ? `<p class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] mt-0.5 opacity-70 line-clamp-1">${r.excerpt}</p>`
+        ? `<p class="font-serif text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] mt-0.5 opacity-70 line-clamp-1">${r.excerpt}</p>`
         : '';
       return `
         <a href="${r.url}" class="block px-3 py-2.5 rounded-md hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors no-underline group">
           <div class="flex items-baseline justify-between gap-4">
             <span class="font-serif text-sm font-semibold text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors leading-snug">${r.meta?.title ?? r.url}</span>
-            ${date ? `<span class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] shrink-0 opacity-60">${date}</span>` : ''}
+            ${date ? `<span class="font-serif text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] shrink-0 opacity-60">${date}</span>` : ''}
           </div>
           ${excerpt}
         </a>`;

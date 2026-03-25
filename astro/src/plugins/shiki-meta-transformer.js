@@ -103,7 +103,8 @@ export function metaTransformer() {
       });
 
       // Rows wrapper
-      const codeRows = h('div', { class: 'code-rows' }, rows);
+      const codeRows  = h('div', { class: 'code-rows' }, rows);
+      const codeScroll = h('div', { class: 'code-scroll' }, [codeRows]);
 
       // Body
       const bodyClass = this._showLines ? 'code-body collapsed' : 'code-body';
@@ -113,7 +114,7 @@ export function metaTransformer() {
         bodyProps.style                    = `max-height: ${ch}`;
         bodyProps['data-collapsed-height'] = ch;
       }
-      const codeBody = h('div', bodyProps, [codeRows]);
+      const codeBody = h('div', bodyProps, [codeScroll]);
 
       // Header — omit only when no lang and no-copy
       const showCopy   = !this._noCopy;
@@ -140,8 +141,17 @@ export function metaTransformer() {
       // Expand/collapse overlay
       let overlay = null;
       if (this._showLines) {
-        overlay = h('div', { class: 'code-overlay', 'data-collapsed': 'true' }, [
-          h('span', { class: 'overlay-label' }, [t('Expand')]),
+        const hiddenCount = visible.length - this._showLines;
+        const showMoreText = hiddenCount > 0
+          ? `Show ${hiddenCount} more line${hiddenCount === 1 ? '' : 's'}`
+          : 'Expand';
+        overlay = h('div', {
+          class: 'code-overlay',
+          'data-collapsed': 'true',
+          'data-show-more': showMoreText,
+          'data-show-less': 'Show less',
+        }, [
+          h('span', { class: 'overlay-label' }, [t(showMoreText)]),
           raw(CHEVRON),
         ]);
       }

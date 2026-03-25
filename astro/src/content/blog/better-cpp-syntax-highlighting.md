@@ -30,7 +30,7 @@ Note that most of these changes also apply to template contexts.
 
 Keen observers will notice that the base class hierarchy is not annotated.
 We can attempt to traverse the base class hierarchy through the underlying `CXXRecordDecl` node:
-```cpp title:{visitor.cpp} added:{17-28} line-numbers:{enabled}
+```cpp title:{visitor.cpp} added:{2, 17-28} line-numbers:{enabled} show-lines:{10}
 #include "visitor.hpp"
 
 bool Visitor::VisitClassTemplateDecl(clang::ClassTemplateDecl* node) {
@@ -40,9 +40,7 @@ bool Visitor::VisitClassTemplateDecl(clang::ClassTemplateDecl* node) {
     // Skip template class definitions that do not come from the main file
     if (!source_manager.isInMainFile(location)) {
         return true;
-    }
-    
-    // Insert annotation for template class name
+    // Insert annotation for template class name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     std::string name = node->[[class-name,getNameAsString]]();
     unsigned line = source_manager.getSpellingLineNumber(location);
     unsigned column = source_manager.getSpellingColumnNumber(location);

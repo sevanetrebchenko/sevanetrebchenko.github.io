@@ -16,7 +16,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
     <!-- Input row -->
     <div class="blog-search-row flex items-center gap-3 pb-3">
       <svg
-        class="blog-search-icon w-4 h-4 shrink-0 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] transition-colors duration-150"
+        class="blog-search-icon w-5 h-5 shrink-0 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] transition-colors duration-150"
         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
       >
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
@@ -27,7 +27,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
         placeholder="Type something..."
         autocomplete="off"
         spellcheck="false"
-        class="flex-1 bg-transparent outline-none font-mono text-sm text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
+        class="flex-1 bg-transparent outline-none font-serif text-base text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
       />
       <kbd
         id="search-kbd-hint"
@@ -35,11 +35,11 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       >/</kbd>
       <button
         id="clear-search"
-        class="hidden font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors shrink-0"
+        class="hidden text-lg leading-none text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors shrink-0 px-2"
         aria-label="Clear search and filters"
         type="button"
       >
-        ✕ clear
+        ✕
       </button>
     </div>
 
@@ -48,7 +48,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       <div id="pills-container" class="flex flex-wrap gap-y-2 pt-3 items-center" style="transition: padding 250ms ease, gap 250ms ease;">
         {allTags.map(([tag, count]) => (
           <button
-            class="tag-filter-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] cursor-pointer"
+            class="tag-filter-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-sm bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] cursor-pointer"
             data-tag={tag}
             type="button"
           >
@@ -60,7 +60,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
           id="more-tags-btn"
           type="button"
           style="display:none"
-          class="more-tags-btn inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs cursor-pointer shrink-0"
+          class="more-tags-btn inline-flex items-center px-2.5 py-1 rounded-md font-mono text-sm cursor-pointer shrink-0"
         ></button>
       </div>
     </div>
@@ -81,7 +81,7 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
     ))}
   </div>
 
-  <p id="no-results" class="hidden text-center font-mono text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] py-12">
+  <p id="no-results" class="hidden text-center font-serif text-base italic text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] py-12">
     No posts found.
   </p>
 
@@ -340,6 +340,9 @@ const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
       e.preventDefault();
       input.focus();
       input.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (e.key === 'Escape' && document.activeElement === input) {
+      input.blur();
     }
   });
 

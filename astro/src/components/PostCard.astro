@@ -12,7 +12,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
 
 <article class="post-card relative group rounded-lg border border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] p-6 mb-4 transition-colors duration-150 hover:border-[var(--color-light-accent)] dark:hover:border-[var(--color-dark-accent)] hover:bg-[var(--color-light-surface)] dark:hover:bg-[var(--color-dark-surface)]">
 
-  <h2 class="font-serif text-xl font-semibold leading-snug">
+  <h2 class="font-serif text-2xl font-semibold leading-snug">
     <a
       href={href}
       class="no-underline text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors duration-150 after:absolute after:inset-0 after:content-['']"
@@ -22,7 +22,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
   </h2>
 
   <time
-    class="mt-2 block font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]"
+    class="mt-2 block font-serif text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]"
     datetime={date.toISOString()}
   >
     {formattedDate}
@@ -37,7 +37,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
       <a
         href={`/tags/${tag}`}
         data-tag={tag}
-        class="post-tag font-mono text-xs px-2 py-0.5 rounded bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors no-underline"
+        class="post-tag font-mono text-sm px-2.5 py-1 rounded bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors no-underline"
       >
         {tag}
       </a>

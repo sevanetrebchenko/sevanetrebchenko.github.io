@@ -33,7 +33,7 @@
   flex-direction:  row;
   align-items:     stretch;
   background:      rgb(56, 56, 56);
-  border-bottom:   1px solid rgb(55, 55, 55);
+  border-bottom:   1px solid rgb(75, 75, 75);
 }
 
 .code-header-left {
@@ -92,24 +92,28 @@
    Body
    ========================================================================== */
 
-.code-body {
+.code-scroll {
   overflow-x: auto;
+  position: relative;
 }
 
-.code-body::-webkit-scrollbar {
+.code-scroll::-webkit-scrollbar {
   height: 6px;
 }
 
-.code-body::-webkit-scrollbar-thumb {
+.code-scroll::-webkit-scrollbar-thumb {
   background:    rgb(100, 100, 100);
   border-radius: 3px;
 }
 
 .code-body.collapsed {
   overflow-y: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-          mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
+
+.code-body.collapsed .code-scroll {
+  overflow-x: hidden;
+}
+
 
 /* ==========================================================================
    Rows
@@ -125,15 +129,33 @@
 }
 
 .code-row {
+  --row-bg:   rgb(43, 43, 43);
   display:    flex;
   align-items: stretch;
   height:     1.5em;
   width:      100%;
-  background: rgb(43, 43, 43);
+  background: var(--row-bg);
 }
 
-.code-row.line-added   { background: rgb(41, 68, 54); }
-.code-row.line-removed { background: rgb(88, 49, 49); }
+.code-row.line-added   { --row-bg: rgb(41, 68, 54); }
+.code-row.line-removed { --row-bg: rgb(88, 49, 49); }
+
+.code-row::after {
+  content:        '';
+  position:       sticky;
+  right:          0;
+  width:          4em;
+  margin-left:    -4em;
+  flex-shrink:    0;
+  background:     linear-gradient(to right, transparent, var(--row-bg));
+  pointer-events: none;
+  opacity:        0;
+  transition:     opacity 0.3s ease;
+}
+
+.code-body.collapsed .code-row::after {
+  opacity: 1;
+}
 
 /* ==========================================================================
    Gutter
@@ -216,18 +238,24 @@
   justify-content: center;
   gap:             8px;
 
-  padding:    10px 0;
+  padding:    14px 0;
   background: rgb(43, 43, 43);
-  color:      rgb(100, 100, 100);
+  color:      rgb(120, 120, 120);
   cursor:     pointer;
-  transition: color 0.125s;
+  transition: color 0.15s;
 
   user-select:       none;
   -webkit-user-select: none;
 }
 
 .code-overlay:hover {
-  color: gainsboro;
+  color: var(--color-dark-accent);
+}
+
+.code-overlay.no-hover {
+  pointer-events: none;
+  color: rgb(120, 120, 120) !important;
+  transition: none !important;
 }
 
 .overlay-icon {
