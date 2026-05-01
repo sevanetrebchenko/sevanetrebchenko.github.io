@@ -2,7 +2,6 @@
 import BaseLayout from './BaseLayout.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import SeriesWidget from '../components/SeriesWidget.astro';
-import Footer from '../components/Footer.astro';
 
 const { frontmatter, headings, seriesPosts, currentPostId } = Astro.props;
 
@@ -31,6 +30,7 @@ const modifiedDate = (() => {
   title={frontmatter.title}
   description={frontmatter.abstract}
   ogType="article"
+  showSocials={false}
 >
   <!-- JSON-LD structured data for blog post -->
   <script
@@ -67,7 +67,7 @@ const modifiedDate = (() => {
 
     <!-- Article -->
     <article
-      class="min-w-0 w-full py-10"
+      class="min-w-0 w-full pt-10 pb-10"
       data-pagefind-body
     >
       <!-- Post header: tags → title → date -->
@@ -117,16 +117,11 @@ const modifiedDate = (() => {
       {hasSeries && (
         <SeriesWidget seriesPosts={seriesPosts} currentPostId={currentPostId} variant="top" />
       )}
-
-      <!-- Post footer -->
-      <footer class="mt-12 pt-6">
-        <Footer />
-      </footer>
     </article>
 
-    <!-- TOC (desktop xl+) -->
-    <div class="hidden xl:block absolute top-0 bottom-0 left-full">
-      <div class="sticky pt-10 pl-8 w-64" style="top: var(--header-height);">
+    <!-- TOC (desktop 2xl+) -->
+    <div class="hidden 2xl:block absolute top-0 bottom-0 left-full">
+      <div class="sticky pt-10 pl-6 w-56" style="top: var(--header-height);">
         <TableOfContents headings={headings} />
       </div>
     </div>

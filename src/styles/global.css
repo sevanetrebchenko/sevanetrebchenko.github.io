@@ -72,22 +72,11 @@ body {
   z-index: 50;
   background-color: var(--color-light-surface);
   border-bottom: 1px solid var(--color-light-border);
-  transition: background-color 200ms ease, backdrop-filter 200ms ease;
 }
 
 .dark .site-header {
   background-color: var(--color-dark-surface);
   border-bottom-color: var(--color-dark-border);
-}
-
-.site-header.scrolled {
-  background-color: color-mix(in srgb, var(--color-light-surface) 85%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.dark .site-header.scrolled {
-  background-color: color-mix(in srgb, var(--color-dark-surface) 85%, transparent);
 }
 
 /* =====================================================================

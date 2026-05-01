@@ -1,4 +1,8 @@
 ---
+import ThemeToggle from './ThemeToggle.astro';
+import SocialLinks from './SocialLinks.astro';
+import Footer from './Footer.astro';
+
 const { currentPath = '' } = Astro.props;
 
 const navLinks = [
@@ -32,15 +36,18 @@ function isActive(href) {
     <!-- Drawer header -->
     <div class="flex items-center justify-between px-5 border-b border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]" style="height: var(--header-height)">
       <span class="font-serif text-xs uppercase tracking-widest text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-60">Menu</span>
-      <button
-        id="mobile-nav-close"
-        class="p-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
-        aria-label="Close menu"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+      <div class="flex items-center gap-1">
+        <ThemeToggle />
+        <button
+          id="mobile-nav-close"
+          class="p-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
+          aria-label="Close menu"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Nav links -->
@@ -60,17 +67,10 @@ function isActive(href) {
       ))}
     </nav>
 
-    <!-- Footer actions -->
-    <div class="mt-auto px-5 py-5 border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] flex items-center gap-3">
-      <button
-        onclick="window.__searchOpen && (window.__searchClose && window.__searchClose(), setTimeout(window.__searchOpen, 50))"
-        class="flex items-center gap-2 text-sm text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-        </svg>
-        <span class="font-serif text-xs">Search</span>
-      </button>
+    <!-- Drawer footer -->
+    <div class="mt-auto px-5 py-5 border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] flex flex-col items-center gap-3">
+      <SocialLinks />
+      <Footer />
     </div>
   </div>
 </div>

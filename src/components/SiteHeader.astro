@@ -16,7 +16,7 @@ function isActive(href) {
 ---
 
 <header class="site-header" id="site-header">
-  <div class="h-full max-w-5xl mx-auto px-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+  <div class="h-full max-w-5xl mx-auto px-6 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4">
 
     <!-- Site name -->
     <a
@@ -74,12 +74,6 @@ function isActive(href) {
 <MobileNav currentPath={currentPath} />
 
 <script is:inline>
-  // Frosted glass on scroll
-  const header = document.getElementById('site-header');
-  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 8);
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-
   // Mobile nav trigger
   document.getElementById('mobile-nav-trigger').addEventListener('click', () => {
     window.__mobileNavOpen && window.__mobileNavOpen();

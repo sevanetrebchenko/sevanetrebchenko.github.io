@@ -4,8 +4,8 @@ import BaseLayout from './BaseLayout.astro';
 const { title = 'Projects', description = 'Graphics programming projects and experiments.' } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
-  <div class="max-w-5xl mx-auto px-6 py-10">
+<BaseLayout title={title} description={description} showFooterBorder={false}>
+  <div class="max-w-5xl mx-auto px-6 pt-10 pb-4">
     <slot />
   </div>
 </BaseLayout>

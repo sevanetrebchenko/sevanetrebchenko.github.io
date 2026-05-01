@@ -1,9 +1,11 @@
 ---
 import Head from '../components/Head.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
-const { title, description, ogType } = Astro.props;
+const { title, description, ogType, showSocials = true, showFooterBorder = true } = Astro.props;
 ---
 
 <html lang="en" class="no-transitions">
@@ -26,8 +28,25 @@ const { title, description, ogType } = Astro.props;
       });
     </script>
   </head>
-  <body class="min-h-screen">
+  <body class="min-h-screen flex flex-col">
     <SiteHeader />
-    <slot />
+    <div class="flex-1">
+      <slot />
+    </div>
+    <footer>
+      <div class="max-w-5xl mx-auto px-6">
+        <div class:list={[
+          'py-8 flex flex-col items-center gap-4',
+          showFooterBorder && 'border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]',
+        ]}>
+          {showSocials && (
+            <div class="hidden md:block">
+              <SocialLinks />
+            </div>
+          )}
+          <Footer />
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
