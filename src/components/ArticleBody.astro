@@ -1,0 +1,40 @@
+---
+// Rendered Markdown plus its contents: a sticky list in the right page margin once there's
+// room for it (≥1400px), otherwise a collapsed box above the text.
+// The margin list is positioned against the page's <main> (which must be `relative`, with px-5),
+// so it lines up with the top of the page rather than the first section.
+import Prose from './Prose.astro';
+import TableOfContents from './TableOfContents.astro';
+
+// figureStart: how many figures precede the body (a project page's main image is Fig. 1)
+const { headings = [], figureStart = 0 } = Astro.props;
+const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]';
+---
+
+<div>
+  {tocItems.length > 0 && (
+    <details class={`min-[1400px]:hidden mb-6 rounded-lg border ${borderColor} bg-[var(--color-light-surface)] dark:bg-[var(--color-dark-surface)] text-[15px]`}>
+      <summary class="min-h-11 flex items-center px-3.5 font-semibold cursor-pointer">Contents</summary>
+      <ol class="px-3.5 pt-1 pb-3 flex flex-col gap-0.5">
+        {tocItems.map((h) => (
+          <li class={h.depth === 3 ? 'pl-4' : ''}>
+            <a href={`#${h.slug}`} class="block py-1.5 no-underline text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)] hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)]">{h.text}</a>
+          </li>
+        ))}
+      </ol>
+    </details>
+  )}
+
+  <article>
+    <Prose style={figureStart ? `counter-reset: figure ${figureStart}` : undefined}>
+      <slot />
+    </Prose>
+  </article>
+
+  <!-- Starts level with the "Back to …" link and fills the page margin right of the 1000px text column
+       (less a little room for the scrollbar), up to 300px -->
+  <div class="hidden min-[1400px]:block absolute top-[46px] bottom-0 left-[calc(100%_-_20px)] w-[min(300px,calc((100vw_-_1000px)/2_-_16px))] pl-8">
+    <TableOfContents headings={headings} />
+  </div>
+</div>

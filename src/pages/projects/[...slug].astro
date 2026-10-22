@@ -1,0 +1,33 @@
+---
+import { render } from 'astro:content';
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import { getPublishedProjects } from '../../utils/projects.js';
+import { getPublishedPosts } from '../../utils/blog.js';
+
+export async function getStaticPaths() {
+  // Only showcase projects get their own page; small ones are a single line on /projects
+  const showcase = (await getPublishedProjects()).filter((project) => project.data.kind === 'showcase');
+  return showcase.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, prev: showcase[i - 1], next: showcase[i + 1] },
+  }));
+}
+
+const { project, prev, next } = Astro.props;
+const { Content, headings } = await render(project);
+
+const posts = await getPublishedPosts();
+const related = project.data.writing
+  .map((id) => posts.find((post) => post.id === id))
+  .filter(Boolean);
+---
+
+<ProjectLayout
+  project={project}
+  headings={headings}
+  related={related}
+  prev={prev}
+  next={next}
+>
+  <Content />
+</ProjectLayout>

@@ -4,8 +4,8 @@ import BaseLayout from './BaseLayout.astro';
 const { title, description } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} showFooterBorder={false}>
-  <main class="w-full max-w-5xl mx-auto px-6 pt-10 pb-4" data-pagefind-body>
+<BaseLayout title={title} description={description}>
+  <main class="max-w-[1040px] mx-auto px-5 pt-10 pb-24 flex flex-col gap-14">
     <slot />
   </main>
 </BaseLayout>

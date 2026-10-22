@@ -1,1 +1,82 @@
-<meta http-equiv="refresh" content="0;url=/blog" />
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getPublishedPosts, getWritingEntries } from '../utils/blog.js';
+import { getPublishedProjects } from '../utils/projects.js';
+import { formatMonthYear } from '../utils/dates.js';
+
+const FEATURED_PROJECTS = 3;
+const RECENT_WRITING = 5;
+
+const projects = (await getPublishedProjects())
+  .filter((project) => project.data.kind === 'showcase')
+  .slice(0, FEATURED_PROJECTS);
+const writing = getWritingEntries(await getPublishedPosts()).slice(0, RECENT_WRITING);
+
+
+const sectionHeading = 'text-[15px] font-semibold uppercase tracking-[0.06em] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]';
+const sectionLink = 'text-sm no-underline text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors';
+---
+
+<BaseLayout
+  title="Seva Netrebchenko"
+  description="Graphics and engine programmer. Renderers, engine systems, and the tools that make them easier to reason about."
+>
+  <main class="max-w-[1040px] mx-auto px-5 pt-10 pb-24 flex flex-col gap-20">
+
+    <!-- Intro -->
+    <section class="flex flex-col gap-4">
+      <h1 class="text-[clamp(28px,3.6vw,36px)] leading-tight font-semibold tracking-[-0.015em]">
+        Hello! I’m Seva.
+      </h1>
+      <p class="max-w-[680px] text-lg leading-[1.7] text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)]">
+        I build renderers, engine systems, and the tools that make them easier to reason about.
+        I also write about the problems I run into along the way.
+      </p>
+    </section>
+
+    <!-- Projects -->
+    {projects.length > 0 && (
+      <section class="flex flex-col gap-7" aria-labelledby="projects-heading">
+        <div class="flex justify-between items-baseline gap-3">
+          <h2 id="projects-heading" class={sectionHeading}>Projects</h2>
+          <a href="/projects" class={sectionLink}>All projects</a>
+        </div>
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-7 gap-y-9">
+          {projects.map((project) => <ProjectCard project={project} />)}
+        </div>
+      </section>
+    )}
+
+    <!-- Writing -->
+    <section class="flex flex-col gap-5" aria-labelledby="writing-heading">
+      <div class="flex justify-between items-baseline gap-3">
+        <h2 id="writing-heading" class={sectionHeading}>Writing</h2>
+        <a href="/blog" class={sectionLink}>All posts</a>
+      </div>
+      <ul class="border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]">
+        {writing.map((entry) => (
+          <li class="border-b border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]">
+            <a href={entry.href} class="group flex flex-col gap-1.5 py-[18px] no-underline">
+              <span class="flex flex-wrap justify-between items-baseline gap-x-5 gap-y-1">
+                <span class="flex-[1_1_360px] text-lg font-semibold leading-[1.45] text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors">
+                  {entry.title}
+                  {entry.parts > 0 && (
+                    <span class="font-normal text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]"> ({entry.parts} parts)</span>
+                  )}
+                </span>
+                <time datetime={entry.date.toISOString()} class="font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+                  {formatMonthYear(entry.date)}
+                </time>
+              </span>
+              <span class="text-[15px] leading-[1.6] text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)]">
+                {entry.abstract}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+  </main>
+</BaseLayout>

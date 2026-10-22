@@ -1,11 +1,11 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 
-const { title = 'Projects', description = 'Graphics programming projects and experiments.' } = Astro.props;
+const { title = 'Projects', description = 'Renderers, engine systems, and the tools built around them.' } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} showFooterBorder={false}>
-  <div class="max-w-5xl mx-auto px-6 pt-10 pb-4">
+<BaseLayout title={title} description={description}>
+  <main class="max-w-[1040px] mx-auto px-5 pt-10 pb-24 flex flex-col gap-14">
     <slot />
-  </div>
+  </main>
 </BaseLayout>

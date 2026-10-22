@@ -1,12 +1,18 @@
 {
-  "blog/better_cpp_syntax_highlighting/10_keywords.md": "2026-03-25T02:52:35.825Z",
-  "blog/better_cpp_syntax_highlighting/1_intro.md": "2026-03-25T02:52:25.053Z",
-  "blog/better_cpp_syntax_highlighting/2_enums.md": "2026-03-25T02:52:25.068Z",
-  "blog/better_cpp_syntax_highlighting/3_namespaces.md": "2026-03-25T02:52:25.073Z",
-  "blog/better_cpp_syntax_highlighting/4_functions.md": "2026-03-25T02:52:25.078Z",
-  "blog/better_cpp_syntax_highlighting/5_classes.md": "2026-03-25T02:52:25.405Z",
-  "blog/better_cpp_syntax_highlighting/6_templates.md": "2026-03-25T02:52:28.026Z",
-  "blog/better_cpp_syntax_highlighting/7_types.md": "2026-03-25T02:52:29.338Z",
-  "blog/better_cpp_syntax_highlighting/8_qualifiers.md": "2026-03-25T02:52:31.151Z",
-  "blog/better_cpp_syntax_highlighting/9_preprocessor.md": "2026-03-25T02:52:33.216Z"
+  "projects/better_cpp_syntax_highlighting.md": "2026-10-22T06:55:10.687Z",
+  "projects/experiment_a.md": "2026-10-22T00:21:21.268Z",
+  "projects/experiment_b.md": "2026-10-22T07:50:24.616Z",
+  "projects/renderer.md": "2026-10-22T07:42:51.614Z",
+  "projects/shader_reflection.md": "2026-10-22T00:14:33.200Z",
+  "blog/what_sampling_outside_a_texture_taught_me_about_spirv.md": "2026-04-30T03:45:23.000Z",
+  "blog/better_cpp_syntax_highlighting/10_keywords.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/1_intro.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/2_enums.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/3_namespaces.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/4_functions.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/5_classes.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/6_templates.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/7_types.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/8_qualifiers.md": "2026-03-25T03:59:45.000Z",
+  "blog/better_cpp_syntax_highlighting/9_preprocessor.md": "2026-03-25T03:59:45.000Z"
 }

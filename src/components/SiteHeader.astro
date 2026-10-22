@@ -5,68 +5,70 @@ import MobileNav from './MobileNav.astro';
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { href: '/blog', label: 'Blog' },
   { href: '/projects', label: 'Projects' },
+  { href: '/blog', label: 'Writing' },
+  { href: '/cv.pdf', label: 'CV' },
 ];
 
 function isActive(href) {
-  if (href === '/blog') return currentPath.startsWith('/blog') || currentPath.startsWith('/tags') || currentPath === '/';
+  if (href === '/blog') return currentPath.startsWith('/blog') || currentPath.startsWith('/tags');
   return currentPath.startsWith(href);
 }
 ---
 
 <header class="site-header" id="site-header">
-  <div class="h-full max-w-5xl mx-auto px-6 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4">
+  <div class="max-w-[1040px] mx-auto px-5 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
 
-    <!-- Site name -->
-    <a
-      href="/blog"
-      class="font-serif font-semibold text-lg text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors no-underline shrink-0"
-    >
-      Seva Netrebchenko
+    <!-- Site name + role -->
+    <a href="/" class="flex flex-wrap items-baseline gap-x-5 gap-y-0.5 no-underline group">
+      <span class="text-[17px] font-semibold text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors">
+        Seva Netrebchenko
+      </span>
+      <span class="hidden sm:block self-center w-px h-[18px] bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)]" aria-hidden="true"></span>
+      <span class="text-[15px] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+        graphics &amp; engine programmer
+      </span>
     </a>
 
-    <!-- Desktop nav -->
-    <nav class="hidden md:flex items-center gap-1" aria-label="Site navigation">
-      {navLinks.map(({ href, label }) => {
-        const active = isActive(href);
-        return (
-          <a
-            href={href}
-            class:list={[
-              'relative px-3 py-1.5 font-serif text-base transition-colors no-underline',
-              active
-                ? 'text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)]'
-                : 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)]',
-            ]}
-            aria-current={active ? 'page' : undefined}
-          >
-            {label}
-            {active && (
-              <span class="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-[var(--color-light-accent)] dark:bg-[var(--color-dark-accent)]"></span>
-            )}
-          </a>
-        );
-      })}
-    </nav>
+    <div class="flex items-center gap-x-[22px]">
+      <!-- Desktop nav -->
+      <nav class="hidden md:flex items-center gap-x-[22px] text-[15px]" aria-label="Site navigation">
+        {navLinks.map(({ href, label }) => {
+          const active = isActive(href);
+          return (
+            <a
+              href={href}
+              class:list={[
+                'transition-colors',
+                active
+                  ? 'text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] underline decoration-2 underline-offset-[6px] decoration-[var(--color-light-accent)] dark:decoration-[var(--color-dark-accent)]'
+                  : 'no-underline text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)]',
+              ]}
+              aria-current={active ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          );
+        })}
+      </nav>
 
-    <!-- Right actions -->
-    <div class="flex items-center gap-2 justify-end">
-      <!-- Theme toggle (desktop) -->
-      <div class="hidden md:block">
-        <ThemeToggle />
+      <div class="flex items-center gap-x-2">
+        <!-- Theme toggle (desktop) -->
+        <div class="hidden md:block">
+          <ThemeToggle />
+        </div>
+
+        <!-- Hamburger (mobile) -->
+        <button
+          id="mobile-nav-trigger"
+          aria-label="Open menu"
+          class="md:hidden p-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
       </div>
-
-      <!-- Hamburger (mobile) -->
-      <button
-        id="mobile-nav-trigger"
-        aria-label="Open menu"
-        class="md:hidden p-2 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
     </div>
   </div>
 </header>

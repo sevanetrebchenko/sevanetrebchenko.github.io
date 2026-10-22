@@ -1,28 +1,117 @@
 ---
 import ProjectsLayout from '../../layouts/ProjectsLayout.astro';
-import ProjectCard from '../../components/ProjectCard.astro';
-import { getCollection } from 'astro:content';
+import ListFilter from '../../components/ListFilter.astro';
+import EntryMeta from '../../components/EntryMeta.astro';
+import { getPublishedProjects } from '../../utils/projects.js';
+import { formatMonthDay } from '../../utils/dates.js';
 
-const projects = await getCollection('projects');
-const sorted = projects.sort((a, b) => {
-  if (a.data.featured && !b.data.featured) return -1;
-  if (!a.data.featured && b.data.featured) return 1;
-  return b.data.date.valueOf() - a.data.date.valueOf();
-});
+const projects = await getPublishedProjects();
+
+// Filter options: every tag in use, most common first
+const tagCounts = new Map();
+for (const project of projects) {
+  for (const tag of project.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  }
+}
+const tags = Array.from(tagCounts.keys()).sort((a, b) => tagCounts.get(b) - tagCounts.get(a));
+
+// Group by the year each project was published, newest first
+const years = [];
+for (const project of projects) {
+  const year = project.data.date.getUTCFullYear();
+  const group = years.find((g) => g.year === year);
+  if (group) group.projects.push(project); else years.push({ year, projects: [project] });
+}
+years.sort((a, b) => b.year - a.year);
+
+// Date in the list's left column: the year is already the group heading, so month and day
+const listDate = (project) => formatMonthDay(project.data.date);
+
+// Showcase projects have their own page; small ones link out to their first link, if any
+const projectHref = (project) => project.data.kind === 'showcase' ? `/projects/${project.id}` : project.data.links[0]?.url;
+
+// Everything the search box matches against
+const searchText = (project) => [project.data.title, project.data.description, ...project.data.tags].join(' ').toLowerCase();
+
+const muted = 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]';
+const soft = 'text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)]';
+const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]';
+const titleHover = 'hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors';
 ---
 
 <ProjectsLayout>
-  {sorted.length > 0 ? (
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-      {sorted.map((project) => (
-        <ProjectCard project={project} />
-      ))}
-    </div>
-  ) : (
-    <div class="min-h-[40vh] flex items-center justify-center">
-      <p class="font-serif italic text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] text-lg">
-        Projects coming soon.
-      </p>
-    </div>
+
+  <!-- Intro, search + filters -->
+  <section class="flex flex-col gap-3.5">
+    <h1 class="text-[clamp(28px,3.6vw,36px)] leading-[1.2] font-semibold tracking-[-0.015em]">Projects</h1>
+    <p class={`max-w-[680px] text-lg leading-[1.7] ${soft}`}>
+      Renderers, engine systems, and the tools I’ve built around them. Most have a write-up; some are still in progress.
+    </p>
+    {projects.length > 0 && (
+      <ListFilter
+        tags={tags.map((tag) => ({ tag }))}
+        placeholder="Search projects…"
+        label="Search projects"
+        filterLabel="Filter by technology"
+      />
+    )}
+  </section>
+
+  {projects.length === 0 && (
+    <p class={`min-h-[30vh] flex items-center justify-center italic text-lg ${muted}`}>
+      Projects coming soon.
+    </p>
   )}
+
+  <!-- Projects grouped by year -->
+  {projects.length > 0 && (
+    <section class="flex flex-col gap-10" aria-label="Projects">
+      {years.map(({ year, projects }) => (
+        <div class="filter-group flex flex-col gap-3">
+          <h2 class={`font-mono text-[13px] font-medium leading-none ${muted}`}>{year}</h2>
+          <ul class="flex flex-col">
+            {projects.map((project) => {
+              const { title, description, thumbnail, tags } = project.data;
+              const showcase = project.data.kind === 'showcase';
+              const href = projectHref(project);
+              const external = href && !showcase ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+              const Title = href ? 'a' : 'span';
+              return (
+                <li class={`filter-item py-6 border-t ${borderColor}`} data-tags={tags.join('|')} data-search={searchText(project)}>
+                  <div class="min-w-0 flex flex-wrap gap-x-7 gap-y-5">
+                  {showcase && (
+                    <a href={href} aria-label={title} tabindex="-1" class="flex-[0_0_220px] max-w-full">
+                      {thumbnail ? (
+                        <img src={thumbnail} alt="" loading="lazy" class={`aspect-[16/10] w-full object-cover rounded-lg border ${borderColor}`} />
+                      ) : (
+                        <div class={`thumb-placeholder aspect-[16/10] rounded-lg border ${borderColor}`} role="img" aria-label={`${title} (no capture yet)`}></div>
+                      )}
+                    </a>
+                  )}
+                  <div class="flex-[1_1_360px] min-w-0 flex flex-col gap-2">
+                    <!-- Month and day above the title; the year is the group heading -->
+                    <span class={`-mb-1 font-mono text-xs ${muted}`}>{listDate(project)}</span>
+                    <span class="flex flex-wrap justify-between items-center gap-x-5 gap-y-1">
+                      <Title
+                        class:list={['flex-[1_1_280px] font-semibold leading-[1.4] no-underline', showcase ? 'text-xl' : 'text-[17px]', href && titleHover]}
+                        {...(href ? { href, ...external } : {})}
+                      >
+                        {title}
+                      </Title>
+                      <EntryMeta tags={tags} />
+                    </span>
+                    <p class={`text-[15px] leading-[1.6] ${soft}`}>{description}</p>
+                  </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+      <p class={`filter-empty py-12 text-center italic text-[15px] ${muted}`} hidden>No projects found.</p>
+    </section>
+  )}
+
 </ProjectsLayout>

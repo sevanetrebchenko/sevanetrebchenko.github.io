@@ -23,14 +23,26 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    thumbnail: z.string(),
+    thumbnail: z.string().optional(),
     tags: z.array(z.string()),
-    links: z.object({
-      github: z.url().optional(),
-      demo: z.url().optional(),
-    }).optional(),
+    // External links shown as buttons on the project page (repo, video, live build, ...).
+    // The icon and default label come from the URL's host; `label` overrides the text.
+    links: z.array(z.object({
+      url: z.url(),
+      label: z.string().optional(),
+    })).default([]),
     date: z.coerce.date(),
+    lastModified: z.coerce.date().optional(),
+    // 'showcase' gets a thumbnail and its own page; 'small' has neither and links to its first link
+    kind: z.enum(['showcase', 'small']).default('showcase'),
     featured: z.boolean().default(false),
+    draft: z.boolean().default(false),
+    // Caption under the main image on the project page
+    caption: z.string().optional(),
+    // Blog series written about this project; each post in it links back with a "Related project" card
+    series: z.string().optional(),
+    // Blog post ids listed under "Related writing"
+    writing: z.array(z.string()).default([]),
   }),
 });
 

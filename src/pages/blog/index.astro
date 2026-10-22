@@ -1,461 +1,129 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
-import PostCard from '../../components/PostCard.astro';
-import { getPublishedPosts, getTagCounts } from '../../utils/blog.js';
+import ListFilter from '../../components/ListFilter.astro';
+import EntryMeta from '../../components/EntryMeta.astro';
+import { getPublishedPosts, getWritingEntries, getPartTitle } from '../../utils/blog.js';
+import { formatMonthDay } from '../../utils/dates.js';
 
-const posts = await getPublishedPosts();
-const tagCounts = getTagCounts(posts);
-const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+const entries = getWritingEntries(await getPublishedPosts());
+
+// Filter options: every tag in use, most common first (a series counts once)
+const tagCounts = new Map();
+for (const entry of entries) {
+  for (const tag of entry.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  }
+}
+const tags = Array.from(tagCounts.keys()).sort((a, b) => tagCounts.get(b) - tagCounts.get(a));
+
+// Group by year, newest first; entries are already sorted
+const years = [];
+for (const entry of entries) {
+  const year = entry.date.getUTCFullYear();
+  const group = years.find((g) => g.year === year);
+  if (group) group.entries.push(entry); else years.push({ year, entries: [entry] });
+}
+
+
+// A series spans the months from its first part to its last
+function entryDate(entry) {
+  if (entry.parts === 0) return formatMonthDay(entry.date);
+  const first = formatMonthDay(entry.seriesPosts[0].data.date);
+  const last = formatMonthDay(entry.seriesPosts.at(-1).data.date);
+  return first === last ? first : `${first} – ${last}`;
+}
+
+// Everything the search box matches against; a series also matches on its parts' titles
+const searchText = (entry) => [entry.title, entry.abstract, ...entry.tags, ...entry.seriesPosts.map((part) => part.data.title)].join(' ').toLowerCase();
+
+const muted = 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]';
+const soft = 'text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)]';
+const accent = 'text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)]';
+const groupHoverAccent = 'group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors';
+const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]';
 ---
 
-<BlogLayout title="Blog" description="Writing about graphics programming, C++, and software development.">
+<BlogLayout title="Writing" description="Notes on graphics, C++, and the problems I run into while building things.">
 
-  <!-- Search + filter UI -->
-  <div id="blog-search-wrapper" class="mb-10">
-
-    <!-- Input row -->
-    <div class="blog-search-row flex items-center gap-3 pb-3">
-      <svg
-        class="blog-search-icon w-5 h-5 shrink-0 text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] transition-colors duration-150"
-        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-      </svg>
-      <input
-        id="blog-search-input"
-        type="text"
-        placeholder="Type something..."
-        autocomplete="off"
-        spellcheck="false"
-        class="flex-1 bg-transparent outline-none font-serif text-base text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] placeholder:text-[var(--color-light-text-secondary)] dark:placeholder:text-[var(--color-dark-text-secondary)] placeholder:opacity-50"
+  <!-- Intro + filters -->
+  <section class="flex flex-col gap-3.5">
+    <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-2">
+      <h1 class="text-[clamp(28px,3.6vw,36px)] leading-[1.2] font-semibold tracking-[-0.015em]">Writing</h1>
+      <a href="/rss.xml" class={`inline-flex items-center gap-1.5 text-sm no-underline ${accent} hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors`}>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 11a8 8 0 0 1 8 8" /><path d="M5 5a14 14 0 0 1 14 14" /><circle cx="6" cy="18" r="1" /></svg>
+        RSS
+      </a>
+    </div>
+    <p class={`max-w-[680px] text-lg leading-[1.7] ${soft}`}>
+      Notes on graphics, C++, and the problems I run into while building things.
+    </p>
+    {entries.length > 0 && (
+      <ListFilter
+        tags={tags.map((tag) => ({ tag, count: tagCounts.get(tag) }))}
+        placeholder="Search writing…"
+        label="Search writing"
+        filterLabel="Filter by topic"
       />
-      <kbd
-        id="search-kbd-hint"
-        class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[var(--color-light-border)] dark:border-[var(--color-dark-border)] font-mono text-xs text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-50 shrink-0"
-      >/</kbd>
-      <button
-        id="clear-search"
-        class="hidden text-lg leading-none text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors shrink-0 px-2"
-        aria-label="Clear search and filters"
-        type="button"
-      >
-        ✕
-      </button>
-    </div>
+    )}
+  </section>
 
-    <!-- Tag panel: expands on focus -->
-    <div id="tag-panel" class="tag-panel">
-      <div id="pills-container" class="flex flex-wrap gap-y-2 pt-3 items-center" style="transition: padding 250ms ease, gap 250ms ease;">
-        {allTags.map(([tag, count]) => (
-          <button
-            class="tag-filter-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-sm bg-[var(--color-light-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] cursor-pointer"
-            data-tag={tag}
-            type="button"
-          >
-            {tag}
-            <span class="opacity-40">{count}</span>
-          </button>
-        ))}
-        <button
-          id="more-tags-btn"
-          type="button"
-          style="display:none"
-          class="more-tags-btn inline-flex items-center px-2.5 py-1 rounded-md font-mono text-sm cursor-pointer shrink-0"
-        ></button>
-      </div>
-    </div>
+  {entries.length === 0 && (
+    <p class={`min-h-[30vh] flex items-center justify-center italic text-lg ${muted}`}>
+      Posts coming soon.
+    </p>
+  )}
 
-  </div>
+  <!-- Posts grouped by year -->
+  {entries.length > 0 && (
+    <section class="flex flex-col gap-11" aria-label="Posts">
+      {years.map(({ year, entries }) => (
+        <div class="filter-group flex flex-col gap-3">
+          <h2 class={`font-mono text-[13px] font-medium leading-none ${muted}`}>{year}</h2>
+          <ul class="flex flex-col">
+            {entries.map((entry) => (
+              <li class={`filter-item border-t ${borderColor} py-6`} data-tags={entry.tags.join('|')} data-search={searchText(entry)}>
+                <div class="min-w-0 flex flex-col gap-1.5">
+                <!-- Month and day above the title; the year is the group heading -->
+                <span class={`font-mono text-xs ${muted}`}>{entryDate(entry)}</span>
+                <div class="flex flex-wrap justify-between items-center gap-x-5 gap-y-1">
+                  <a href={entry.href} class="flex-[1_1_360px] text-lg font-semibold leading-[1.45] no-underline hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors">
+                    {entry.title}
+                  </a>
+                  <EntryMeta tags={entry.tags} />
+                </div>
+                <p class={`text-[15px] leading-[1.6] ${soft}`}>{entry.abstract}</p>
 
-  <!-- Post list -->
-  <div id="post-list">
-    {posts.map((post) => (
-      <div
-        class="post-item"
-        data-title={post.data.title.toLowerCase()}
-        data-abstract={(post.data.abstract || '').toLowerCase()}
-        data-tags={post.data.tags.join(',')}
-      >
-        <PostCard post={post} />
-      </div>
-    ))}
-  </div>
-
-  <p id="no-results" class="hidden text-center font-serif text-base italic text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] py-12">
-    No posts found.
-  </p>
-
-  <!-- Pagination -->
-  <nav id="pagination" class="hidden flex items-center justify-center gap-6 pt-8" aria-label="Pagination">
-    <button
-      id="page-prev"
-      type="button"
-      class="flex items-center justify-center w-9 h-9 rounded text-2xl text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
-      aria-label="Previous page"
-    ><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
-    <span id="page-numbers" class="flex gap-3"></span>
-    <button
-      id="page-next"
-      type="button"
-      class="flex items-center justify-center w-9 h-9 rounded text-2xl text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
-      aria-label="Next page"
-    ><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
-  </nav>
+                <!-- A series lists its parts on demand -->
+                {entry.parts > 0 && (
+                  <details class="group/parts">
+                    <summary class={`inline-flex items-center gap-1.5 min-h-8 text-sm cursor-pointer list-none [&::-webkit-details-marker]:hidden ${soft} hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)]`}>
+                      <svg class="w-3 h-3 transition-transform group-open/parts:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+                      <span class="group-open/parts:hidden">Show all {entry.parts} parts</span>
+                      <span class="hidden group-open/parts:inline">Hide parts</span>
+                    </summary>
+                    <ol class={`mt-2 max-w-[760px] pl-[18px] border-l ${borderColor} flex flex-col gap-0.5`}>
+                      {entry.seriesPosts.map((part) => (
+                        <li>
+                          <a href={`/blog/${part.id}`} class="group flex justify-between items-baseline gap-4 py-[7px] text-[15px] no-underline">
+                            <span class={groupHoverAccent}>
+                              <span class={`inline-block min-w-[28px] font-mono text-xs ${muted}`}>{String(part.data.series.part).padStart(2, '0')}</span>
+                              {getPartTitle(part)}
+                            </span>
+                            <time datetime={part.data.date.toISOString()} class={`font-mono text-xs whitespace-nowrap ${muted}`}>{formatMonthDay(part.data.date)}</time>
+                          </a>
+                          </div>
+              </li>
+                      ))}
+                    </ol>
+                  </details>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <p class={`filter-empty py-12 text-center italic text-[15px] ${muted}`} hidden>No posts found.</p>
+    </section>
+  )}
 
 </BlogLayout>
-
-<script is:inline>
-(function () {
-  const wrapper        = document.getElementById('blog-search-wrapper');
-  const input          = document.getElementById('blog-search-input');
-  const tagPanel       = document.getElementById('tag-panel');
-  const pillsContainer = document.getElementById('pills-container');
-  const moreBtn        = document.getElementById('more-tags-btn');
-  const clearBtn       = document.getElementById('clear-search');
-  const kbdHint        = document.getElementById('search-kbd-hint');
-  const noResults      = document.getElementById('no-results');
-  const searchRow      = wrapper.querySelector('.blog-search-row');
-
-  const PER_PAGE = 6;
-  let currentPage   = 1;
-  let activeTags    = new Set();
-  let panelOpen     = false;
-  let debounce;
-  let moreBtnTimer  = null;
-
-  const pagination   = document.getElementById('pagination');
-  const pageNumbers  = document.getElementById('page-numbers');
-  const prevBtn      = document.getElementById('page-prev');
-  const nextBtn      = document.getElementById('page-next');
-
-  // ── Pill helpers ─────────────────────────────────────────────────────
-
-  function hidePill(p) {
-    const cs = getComputedStyle(p);
-    const w = p.offsetWidth;
-    p.style.width         = w + 'px';
-    p.style.minWidth      = '0';
-    p.style.marginRight   = cs.marginRight;
-    p.style.borderWidth   = cs.borderWidth;
-    p.style.paddingLeft   = cs.paddingLeft;
-    p.style.paddingRight  = cs.paddingRight;
-    void p.offsetWidth;
-    p.style.width         = '0';
-    p.style.marginRight   = '0';
-    p.style.borderWidth   = '0';
-    p.style.paddingLeft   = '0';
-    p.style.paddingRight  = '0';
-    p.style.opacity       = '0';
-    p.style.pointerEvents = 'none';
-  }
-
-  function showPill(p) {
-    p.style.width         = '';
-    p.style.minWidth      = '';
-    p.style.marginRight   = '';
-    p.style.borderWidth   = '';
-    p.style.paddingLeft   = '';
-    p.style.paddingRight  = '';
-    p.style.opacity       = '';
-    p.style.pointerEvents = '';
-  }
-
-  // ── Expand ───────────────────────────────────────────────────────────
-
-  function expandPanel() {
-    if (panelOpen) return;
-    panelOpen = true;
-    clearTimeout(moreBtnTimer);
-    searchRow.classList.add('focused');
-    kbdHint.style.opacity = '0';
-    kbdHint.style.pointerEvents = 'none';
-    moreBtn.style.display = 'none';
-
-    // Reset pills instantly (no transition) before revealing the panel
-    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
-      p.style.transition = 'none';
-      showPill(p);
-    });
-    pillsContainer.style.paddingTop = '';
-    pillsContainer.style.gap = '';
-    void pillsContainer.offsetWidth; // force layout with transitions disabled
-
-    // Re-enable transitions, then reveal
-    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(p => {
-      p.style.transition = '';
-    });
-    tagPanel.style.gridTemplateRows = '1fr';
-    tagPanel.style.opacity = '1';
-  }
-
-  // ── Collapse ─────────────────────────────────────────────────────────
-
-  function collapsePanel() {
-    if (!panelOpen) return;
-    panelOpen = false;
-
-    const hasFilters = !!(input.value.trim()) || activeTags.size > 0;
-    searchRow.classList.toggle('focused', hasFilters);
-    if (!hasFilters) { kbdHint.style.opacity = ''; kbdHint.style.pointerEvents = ''; }
-
-    if (activeTags.size > 0) {
-      const inactivePills = [...pillsContainer.querySelectorAll('.tag-filter-pill')]
-        .filter(p => !activeTags.has(p.dataset.tag));
-
-      // Animate inactive pills out and collapse row gap to prevent snap
-      // when an entire row of pills disappears
-      inactivePills.forEach(hidePill);
-      pillsContainer.style.gap = '0';
-
-      // Show the more button after pills finish collapsing, fading in
-      const count = inactivePills.length;
-      moreBtn.textContent = `+${count} more`;
-      moreBtn.style.display = '';
-      moreBtn.style.opacity = '0';
-      moreBtnTimer = setTimeout(() => {
-        moreBtn.style.opacity = '';
-      }, 250);
-    } else {
-      tagPanel.style.gridTemplateRows = '0fr';
-      tagPanel.style.opacity = '0';
-    }
-  }
-
-  wrapper.addEventListener('focusin', function() {
-    if (window.scrollY > 0) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    expandPanel();
-  });
-  wrapper.addEventListener('focusout', () => {
-    setTimeout(() => { if (!wrapper.contains(document.activeElement)) collapsePanel(); }, 0);
-  });
-
-  // ── Filter ──────────────────────────────────────────────────────────
-
-  function filterPosts(resetPage) {
-    if (resetPage !== false) currentPage = 1;
-
-    const query = input.value.trim().toLowerCase();
-    const items = [...document.querySelectorAll('.post-item')];
-    const matched = [];
-
-    items.forEach(item => {
-      const title    = item.dataset.title    || '';
-      const abstract = item.dataset.abstract || '';
-      const itemTags = (item.dataset.tags || '').split(',').map(t => t.trim().toLowerCase());
-
-      const textMatch = !query || title.includes(query) || abstract.includes(query) || itemTags.some(t => t.includes(query));
-      const tagMatch  = activeTags.size === 0 || [...activeTags].every(t => itemTags.includes(t));
-
-      if (textMatch && tagMatch) matched.push(item);
-    });
-
-    const totalPages = Math.max(1, Math.ceil(matched.length / PER_PAGE));
-    if (currentPage > totalPages) currentPage = totalPages;
-    const start = (currentPage - 1) * PER_PAGE;
-    const end = start + PER_PAGE;
-
-    items.forEach(item => item.style.display = 'none');
-    matched.forEach((item, i) => {
-      item.style.display = (i >= start && i < end) ? '' : 'none';
-    });
-
-    noResults.classList.toggle('hidden', matched.length > 0);
-    renderPagination(totalPages);
-    syncPillStates();
-    const hasFilters = !!input.value.trim() || activeTags.size > 0;
-    clearBtn.classList.toggle('hidden', !hasFilters);
-    if (!panelOpen) { kbdHint.style.opacity = hasFilters ? '0' : ''; kbdHint.style.pointerEvents = hasFilters ? 'none' : ''; }
-  }
-
-  function renderPagination(totalPages) {
-    if (totalPages <= 1) { pagination.classList.add('hidden'); return; }
-    pagination.classList.remove('hidden');
-
-    prevBtn.disabled = currentPage <= 1;
-    nextBtn.disabled = currentPage >= totalPages;
-
-    // Build page numbers with ellipsis for large page counts
-    // Always show: first, last, current, and 1 neighbor on each side
-    var pages = [];
-    for (var i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
-        pages.push(i);
-      }
-    }
-
-    pageNumbers.innerHTML = '';
-    var prev = 0;
-    pages.forEach(function(p) {
-      if (prev && p - prev > 1) {
-        var dots = document.createElement('span');
-        dots.textContent = '\u2026';
-        dots.className = 'px-2 py-1.5 font-serif text-base text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] opacity-50 select-none';
-        pageNumbers.appendChild(dots);
-      }
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = p;
-      btn.className = 'px-3 py-1.5 rounded font-serif text-base transition-colors ';
-      if (p === currentPage) {
-        btn.className += 'text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)] font-semibold';
-      } else {
-        btn.className += 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] hover:bg-[var(--color-light-border)] dark:hover:bg-[var(--color-dark-border)]';
-      }
-      btn.addEventListener('click', function() { goToPage(p); });
-      pageNumbers.appendChild(btn);
-      prev = p;
-    });
-  }
-
-  function goToPage(page) {
-    currentPage = page;
-    filterPosts(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
-  nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
-
-  // ── Pill states ─────────────────────────────────────────────────────
-
-  function syncPillStates() {
-    const applyActive = (el, active) => {
-      el.classList.toggle('bg-[var(--color-light-accent)]',               active);
-      el.classList.toggle('dark:bg-[var(--color-dark-accent)]',           active);
-      el.classList.toggle('text-white',                                   active);
-      el.classList.toggle('dark:text-[var(--color-dark-bg)]',             active);
-      el.classList.toggle('bg-[var(--color-light-border)]',              !active);
-      el.classList.toggle('dark:bg-[var(--color-dark-border)]',          !active);
-      el.classList.toggle('text-[var(--color-light-text-secondary)]',    !active);
-      el.classList.toggle('dark:text-[var(--color-dark-text-secondary)]',!active);
-    };
-
-    pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
-      applyActive(pill, activeTags.has(pill.dataset.tag));
-    });
-
-    document.querySelectorAll('.post-tag').forEach(tag => {
-      applyActive(tag, activeTags.has(tag.dataset.tag));
-    });
-  }
-
-  // ── Summary refresh (pill clicked while panel is closed) ────────────
-
-  function refreshSummary() {
-    const hasFilters = !!input.value.trim() || activeTags.size > 0;
-    searchRow.classList.toggle('focused', hasFilters);
-
-    if (activeTags.size > 0) {
-      let inactiveCount = 0;
-      pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
-        if (activeTags.has(pill.dataset.tag)) {
-          showPill(pill);
-        } else {
-          hidePill(pill);
-          inactiveCount++;
-        }
-      });
-      moreBtn.textContent = `+${inactiveCount} more`;
-      moreBtn.style.display = inactiveCount > 0 ? '' : 'none';
-      tagPanel.style.gridTemplateRows = '1fr';
-      tagPanel.style.opacity = '1';
-    } else {
-      moreBtn.style.display = 'none';
-      input.focus();
-    }
-  }
-
-  // ── Tag pill clicks ─────────────────────────────────────────────────
-
-  pillsContainer.querySelectorAll('.tag-filter-pill').forEach(pill => {
-    pill.addEventListener('mousedown', (e) => {
-      if (!panelOpen) e.preventDefault();
-    });
-    pill.addEventListener('click', () => {
-      const tag = pill.dataset.tag;
-      activeTags.has(tag) ? activeTags.delete(tag) : activeTags.add(tag);
-      filterPosts();
-      syncTagsToURL();
-      if (!panelOpen) refreshSummary();
-    });
-  });
-
-  // ── More tags button ────────────────────────────────────────────────
-
-  moreBtn.addEventListener('mousedown', (e) => e.preventDefault());
-  moreBtn.addEventListener('click', () => input.focus());
-
-  // ── Post card tag clicks ────────────────────────────────────────────
-
-  document.querySelectorAll('.post-tag').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      activeTags.add(link.dataset.tag);
-      filterPosts();
-      syncTagsToURL();
-      if (!panelOpen) refreshSummary();
-    });
-  });
-
-  // ── Input ───────────────────────────────────────────────────────────
-
-  input.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(filterPosts, 80); });
-
-  // ── Clear ───────────────────────────────────────────────────────────
-
-  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
-
-  clearBtn.addEventListener('click', () => {
-    input.value = '';
-    activeTags.clear();
-    filterPosts();
-    syncTagsToURL();
-    panelOpen = false;
-    moreBtn.style.display = 'none';
-    tagPanel.style.gridTemplateRows = '0fr';
-    tagPanel.style.opacity = '0';
-    searchRow.classList.remove('focused');
-    kbdHint.style.opacity = '';
-    kbdHint.style.pointerEvents = '';
-    input.blur();
-  });
-
-  // ── / shortcut ──────────────────────────────────────────────────────
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      var rect = input.getBoundingClientRect();
-      var isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-      input.focus({ preventScroll: true });
-      if (!isVisible) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-    if (e.key === 'Escape' && document.activeElement === input) {
-      input.blur();
-    }
-  });
-
-  // ── URL ↔ tag sync ─────────────────────────────────────────────────
-
-  function syncTagsToURL() {
-    const url = new URL(window.location);
-    url.searchParams.delete('tag');
-    activeTags.forEach(t => url.searchParams.append('tag', t));
-    history.replaceState(null, '', url);
-  }
-
-  // Read tags from URL on load
-  const urlTags = new URLSearchParams(window.location.search).getAll('tag');
-  if (urlTags.length) {
-    urlTags.forEach(t => activeTags.add(t));
-    refreshSummary();
-  }
-
-  // Initial render with pagination
-  filterPosts();
-})();
-</script>

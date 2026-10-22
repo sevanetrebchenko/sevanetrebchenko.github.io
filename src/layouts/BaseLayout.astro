@@ -1,11 +1,17 @@
 ---
 import Head from '../components/Head.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import SocialLinks from '../components/SocialLinks.astro';
-import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
-const { title, description, ogType, showSocials = true, showFooterBorder = true } = Astro.props;
+const { title, description, ogType } = Astro.props;
+const fullTitle = title && title !== 'Seva Netrebchenko' ? `${title} — Seva Netrebchenko` : 'Seva Netrebchenko';
+const year = new Date().getFullYear();
+
+const footerLinks = [
+  { href: 'https://github.com/sevanetrebchenko', label: 'GitHub', external: true },
+  { href: 'https://www.linkedin.com/in/seva-netrebchenko/', label: 'LinkedIn', external: true },
+  { href: '/rss.xml', label: 'RSS', external: false },
+];
 ---
 
 <html lang="en" class="no-transitions">
@@ -21,7 +27,7 @@ const { title, description, ogType, showSocials = true, showFooterBorder = true 
         }
       })();
     </script>
-    <Head title={title} description={description} ogType={ogType} />
+    <Head title={fullTitle} description={description} ogType={ogType} />
     <script is:inline>
       requestAnimationFrame(function() {
         document.documentElement.classList.remove('no-transitions');
@@ -33,20 +39,19 @@ const { title, description, ogType, showSocials = true, showFooterBorder = true 
     <div class="flex-1">
       <slot />
     </div>
-    <footer>
-      <div class="max-w-5xl mx-auto px-6">
-        <div class:list={[
-          'py-8 flex flex-col items-center gap-4',
-          showFooterBorder && 'border-t border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]',
-        ]}>
-          {showSocials && (
-            <div class="hidden md:block">
-              <SocialLinks />
-            </div>
-          )}
-          <Footer />
-        </div>
-      </div>
+    <footer class="max-w-[1040px] w-full mx-auto px-5 pt-6 pb-10 flex flex-wrap justify-between gap-3 text-[13px] text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]">
+      <span>&copy; {year} Seva Netrebchenko</span>
+      <span class="flex flex-wrap gap-x-[18px] gap-y-1">
+        {footerLinks.map(({ href, label, external }) => (
+          <a
+            href={href}
+            class="no-underline hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
+            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
+            {label}
+          </a>
+        ))}
+      </span>
     </footer>
   </body>
 </html>

@@ -1,0 +1,129 @@
+---
+// Search box + tag pills for the Projects and Writing pages. Filters the list on the page in place:
+// an item shows when its text contains the query and it has every selected tag.
+// The page marks up its list with:
+//   .filter-item   data-tags="a|b"  data-search="lowercase searchable text"
+//   .filter-group  wraps items (e.g. a year); hidden when none of its items match
+//   .filter-empty  shown when nothing matches
+// tags: [{ tag, count? }]
+const { tags = [], placeholder, label, filterLabel } = Astro.props;
+
+const muted = 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]';
+const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]';
+---
+
+<label class={`mt-1.5 flex items-center gap-2.5 min-h-11 px-3.5 rounded-[10px] border ${borderColor} bg-[var(--color-light-surface)] dark:bg-[var(--color-dark-surface)] ${muted} focus-within:border-[var(--color-light-accent)] dark:focus-within:border-[var(--color-dark-accent)] transition-colors`}>
+  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+  <input
+    id="filter-input"
+    type="search"
+    class="flex-1 min-w-0 min-h-10 border-0 outline-none bg-transparent font-serif text-base text-[var(--color-light-text)] dark:text-[var(--color-dark-text)] [&::-webkit-search-cancel-button]:hidden"
+    placeholder={placeholder}
+    aria-label={label}
+    autocomplete="off"
+    spellcheck="false"
+  />
+  <kbd id="filter-kbd-hint" class={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border ${borderColor} font-mono text-xs opacity-60 shrink-0`} aria-hidden="true">/</kbd>
+  <button
+    id="filter-clear"
+    type="button"
+    class="hidden shrink-0 -mr-2 min-w-11 min-h-10 items-center justify-center hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors"
+    aria-label="Clear search and filters"
+  >
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+  </button>
+</label>
+
+{tags.length > 1 && (
+  <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label={filterLabel}>
+    {tags.map(({ tag, count }) => (
+      <button
+        type="button"
+        class="filter-pill inline-flex items-center gap-1.5 min-h-8 px-2.5 rounded-md font-mono text-[13px] transition-colors bg-[var(--color-light-border)]/60 dark:bg-[var(--color-dark-border)]/70 text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] aria-pressed:bg-[var(--color-light-accent)] dark:aria-pressed:bg-[var(--color-dark-accent)] aria-pressed:text-white dark:aria-pressed:text-[var(--color-dark-bg)]"
+        data-tag={tag}
+        aria-pressed="false"
+      >
+        {tag}{count !== undefined && <span class="opacity-55">{count}</span>}
+      </button>
+    ))}
+  </div>
+)}
+
+<script is:inline>
+(function () {
+  const input  = document.getElementById('filter-input');
+  const hint   = document.getElementById('filter-kbd-hint');
+  const clear  = document.getElementById('filter-clear');
+  const pills  = document.querySelectorAll('.filter-pill');
+  const active = new Set();
+
+  function apply() {
+    // Looked up here, not once at the top: this script sits above the list, so it runs before the list is parsed
+    const groups = document.querySelectorAll('.filter-group');
+    const items  = document.querySelectorAll('.filter-item');
+    const empty  = document.querySelector('.filter-empty');
+    const query = input.value.trim().toLowerCase();
+    let anyVisible = false;
+
+    items.forEach((item) => {
+      const itemTags = item.dataset.tags ? item.dataset.tags.split('|') : [];
+      const match = (!query || item.dataset.search.includes(query)) && [...active].every((tag) => itemTags.includes(tag));
+      item.hidden = !match;
+      anyVisible ||= match;
+    });
+    groups.forEach((group) => {
+      group.hidden = !group.querySelector('.filter-item:not([hidden])');
+    });
+    pills.forEach((pill) => pill.setAttribute('aria-pressed', active.has(pill.dataset.tag) ? 'true' : 'false'));
+    document.querySelectorAll('.entry-tag').forEach((el) => el.toggleAttribute('data-active', active.has(el.dataset.tag)));
+
+    const filtering = query !== '' || active.size > 0;
+    if (empty) empty.hidden = anyVisible;
+    hint.classList.toggle('sm:inline-flex', !filtering);
+    clear.classList.toggle('hidden', !filtering);
+    clear.classList.toggle('inline-flex', filtering);
+
+    // Keep the filter in the URL so it survives reloads and can be linked
+    const url = new URL(window.location);
+    url.searchParams.delete('q');
+    url.searchParams.delete('tag');
+    if (query) url.searchParams.set('q', input.value.trim());
+    active.forEach((tag) => url.searchParams.append('tag', tag));
+    history.replaceState(null, '', url);
+  }
+
+  input.addEventListener('input', apply);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { input.value = ''; apply(); input.blur(); }
+  });
+
+  pills.forEach((pill) => pill.addEventListener('click', () => {
+    const tag = pill.dataset.tag;
+    if (active.has(tag)) active.delete(tag); else active.add(tag);
+    apply();
+  }));
+
+  clear.addEventListener('click', () => {
+    input.value = '';
+    active.clear();
+    apply();
+    input.focus();
+  });
+
+  // "/" focuses the search box from anywhere on the page
+  document.addEventListener('keydown', (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+    if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const known = new Set([...pills].map((pill) => pill.dataset.tag));
+  params.getAll('tag').filter((tag) => known.has(tag)).forEach((tag) => active.add(tag));
+  input.value = params.get('q') ?? '';
+  // Filters restored from the URL need the list to exist, so wait for the rest of the page
+  if (input.value || active.size > 0) document.addEventListener('DOMContentLoaded', apply);
+})();
+</script>

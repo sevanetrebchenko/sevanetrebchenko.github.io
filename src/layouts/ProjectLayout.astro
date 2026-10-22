@@ -1,0 +1,115 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import ArticleBody from '../components/ArticleBody.astro';
+import { describeLink } from '../utils/projects.js';
+import { getPartTitle, getReadingMinutes } from '../utils/blog.js';
+import { formatDate } from '../utils/dates.js';
+import { getLastModified } from '../utils/last-modified.js';
+
+const { project, headings, related = [], prev, next } = Astro.props;
+const { title, description, thumbnail, caption, links, date } = project.data;
+const lastModified = getLastModified(project);
+
+// Same meta row as a post: only show "Updated" if lastModified is more than 7 days after the start date
+const updated = lastModified && lastModified.valueOf() - date.valueOf() >= 7 * 24 * 60 * 60 * 1000 ? formatDate(lastModified) : null;
+const readingMinutes = getReadingMinutes(project.body);
+
+const muted = 'text-[var(--color-light-text-secondary)] dark:text-[var(--color-dark-text-secondary)]';
+const accentLink = 'no-underline text-[var(--color-light-accent)] dark:text-[var(--color-dark-accent)] hover:text-[var(--color-light-text)] dark:hover:text-[var(--color-dark-text)] transition-colors';
+const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color-dark-border)]';
+---
+
+<BaseLayout title={title} description={description} ogType="article">
+  <main class="relative max-w-[1040px] mx-auto px-5 pt-8 pb-24 flex flex-col gap-12">
+
+    <!-- Title block -->
+    <section class="flex flex-col gap-3.5">
+      <a href="/projects" class={`self-start inline-flex items-center gap-1.5 min-h-11 text-sm no-underline ${muted} hover:text-[var(--color-light-accent)] dark:hover:text-[var(--color-dark-accent)] transition-colors`}><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>Back to projects</a>
+      <h1 class="max-w-[820px] text-[clamp(30px,4vw,42px)] leading-[1.18] font-semibold tracking-[-0.02em]">{title}</h1>
+      <p class="max-w-[760px] text-[19px] leading-[1.65] text-[var(--color-light-text-soft)] dark:text-[var(--color-dark-text-soft)]">{description}</p>
+
+      <div class={`mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5 font-mono text-xs ${muted}`}>
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        {updated && <><span aria-hidden="true">·</span><span>updated {updated}</span></>}
+        <span aria-hidden="true">·</span>
+        <span>{readingMinutes} min read</span>
+      </div>
+
+      {links.length > 0 && (
+        <div class="mt-1.5 flex flex-wrap gap-2.5">
+          {links.map(describeLink).map(({ url, label, icon }) => (
+            <a href={url} target="_blank" rel="noopener noreferrer" class={`inline-flex items-center gap-2 min-h-11 px-3.5 rounded-lg border ${borderColor} text-[15px] no-underline hover:border-[var(--color-light-accent)] dark:hover:border-[var(--color-dark-accent)] transition-colors`}>
+              {icon === 'github' && <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg>}
+              {icon === 'youtube' && <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" /><path d="M10 9l5 3-5 3z" /></svg>}
+              {icon === 'external' && <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>}
+              {label}
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Main image: kept visually separate from the figures in the write-up -->
+    <figure class="flex flex-col gap-2.5">
+      {thumbnail ? (
+        <img src={thumbnail} alt={title} class={`w-full aspect-video object-cover rounded-[10px] border ${borderColor}`} />
+      ) : (
+        <div class={`thumb-placeholder aspect-video rounded-[10px] border ${borderColor}`} role="img" aria-label={`${title} (no capture yet)`}></div>
+      )}
+      {caption && <figcaption class={`text-sm leading-[1.55] ${muted}`}><span class="font-mono text-xs mr-2">Fig. 1</span>{caption}</figcaption>}
+    </figure>
+
+    <!-- Write-up -->
+    <div class={`pt-10 border-t ${borderColor}`}>
+      <ArticleBody headings={headings} figureStart={caption ? 1 : 0}>
+        <slot />
+      </ArticleBody>
+    </div>
+
+    <!-- Related writing -->
+    {related.length > 0 && (
+      <section class={`pt-10 border-t ${borderColor} flex flex-col gap-4`} aria-labelledby="related-heading">
+        <div class="flex justify-between items-baseline gap-3">
+          <h2 id="related-heading" class="text-2xl font-semibold leading-[1.3]">Related writing</h2>
+          <a href="/blog" class={`text-sm ${accentLink}`}>All posts</a>
+        </div>
+        <ul class={`border-t ${borderColor}`}>
+          {related.map((post) => (
+            <li class={`border-b ${borderColor}`}>
+              <a href={`/blog/${post.id}`} class="group flex justify-between items-baseline gap-4 py-3.5 text-base no-underline">
+                <span class="group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors">
+                  {post.data.series && (
+                    <span class={`inline-block min-w-[30px] font-mono text-xs ${muted}`}>{String(post.data.series.part).padStart(2, '0')}</span>
+                  )}
+                  {getPartTitle(post)}
+                </span>
+                <time datetime={post.data.date.toISOString()} class={`font-mono text-xs whitespace-nowrap ${muted}`}>{formatDate(post.data.date)}</time>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- Previous / next project -->
+    {(prev || next) && (
+      <nav class={`pt-6 border-t ${borderColor} flex flex-wrap justify-between gap-4`} aria-label="More projects">
+        {prev ? (
+          <a href={`/projects/${prev.id}`} class="group flex flex-col gap-1 min-w-[200px] no-underline">
+            <span class={`inline-flex items-center gap-1 self-start text-[13px] ${muted}`}><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>Previous</span>
+            <span class="text-[17px] font-semibold group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors">{prev.data.title}</span>
+          </a>
+        ) : <span></span>}
+        {next && (
+          <a href={`/projects/${next.id}`} class="group flex flex-col gap-1 min-w-[200px] text-right no-underline">
+            <span class={`inline-flex items-center gap-1 self-end text-[13px] ${muted}`}>Next<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></span>
+            <span class="text-[17px] font-semibold group-hover:text-[var(--color-light-accent)] dark:group-hover:text-[var(--color-dark-accent)] transition-colors">{next.data.title}</span>
+          </a>
+        )}
+      </nav>
+    )}
+
+  </main>
+</BaseLayout>
+
+<script src="../utils/code-blocks.js"></script>

@@ -1,32 +1,32 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import BlogPostLayout from '../../layouts/BlogPostLayout.astro';
 import { getPublishedPosts, getSeriesPosts } from '../../utils/blog.js';
+import { getPublishedProjects, getProjectsForPost } from '../../utils/projects.js';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
-  return posts.map((post) => ({
+  // Newest first, so the next index is the older post
+  const posts = await getPublishedPosts();
+  return posts.map((post, i) => ({
     params: { slug: post.id },
-    props: { post },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
   }));
 }
 
-const { post } = Astro.props;
+const { post, newer, older } = Astro.props;
 const { Content, headings } = await render(post);
 
-// Build series data if this post belongs to a series
-let seriesPosts = null;
-if (post.data.series) {
-  const allPosts = await getPublishedPosts();
-  seriesPosts = getSeriesPosts(allPosts, post.data.series.name);
-}
+const seriesPosts = post.data.series ? getSeriesPosts(await getPublishedPosts(), post.data.series.name) : [];
+const projects = getProjectsForPost(await getPublishedProjects(), post);
 ---
 
 <BlogPostLayout
-  frontmatter={post.data}
+  post={post}
   headings={headings}
   seriesPosts={seriesPosts}
-  currentPostId={post.id}
+  projects={projects}
+  newer={newer}
+  older={older}
 >
   <Content />
 </BlogPostLayout>
