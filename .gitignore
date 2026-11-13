@@ -2,9 +2,10 @@
 node_modules
 .astro
 .claude
+.beads
 build
 
-# Beads / Dolt files (added by bd init)
-.dolt/
-*.db
-.beads-credential-key
+# Environment
+.env*
+npm-debug.log*
+.vscode/

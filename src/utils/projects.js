@@ -13,6 +13,14 @@ export async function getPublishedProjects() {
 }
 
 /**
+ * Whether a project gets its own page: always for showcase projects, and for small ones
+ * only when they have a write-up (otherwise the list links straight to their first link).
+ */
+export function hasPage(project) {
+  return project.data.kind === 'showcase' || Boolean(project.body?.trim());
+}
+
+/**
  * Showcase projects that link to a post, either by listing it under `writing`
  * or by naming the series it belongs to.
  */

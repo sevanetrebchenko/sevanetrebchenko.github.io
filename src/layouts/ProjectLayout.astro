@@ -2,12 +2,16 @@
 import BaseLayout from './BaseLayout.astro';
 import ArticleBody from '../components/ArticleBody.astro';
 import { describeLink } from '../utils/projects.js';
+import { shotHtml } from '../utils/media.js';
 import { getPartTitle, getReadingMinutes } from '../utils/blog.js';
 import { formatDate } from '../utils/dates.js';
 import { getLastModified } from '../utils/last-modified.js';
 
 const { project, headings, related = [], prev, next } = Astro.props;
-const { title, description, thumbnail, caption, links, date } = project.data;
+const { title, description, thumbnail, video, caption, links, date } = project.data;
+// Main image: a YouTube video, a looping clip or an image (see src/utils/media.js)
+const hero = video ?? thumbnail;
+const heroHtml = hero && shotHtml({ src: hero, alt: title, caption: caption ?? '', eager: true }).replace('class="shot', 'class="shot shot-hero');
 const lastModified = getLastModified(project);
 
 // Same meta row as a post: only show "Updated" if lastModified is more than 7 days after the start date
@@ -51,8 +55,8 @@ const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color
 
     <!-- Main image: kept visually separate from the figures in the write-up -->
     <figure class="flex flex-col gap-2.5">
-      {thumbnail ? (
-        <img src={thumbnail} alt={title} class={`w-full aspect-video object-cover rounded-[10px] border ${borderColor}`} />
+      {heroHtml ? (
+        <Fragment set:html={heroHtml} />
       ) : (
         <div class={`thumb-placeholder aspect-video rounded-[10px] border ${borderColor}`} role="img" aria-label={`${title} (no capture yet)`}></div>
       )}
@@ -113,3 +117,4 @@ const borderColor = 'border-[var(--color-light-border)] dark:border-[var(--color
 </BaseLayout>
 
 <script src="../utils/code-blocks.js"></script>
+<script src="../utils/media-player.js"></script>

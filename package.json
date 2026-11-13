@@ -19,8 +19,12 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",
+    "katex": "^0.16.47",
     "parse-numeric-range": "^1.3.0",
     "prismjs": "^1.30.0",
+    "rehype-katex": "^7.0.1",
+    "remark-directive": "3.0.1",
+    "remark-math": "^6.0.0",
     "tailwindcss": "^4.2.2"
   }
 }

@@ -1,6 +1,9 @@
 ---
+import { posterFor } from '../utils/media.js';
 const { project } = Astro.props;
-const { title, description, thumbnail } = project.data;
+const { title, description } = project.data;
+// A clip's poster stands in for it here
+const thumbnail = posterFor(project.data.thumbnail);
 const href = `/projects/${project.id}`;
 ---
 

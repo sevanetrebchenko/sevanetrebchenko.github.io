@@ -3,6 +3,7 @@
 // room for it (≥1400px), otherwise a collapsed box above the text.
 // The margin list is positioned against the page's <main> (which must be `relative`, with px-5),
 // so it lines up with the top of the page rather than the first section.
+import 'katex/dist/katex.min.css'; // math in Markdown ($…$ / $$…$$), rendered by rehype-katex
 import Prose from './Prose.astro';
 import TableOfContents from './TableOfContents.astro';
 

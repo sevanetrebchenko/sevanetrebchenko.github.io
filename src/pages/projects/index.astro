@@ -2,7 +2,8 @@
 import ProjectsLayout from '../../layouts/ProjectsLayout.astro';
 import ListFilter from '../../components/ListFilter.astro';
 import EntryMeta from '../../components/EntryMeta.astro';
-import { getPublishedProjects } from '../../utils/projects.js';
+import { getPublishedProjects, hasPage } from '../../utils/projects.js';
+import { posterFor } from '../../utils/media.js';
 import { formatMonthDay } from '../../utils/dates.js';
 
 const projects = await getPublishedProjects();
@@ -28,8 +29,8 @@ years.sort((a, b) => b.year - a.year);
 // Date in the list's left column: the year is already the group heading, so month and day
 const listDate = (project) => formatMonthDay(project.data.date);
 
-// Showcase projects have their own page; small ones link out to their first link, if any
-const projectHref = (project) => project.data.kind === 'showcase' ? `/projects/${project.id}` : project.data.links[0]?.url;
+// Projects with a page link to it; small ones without a write-up link out to their first link, if any
+const projectHref = (project) => hasPage(project) ? `/projects/${project.id}` : project.data.links[0]?.url;
 
 // Everything the search box matches against
 const searchText = (project) => [project.data.title, project.data.description, ...project.data.tags].join(' ').toLowerCase();
@@ -72,10 +73,11 @@ const titleHover = 'hover:text-[var(--color-light-accent)] dark:hover:text-[var(
           <h2 class={`font-mono text-[13px] font-medium leading-none ${muted}`}>{year}</h2>
           <ul class="flex flex-col">
             {projects.map((project) => {
-              const { title, description, thumbnail, tags } = project.data;
+              const { title, description, tags } = project.data;
+              const thumbnail = posterFor(project.data.thumbnail);
               const showcase = project.data.kind === 'showcase';
               const href = projectHref(project);
-              const external = href && !showcase ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+              const external = href && !hasPage(project) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
               const Title = href ? 'a' : 'span';
               return (
                 <li class={`filter-item py-6 border-t ${borderColor}`} data-tags={tags.join('|')} data-search={searchText(project)}>
